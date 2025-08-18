@@ -35,16 +35,18 @@
     flex-direction: column;
     gap: 10px;
 ">
-  {% for message in messages %}
-  <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert" aria-live="assertive" aria-atomic="true" style="min-width: 250px;">
-    <div class="d-flex">
-      <div class="toast-body">
-        {{ message }}
-      </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    {% for message in messages %}
+    <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert"
+        aria-live="assertive" aria-atomic="true" style="min-width: 250px;">
+        <div class="d-flex">
+            <div class="toast-body">
+                {{ message }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+        </div>
     </div>
-  </div>
-  {% endfor %}
+    {% endfor %}
 </div>
 {% endif %}
 <div class="content-wrapper">
@@ -166,29 +168,29 @@
                             </tr>
                         </thead>
                         <tbody class="table-border-bottom-0">
-                            {% for host in page_obj  %}
+                            {% for host in page_obj %}
                             <tr>
                                 <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
                                 <td>
                                     {% if host.project.exists %}
-                                        {% for p in host.project.all %}
-                                            {{ p.project_id }} <br>
-                                        {% endfor %}
+                                    {% for p in host.project.all %}
+                                    {{ p.project_id }} <br>
+                                    {% endfor %}
                                     {% else %}
-                                        <span class="text-muted"> - </span>
+                                    <span class="text-muted"> - </span>
                                     {% endif %}
                                 </td>
                                 <td>{{ host.company_name }}</td>
                                 <td>
                                     {% if host.project.exists %}
-                                        {% for p in host.project.all %}
-                                            <a href="#" data-bs-toggle="modal" data-bs-target="#hostDetailsModal"
-                                                class="fw-bold host-link" data-host-id="{{ host.id }}">
-                                        {{ p.project_name }} 
+                                    {% for p in host.project.all %}
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#hostDetailsModal"
+                                        class="fw-bold host-link" data-host-id="{{ host.id }}">
+                                        {{ p.project_name }}
                                     </a> <br>
-                                     {% endfor %}
+                                    {% endfor %}
                                     {% else %}
-                                        <span class="text-muted">No Project</span>
+                                    <span class="text-muted">No Project</span>
                                     {% endif %}
                                 </td>
                                 <td>{{ host.hosting_provider }}</td>
@@ -218,11 +220,13 @@
 
                                 <td>{{ host.notes }}</td>
                                 <td>
-                                    <a href="#" class="text-primary me-2 action-icon edit-host" title="Edit" data-host-id="{{ host.id }}">
+                                    <a href="#" class="text-primary me-2 action-icon edit-host" title="Edit"
+                                        data-host-id="{{ host.id }}">
                                         <i class="bx bx-edit-alt"></i>
                                     </a>
 
-                                    <a href="#" class="text-danger action-icon delete-host" title="Delete" data-host-id="{{ host.id }}">
+                                    <a href="#" class="text-danger action-icon delete-host" title="Delete"
+                                        data-host-id="{{ host.id }}">
                                         <i class="bx bx-trash"></i>
                                     </a>
 
@@ -234,259 +238,292 @@
                     </table>
                     {% block extra_js %}
                     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                   <script>
-                    document.addEventListener("DOMContentLoaded", function () {
-    const toasts = document.querySelectorAll('#toast-container .toast');
-    toasts.forEach(function(toast) {
-      setTimeout(() => {
-        toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-        toast.style.opacity = "0";
-        toast.style.transform = "translateX(100%)";
-        setTimeout(() => toast.remove(), 500);
-      }, 3000); // Auto-hide after 3 seconds
-    });
-  });
-$(document).ready(function() {
-    const hostDetailsUrl = "{% url 'get_host_details' %}";
+                    <script>
+                        function showToast(message, type = "info") {
+                            const container = document.getElementById("toast-container") || (() => {
+                                const div = document.createElement("div");
+                                div.id = "toast-container";
+                                div.style.position = "fixed";
+                                div.style.top = "20px";
+                                div.style.right = "20px";
+                                div.style.zIndex = "3000";
+                                div.style.display = "flex";
+                                div.style.flexDirection = "column";
+                                div.style.gap = "10px";
+                                document.body.appendChild(div);
+                                return div;
+                            })();
 
-    // VIEW modal
-    $(document).on("click", ".host-link", function(e) {
-        e.preventDefault();
-        const hostId = $(this).data("host-id");
-        if (!hostId) return console.error("Host ID missing!");
+                            const toast = document.createElement("div");
+                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+                            toast.style.minWidth = "250px";
+                            toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
 
-        $.get(hostDetailsUrl, { id: hostId, mode: "view" }, function(res) {
-            if (!res.success) return console.error(res.error);
-            const h = res.host;
+                            container.appendChild(toast);
 
-            // Fill VIEW modal fields
-            $("#hd-server-name").text(h.server_name || '-');
-            $("#hd-server-ip").text(h.server_ip || '-');
-            $("#hd-location").text(h.location || '-');
-            $("#hd-operating-system").text(h.operating_system || '-');
-            $("#hd-server-type").text(h.server_type || '-');
+                            setTimeout(() => {
+                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                                toast.style.opacity = "0";
+                                toast.style.transform = "translateX(100%)";
+                                setTimeout(() => toast.remove(), 500);
+                            }, 3000);
+                        }
 
-            // Status badge
-            $("#hd-status").text(h.status || '-')
-                .removeClass()
-                .addClass('badge ' + (h.status === "Active" ? 'bg-label-success' :
-                                       h.status === "Inactive" ? 'bg-label-warning' : 'bg-label-danger'));
+                        $(document).ready(function () {
+                            const hostDetailsUrl = "{% url 'get_host_details' %}";
 
-            // Backup badge
-            $("#hd-backup-status").text(h.backup_status || '-')
-                .removeClass()
-                .addClass('badge ' + (h.backup_status === "Scheduled" ? 'bg-label-info' :
-                                       h.backup_status === "Completed" ? 'bg-label-success' : 'bg-label-danger'));
+                            // VIEW modal
+                            $(document).on("click", ".host-link", function (e) {
+                                e.preventDefault();
+                                const hostId = $(this).data("host-id");
+                                if (!hostId) return console.error("Host ID missing!");
 
-            $("#hd-cpu-usage").text(h.cpu_usage || '-');
-            $("#hd-uptime").text(h.uptime || '-');
-            $("#hd-memory-usage").text(h.memory_usage || '-');
-            $("#hd-disk-space").text(h.disk_space || '-');
-            $("#hd-ssh-username").text(h.ssh_username || '-');
-            $("#hd-ssh-ftp-access").text(h.ssh_ftp_access || '-');
-            $("#hd-linked-services").text(h.linked_services || '-');
-            $("#hd-notes").text(h.notes || '-');
+                                $.get(hostDetailsUrl, { id: hostId, mode: "view" }, function (res) {
+                                    if (!res.success) return console.error(res.error);
+                                    const h = res.host;
 
-            $("#hostDetailsModal").modal("show");
-        });
-    });
+                                    // Fill VIEW modal fields
+                                    $("#hd-server-name").text(h.server_name || '-');
+                                    $("#hd-server-ip").text(h.server_ip || '-');
+                                    $("#hd-location").text(h.location || '-');
+                                    $("#hd-operating-system").text(h.operating_system || '-');
+                                    $("#hd-server-type").text(h.server_type || '-');
 
-    // EDIT modal
-    $(document).on("click", ".edit-host", function(e) {
-        e.preventDefault();
-        const hostId = $(this).data("host-id");
-        if (!hostId) return console.error("Host ID missing on Edit button!");
+                                    // Status badge
+                                    $("#hd-status").text(h.status || '-')
+                                        .removeClass()
+                                        .addClass('badge ' + (h.status === "Active" ? 'bg-label-success' :
+                                            h.status === "Inactive" ? 'bg-label-warning' : 'bg-label-danger'));
 
-        $.get(hostDetailsUrl, { id: hostId, mode: "edit" }, function(res) {
-            if (!res.success) return console.error(res.error);
-            const h = res.host;
+                                    // Backup badge
+                                    $("#hd-backup-status").text(h.backup_status || '-')
+                                        .removeClass()
+                                        .addClass('badge ' + (h.backup_status === "Scheduled" ? 'bg-label-info' :
+                                            h.backup_status === "Completed" ? 'bg-label-success' : 'bg-label-danger'));
 
-            // Set form action and hidden input
-            $("#editHostForm").attr("action", `/update_host_data/${hostId}/`);
-            $("#edit-host-id").val(hostId);
+                                    $("#hd-cpu-usage").text(h.cpu_usage || '-');
+                                    $("#hd-uptime").text(h.uptime || '-');
+                                    $("#hd-memory-usage").text(h.memory_usage || '-');
+                                    $("#hd-disk-space").text(h.disk_space || '-');
+                                    $("#hd-ssh-username").text(h.ssh_username || '-');
+                                    $("#hd-ssh-ftp-access").text(h.ssh_ftp_access || '-');
+                                    $("#hd-linked-services").text(h.linked_services || '-');
+                                    $("#hd-notes").text(h.notes || '-');
 
-            // Clear old selection
-            $("#edit-project").val([]);
+                                    $("#hostDetailsModal").modal("show");
+                                });
+                            });
 
-            // If backend returned multiple projects
-            if (h.projects && h.projects.length > 0) {
-                const ids = h.projects.map(p => p.id.toString());
-                $("#edit-project").val(ids).trigger("change");  // works with normal select or select2
-            }
-            $("#edit-company-name").val(h.company_name || '');
-            $("#edit-server-name").val(h.server_name || '');
-            $("#edit-hosting-provider").val(h.hosting_provider || '');
-            $("#edit-server-type").val(h.server_type || '');
-            $("#edit-plan-package").val(h.plan_package || '');
-            $("#edit-server-ip").val(h.server_ip || '');
-            $("#edit-location").val(h.location || '');
-            $("#edit-operating-system").val(h.operating_system || '');
-            $("#edit-control-panel").val(h.control_panel || '');
-            $("#edit-login-url").val(h.login_url || '');
-            $("#edit-username").val(h.username || '');
-            $("#edit-password").val(h.password || '');
-            $("#edit-ssh-username").val(h.ssh_username || '');
-            $("#edit-ssh-ftp-access").val(h.ssh_ftp_access || '');
-            $("#edit-database-name").val(h.database_name || '');
-            $("#edit-db-username").val(h.db_username || '');
-            $("#edit-db-password").val(h.db_password || '');
-            $("#edit-purchase-date").val(h.purchase_date || '');
-            $("#edit-expiry-date").val(h.expiry_date || '');
-            $("#edit-server-cost").val(h.server_cost || '');
-            $("#edit-uptime").val(h.uptime || '');
-            $("#edit-cpu-usage").val(h.cpu_usage || '');
-            $("#edit-memory-usage").val(h.memory_usage || '');
-            $("#edit-disk-space").val(h.disk_space || '');
-            $("#edit-backup-status").val(h.backup_status || '');
-            $("#edit-linked-services").val(h.linked_services || '');
-            $("#edit-status").val(h.status || '');
-            $("#edit-notes").val(h.notes || '');
+                            // EDIT modal
+                            $(document).on("click", ".edit-host", function (e) {
+                                e.preventDefault();
+                                const hostId = $(this).data("host-id");
+                                if (!hostId) return console.error("Host ID missing on Edit button!");
 
-            $("#editHostModal").modal("show");
-        });
-    });
+                                $.get(hostDetailsUrl, { id: hostId, mode: "edit" }, function (res) {
+                                    if (!res.success) return console.error(res.error);
+                                    const h = res.host;
 
-    // deleet modal
-    let hostIdToDelete = null;
+                                    // Set form action and hidden input
+                                    $("#editHostForm").attr("action", `/update_host_data/${hostId}/`);
+                                    $("#edit-host-id").val(hostId);
 
-$(document).on("click", ".delete-host", function(e) {
-    e.preventDefault();
-    hostIdToDelete = $(this).data("host-id");
-    if (!hostIdToDelete) return console.error("Host ID missing!");
+                                    // Clear old selection
+                                    $("#edit-project").val([]);
 
-    // Show Bootstrap modal
-    var deleteModal = new bootstrap.Modal(document.getElementById('deleteHostModal'));
-    deleteModal.show();
-});
+                                    // If backend returned multiple projects
+                                    if (h.projects && h.projects.length > 0) {
+                                        const ids = h.projects.map(p => p.id.toString());
+                                        $("#edit-project").val(ids).trigger("change");  // works with normal select or select2
+                                    }
+                                    $("#edit-company-name").val(h.company_name || '');
+                                    $("#edit-server-name").val(h.server_name || '');
+                                    $("#edit-hosting-provider").val(h.hosting_provider || '');
+                                    $("#edit-server-type").val(h.server_type || '');
+                                    $("#edit-plan-package").val(h.plan_package || '');
+                                    $("#edit-server-ip").val(h.server_ip || '');
+                                    $("#edit-location").val(h.location || '');
+                                    $("#edit-operating-system").val(h.operating_system || '');
+                                    $("#edit-control-panel").val(h.control_panel || '');
+                                    $("#edit-login-url").val(h.login_url || '');
+                                    $("#edit-username").val(h.username || '');
+                                    $("#edit-password").val(h.password || '');
+                                    $("#edit-ssh-username").val(h.ssh_username || '');
+                                    $("#edit-ssh-ftp-access").val(h.ssh_ftp_access || '');
+                                    $("#edit-database-name").val(h.database_name || '');
+                                    $("#edit-db-username").val(h.db_username || '');
+                                    $("#edit-db-password").val(h.db_password || '');
+                                    $("#edit-purchase-date").val(h.purchase_date || '');
+                                    $("#edit-expiry-date").val(h.expiry_date || '');
+                                    $("#edit-server-cost").val(h.server_cost || '');
+                                    $("#edit-uptime").val(h.uptime || '');
+                                    $("#edit-cpu-usage").val(h.cpu_usage || '');
+                                    $("#edit-memory-usage").val(h.memory_usage || '');
+                                    $("#edit-disk-space").val(h.disk_space || '');
+                                    $("#edit-backup-status").val(h.backup_status || '');
+                                    $("#edit-linked-services").val(h.linked_services || '');
+                                    $("#edit-status").val(h.status || '');
+                                    $("#edit-notes").val(h.notes || '');
 
-// Handle confirm delete
-$(document).on("click", "#confirmDeleteHostBtn", function() {
-    if (!hostIdToDelete) return;
+                                    $("#editHostModal").modal("show");
+                                });
+                            });
 
-    $.ajax({
-        url: `/delete_host/${hostIdToDelete}/`,
-        type: "POST",
-        data: {
-            csrfmiddlewaretoken: '{{ csrf_token }}'
-        },
-        success: function(res) {
-            // Simply refresh the page
-            location.reload();
-        },
-        error: function(err) {
-            // Optional: you can show a Bootstrap alert instead of alert()
-            console.error("Error deleting host.", err);
-        }
-    });
+                            // deleet modal
+                            let hostIdToDelete = null;
 
-    // Hide the modal
-    var deleteModalEl = document.getElementById('deleteHostModal');
-    var deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
-    deleteModalInstance.hide();
-});
+                            $(document).on("click", ".delete-host", function (e) {
+                                e.preventDefault();
+                                hostIdToDelete = $(this).data("host-id");
+                                if (!hostIdToDelete) return console.error("Host ID missing!");
 
-});
-</script>
+                                let deleteModal = new bootstrap.Modal(document.getElementById('deleteHostModal'));
+                                deleteModal.show();
+                            });
+
+                            $(document).on("click", "#confirmDeleteHostBtn", function () {
+                                if (!hostIdToDelete) return;
+
+                                $.ajax({
+                                    url: `/delete_host/${hostIdToDelete}/`,
+                                    type: "POST",
+                                    data: {
+                                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                                    },
+                                    success: function (res) {
+                                        if (res.success) {
+                                            showToast(res.message, "success");
+                                            setTimeout(() => window.location.reload(), 1000);
+                                        } else {
+                                            showToast(res.error || "Failed to delete host.", "danger");
+                                        }
+                                    },
+                                    error: function (err) {
+                                        console.error("Error deleting host:", err);
+                                        showToast("Unexpected error while deleting host.", "danger");
+                                    }
+                                });
+
+                                // Hide modal
+                                let deleteModalEl = document.getElementById('deleteHostModal');
+                                let deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
+                                deleteModalInstance.hide();
+                            });
+
+                        });
+                    </script>
 
                     {% endblock %}
                 </div>
                 <!-- Records Per Page & Pagination -->
                 <div class="d-flex justify-content-between align-items-center mt-3">
 
-    <!-- Records Per Page Dropdown -->
-    <div class="d-flex align-items-center">
-        <form method="GET" id="recordsForm" class="d-flex align-items-center">
-            <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
-            <select class="form-select form-select-sm" name="recordsPerPage" id="recordsPerPage" style="width: auto;">
-                {% for option in records_options %}
-                    <option value="{{ option }}" {% if records_per_page == option %}selected{% endif %}>
-                        {{ option }}
-                    </option>
-                {% endfor %}
-            </select>
-        </form>
-    </div>
+                    <!-- Records Per Page Dropdown -->
+                    <div class="d-flex align-items-center">
+                        <form method="GET" id="recordsForm" class="d-flex align-items-center">
+                            <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
+                            <select class="form-select form-select-sm" name="recordsPerPage" id="recordsPerPage"
+                                style="width: auto;">
+                                {% for option in records_options %}
+                                <option value="{{ option }}" {% if records_per_page == option %}selected{% endif %}>
+                                    {{ option }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
 
-    <!-- Pagination -->
-    <nav aria-label="Page navigation" class="mt-3">
-        <ul class="pagination justify-content-end mb-0">
+                    <!-- Pagination -->
+                    <nav aria-label="Page navigation" class="mt-3">
+                        <ul class="pagination justify-content-end mb-0">
 
-            <!-- Previous Button -->
-            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
-                {% if page_obj.has_previous %}
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&recordsPerPage={{ records_per_page }}">
-                        <i class="bx bx-chevrons-left"></i>
-                    </a>
-                {% else %}
-                    <span class="page-link disabled">
-                        <i class="bx bx-chevrons-left"></i>
-                    </span>
-                {% endif %}
-            </li>
+                            <!-- Previous Button -->
+                            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                                {% if page_obj.has_previous %}
+                                <a class="page-link"
+                                    href="?page={{ page_obj.previous_page_number }}&recordsPerPage={{ records_per_page }}">
+                                    <i class="bx bx-chevrons-left"></i>
+                                </a>
+                                {% else %}
+                                <span class="page-link disabled">
+                                    <i class="bx bx-chevrons-left"></i>
+                                </span>
+                                {% endif %}
+                            </li>
 
-            <!-- Always show first page -->
-            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
-                <a class="page-link" href="?page=1&recordsPerPage={{ records_per_page }}">1</a>
-            </li>
+                            <!-- Always show first page -->
+                            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                                <a class="page-link" href="?page=1&recordsPerPage={{ records_per_page }}">1</a>
+                            </li>
 
-            <!-- Show second page if exists -->
-            {% if page_obj.paginator.num_pages >= 2 %}
-                <li class="page-item {% if page_obj.number == 2 %}active{% endif %}">
-                    <a class="page-link" href="?page=2&recordsPerPage={{ records_per_page }}">2</a>
-                </li>
-            {% endif %}
+                            <!-- Show second page if exists -->
+                            {% if page_obj.paginator.num_pages >= 2 %}
+                            <li class="page-item {% if page_obj.number == 2 %}active{% endif %}">
+                                <a class="page-link" href="?page=2&recordsPerPage={{ records_per_page }}">2</a>
+                            </li>
+                            {% endif %}
 
-            <!-- Ellipsis -->
-            {% if page_obj.paginator.num_pages > 4 %}
-                <li class="page-item disabled"><span class="page-link">…</span></li>
-            {% endif %}
+                            <!-- Ellipsis -->
+                            {% if page_obj.paginator.num_pages > 4 %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                            {% endif %}
 
-            <!-- Second last page (if not duplicate of 2) -->
-            {% if page_obj.paginator.num_pages > 2 and page_obj.paginator.num_pages|add:'-1' != 2 %}
-                <li class="page-item {% if page_obj.number == page_obj.paginator.num_pages|add:'-1' %}active{% endif %}">
-                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages|add:'-1' }}&recordsPerPage={{ records_per_page }}">
-                        {{ page_obj.paginator.num_pages|add:'-1' }}
-                    </a>
-                </li>
-            {% endif %}
+                            <!-- Second last page (if not duplicate of 2) -->
+                            {% if page_obj.paginator.num_pages > 2 and page_obj.paginator.num_pages|add:'-1' != 2 %}
+                            <li
+                                class="page-item {% if page_obj.number == page_obj.paginator.num_pages|add:'-1' %}active{% endif %}">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.paginator.num_pages|add:'-1' }}&recordsPerPage={{ records_per_page }}">
+                                    {{ page_obj.paginator.num_pages|add:'-1' }}
+                                </a>
+                            </li>
+                            {% endif %}
 
-            <!-- Last page (if not duplicate of 2) -->
-            {% if page_obj.paginator.num_pages > 1 and page_obj.paginator.num_pages != 2 %}
-                <li class="page-item {% if page_obj.number == page_obj.paginator.num_pages %}active{% endif %}">
-                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&recordsPerPage={{ records_per_page }}">
-                        {{ page_obj.paginator.num_pages }}
-                    </a>
-                </li>
-            {% endif %}
+                            <!-- Last page (if not duplicate of 2) -->
+                            {% if page_obj.paginator.num_pages > 1 and page_obj.paginator.num_pages != 2 %}
+                            <li
+                                class="page-item {% if page_obj.number == page_obj.paginator.num_pages %}active{% endif %}">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.paginator.num_pages }}&recordsPerPage={{ records_per_page }}">
+                                    {{ page_obj.paginator.num_pages }}
+                                </a>
+                            </li>
+                            {% endif %}
 
-            <!-- Next Button -->
-            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
-                {% if page_obj.has_next %}
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&recordsPerPage={{ records_per_page }}">
-                        <i class="bx bx-chevrons-right"></i>
-                    </a>
-                {% else %}
-                    <span class="page-link disabled">
-                        <i class="bx bx-chevrons-right"></i>
-                    </span>
-                {% endif %}
-            </li>
+                            <!-- Next Button -->
+                            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                                {% if page_obj.has_next %}
+                                <a class="page-link"
+                                    href="?page={{ page_obj.next_page_number }}&recordsPerPage={{ records_per_page }}">
+                                    <i class="bx bx-chevrons-right"></i>
+                                </a>
+                                {% else %}
+                                <span class="page-link disabled">
+                                    <i class="bx bx-chevrons-right"></i>
+                                </span>
+                                {% endif %}
+                            </li>
 
-        </ul>
-    </nav>
-</div>
+                        </ul>
+                    </nav>
+                </div>
 
-<script>
-document.getElementById('recordsPerPage').addEventListener('change', function() {
-    const form = document.getElementById('recordsForm');
-    const hiddenPage = document.createElement('input');
-    hiddenPage.type = 'hidden';
-    hiddenPage.name = 'page';
-    hiddenPage.value = 1;
-    form.appendChild(hiddenPage);
-    form.submit();
-});
-</script>
+                <script>
+                    document.getElementById('recordsPerPage').addEventListener('change', function () {
+                        const form = document.getElementById('recordsForm');
+                        const hiddenPage = document.createElement('input');
+                        hiddenPage.type = 'hidden';
+                        hiddenPage.name = 'page';
+                        hiddenPage.value = 1;
+                        form.appendChild(hiddenPage);
+                        form.submit();
+                    });
+                </script>
 
             </div>
 
@@ -500,83 +537,83 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
     <!-- Content wrapper -->
     <!-- host Details Modal -->
     <div class="modal fade" id="hostDetailsModal" tabindex="-1" aria-labelledby="hostDetailsModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header table-primary text-white">
-                <h5 class="modal-title" id="hostDetailsModalLabel">
-                    <i class="bx bx-folder-open me-2"></i> Project Details: {{ host.project.project_name }}
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                    aria-label="Close"></button>
-            </div>
-            <div class="modal-body px-4 py-3">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped align-middle">
-                        <tbody>
-                            <tr>
-                                <th>Server Name</th>
-                                <td colspan="3" id="hd-server-name"></td>
-                            </tr>
-                            <tr>
-                                <th>IP Address</th>
-                                <td id="hd-server-ip"></td>
-                                <th>Location</th>
-                                <td id="hd-location"></td>
-                            </tr>
-                            <tr>
-                                <th>Operating System</th>
-                                <td id="hd-operating-system"></td>
-                                <th>Server Type</th>
-                                <td id="hd-server-type"></td>
-                            </tr>
-                            <tr>
-                                <th>Status</th>
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header table-primary text-white">
+                    <h5 class="modal-title" id="hostDetailsModalLabel">
+                        <i class="bx bx-folder-open me-2"></i> Project Details: {{ host.project.project_name }}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 py-3">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped align-middle">
+                            <tbody>
+                                <tr>
+                                    <th>Server Name</th>
+                                    <td colspan="3" id="hd-server-name"></td>
+                                </tr>
+                                <tr>
+                                    <th>IP Address</th>
+                                    <td id="hd-server-ip"></td>
+                                    <th>Location</th>
+                                    <td id="hd-location"></td>
+                                </tr>
+                                <tr>
+                                    <th>Operating System</th>
+                                    <td id="hd-operating-system"></td>
+                                    <th>Server Type</th>
+                                    <td id="hd-server-type"></td>
+                                </tr>
+                                <tr>
+                                    <th>Status</th>
                                     <td>
                                         <span id="hd-status" class="badge"></span>
                                     </td>
-                                <th>Uptime</th>
-                                <td id="hd-uptime"></td>
-                            </tr>
-                            <tr>
-                                <th>CPU Usage</th>
-                               <td id="hd-cpu-usage"></td>
-                                <th>Memory Usage</th>
-                                <td id="hd-memory-usage"></td>
-                            </tr>
-                            <tr>
-                                <th>Disk Space</th>
-                                <td id="hd-disk-space"></td>
-                                <th>Backup Status</th>
+                                    <th>Uptime</th>
+                                    <td id="hd-uptime"></td>
+                                </tr>
+                                <tr>
+                                    <th>CPU Usage</th>
+                                    <td id="hd-cpu-usage"></td>
+                                    <th>Memory Usage</th>
+                                    <td id="hd-memory-usage"></td>
+                                </tr>
+                                <tr>
+                                    <th>Disk Space</th>
+                                    <td id="hd-disk-space"></td>
+                                    <th>Backup Status</th>
                                     <td>
                                         <span id="hd-backup-status" class="badge"></span>
                                     </td>
-                            </tr>
-                            <tr>
-                            <th>Credentials</th>
-                            <td colspan="3">
-                                <strong>User:</strong> <span id="hd-ssh-username"></span><br>
-                                <strong>SSH Key / Password:</strong> <span id="hd-ssh-ftp-access"></span>
-                            </td>
-                        </tr>
+                                </tr>
+                                <tr>
+                                    <th>Credentials</th>
+                                    <td colspan="3">
+                                        <strong>User:</strong> <span id="hd-ssh-username"></span><br>
+                                        <strong>SSH Key / Password:</strong> <span id="hd-ssh-ftp-access"></span>
+                                    </td>
+                                </tr>
 
-                            
-                            <tr>
-                                <th>Linked Services</th>
-                                <td id="hd-linked-services" colspan="3"></td>
-                            </tr>
-                        
-                            <tr>
-                                <th>Notes</th>
-                                <td id="hd-notes" colspan="3"></td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+                                <tr>
+                                    <th>Linked Services</th>
+                                    <td id="hd-linked-services" colspan="3"></td>
+                                </tr>
+
+                                <tr>
+                                    <th>Notes</th>
+                                    <td id="hd-notes" colspan="3"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Add Host Data Modal -->
     <div class="modal fade" id="addHostDataModal" tabindex="-1" aria-labelledby="addHostDataModalLabel"
@@ -591,24 +628,25 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                         aria-label="Close"></button>
                 </div>
 
-                <form id="hostDataForm" method="POST" action="{% url 'add_host_data' %}">
+                <form id="hostDataForm" method="POST">
                     {% csrf_token %}
                     <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle">
                                 <tbody>
                                     <tr>
-                                            <th>Project(s)</th>
-                                            <td colspan="3">
-                                                <select class="form-select" name="project" id="add-project" multiple>
-                                                    {% for project in projects %}
-                                                        <option value="{{ project.id }}">{{ project.project_name }}</option>
-                                                    {% endfor %}
-                                                </select>
+                                        <th>Project(s)</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="project" id="add-project" multiple>
+                                                {% for project in projects %}
+                                                <option value="{{ project.id }}">{{ project.project_name }}</option>
+                                                {% endfor %}
+                                            </select>
 
-                                                <small class="text-muted">Hold Ctrl (Windows) or Command (Mac) to select multiple</small>
-                                            </td>
-                                        </tr>
+                                            <small class="text-muted">Hold Ctrl (Windows) or Command (Mac) to select
+                                                multiple</small>
+                                        </td>
+                                    </tr>
                                     <tr>
                                         <th>Company Name</th>
                                         <td colspan="3">
@@ -675,7 +713,7 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                     </tr>
                                     <tr>
                                         <th>SSH Username</th>
-                                        <td><input type="text" name="ssh_username"  class="form-control"></td>
+                                        <td><input type="text" name="ssh_username" class="form-control"></td>
                                     </tr>
                                     <tr>
                                         <th>SSH / FTP Access</th>
@@ -712,7 +750,8 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                     <tr>
                                         <th>Server Cost</th>
                                         <td colspan="3">
-                                            <input type="number" step="0.01" class="form-control" name="server_cost" required>
+                                            <input type="number" step="0.01" class="form-control" name="server_cost"
+                                                required>
                                         </td>
                                     </tr>
                                     <tr>
@@ -788,22 +827,79 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                         <button type="submit" class="btn btn-primary">Save Server</button>
                     </div>
                 </form>
+                <script>
+                    document.getElementById("hostDataForm").addEventListener("submit", function (e) {
+                        e.preventDefault();
+                        let form = this;
+                        let formData = new FormData(form);
+
+                        fetch("/add_host_data/", {
+                            method: "POST",
+                            body: formData,
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest",
+                                "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
+                            }
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                // clear validation errors
+                                form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+                                form.querySelectorAll(".invalid-feedback").forEach(el => el.innerText = "");
+
+                                if (data.success) {
+                                    // Close modal
+                                    let modalEl = document.getElementById("addHostDataModal");
+                                    let modal = bootstrap.Modal.getInstance(modalEl);
+                                    modal.hide();
+
+                                    // Show success toast
+                                    showToast(data.message, "success");
+
+                                    // Reload after short delay
+                                    setTimeout(() => window.location.reload(), 1000);
+                                } else {
+                                    if (data.errors) {
+                                        for (let field in data.errors) {
+                                            let input = form.querySelector(`[name="${field}"]`);
+                                            if (input) {
+                                                input.classList.add("is-invalid");
+                                                let feedback = input.closest("td,div").querySelector(".invalid-feedback");
+                                                if (feedback) {
+                                                    feedback.innerText = data.errors[field].join(", ");
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (data.errors["__all__"]) {
+                                        showToast(data.errors["__all__"].join(", "), "danger");
+                                    }
+                                }
+                            })
+                            .catch(err => {
+                                console.error("Error:", err);
+                                showToast("Unexpected error while saving host data.", "danger");
+                            });
+                    });
+
+                </script>
             </div>
         </div>
     </div>
 
     <!-- update host data modal -->
     <div class="modal fade" id="editHostModal" tabindex="-1" aria-labelledby="editHostModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header table-primary text-white">
-                <h5 class="modal-title" id="editHostModalLabel">
-                    <i class="bx bx-edit-alt me-2"></i> Edit Server / Host Data
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header table-primary text-white">
+                    <h5 class="modal-title" id="editHostModalLabel">
+                        <i class="bx bx-edit-alt me-2"></i> Edit Server / Host Data
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
 
-            <form id="editHostForm" method="POST">
+                <form id="editHostForm" method="POST">
                     {% csrf_token %}
                     <input type="hidden" name="host_id" id="edit-host-id">
                     <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
@@ -813,9 +909,9 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                     <tr>
                                         <th>Project</th>
                                         <td colspan="3">
-                                           <select class="form-select" name="project" id="edit-project" multiple>
+                                            <select class="form-select" name="project" id="edit-project" multiple>
                                                 {% for project in projects %}
-                                                    <option value="{{ project.id }}">{{ project.project_name }}</option>
+                                                <option value="{{ project.id }}">{{ project.project_name }}</option>
                                                 {% endfor %}
                                             </select>
 
@@ -825,34 +921,40 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                     <tr>
                                         <th>Company Name</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="company_name" id="edit-company-name">
+                                            <input type="text" class="form-control" name="company_name"
+                                                id="edit-company-name">
                                         </td>
                                     </tr>
-                                        <th>Hosting Provider</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="hosting_provider" id="edit-hosting-provider">
-                                        </td>
+                                    <th>Hosting Provider</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="hosting_provider"
+                                            id="edit-hosting-provider">
+                                    </td>
                                     </tr>
                                     <tr>
                                         <th>Server Name</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="server_name" id="edit-server-name">
+                                            <input type="text" class="form-control" name="server_name"
+                                                id="edit-server-name">
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Server Type</th>
                                         <td>
-                                            <input type="text" class="form-control" name="server_type" id="edit-server-type">
+                                            <input type="text" class="form-control" name="server_type"
+                                                id="edit-server-type">
                                         </td>
                                         <th>Plan / Package</th>
                                         <td>
-                                            <input type="text" class="form-control" name="plan_package" id="edit-plan-package">
+                                            <input type="text" class="form-control" name="plan_package"
+                                                id="edit-plan-package">
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Server IP</th>
                                         <td>
-                                            <input type="text" class="form-control" name="server_ip" id="edit-server-ip">
+                                            <input type="text" class="form-control" name="server_ip"
+                                                id="edit-server-ip">
                                         </td>
                                         <th>Location</th>
                                         <td>
@@ -862,13 +964,15 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                     <tr>
                                         <th>Operating System</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="operating_system" id="edit-operating-system">
+                                            <input type="text" class="form-control" name="operating_system"
+                                                id="edit-operating-system">
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Control Panel</th>
                                         <td>
-                                            <input type="text" class="form-control" name="control_panel" id="edit-control-panel">
+                                            <input type="text" class="form-control" name="control_panel"
+                                                id="edit-control-panel">
                                         </td>
                                         <th>Login URL</th>
                                         <td>
@@ -882,49 +986,58 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                         </td>
                                         <th>Password</th>
                                         <td>
-                                            <input type="password" class="form-control" name="password" id="edit-password">
+                                            <input type="password" class="form-control" name="password"
+                                                id="edit-password">
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>SSH Username</th>
-                                        <td><input type="text" name="ssh_username" id="edit-ssh-username" class="form-control"></td>
+                                        <td><input type="text" name="ssh_username" id="edit-ssh-username"
+                                                class="form-control"></td>
                                     </tr>
                                     <tr>
                                         <th>SSH / FTP Access</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="ssh_ftp_access" id="edit-ssh-ftp-access">
+                                            <input type="text" class="form-control" name="ssh_ftp_access"
+                                                id="edit-ssh-ftp-access">
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Database Name</th>
                                         <td>
-                                            <input type="text" class="form-control" name="database_name" id="edit-database-name">
+                                            <input type="text" class="form-control" name="database_name"
+                                                id="edit-database-name">
                                         </td>
                                         <th>DB Username</th>
                                         <td>
-                                            <input type="text" class="form-control" name="db_username" id="edit-db-username">
+                                            <input type="text" class="form-control" name="db_username"
+                                                id="edit-db-username">
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>DB Password</th>
                                         <td colspan="3">
-                                            <input type="password" class="form-control" name="db_password" id="edit-db-password">
+                                            <input type="password" class="form-control" name="db_password"
+                                                id="edit-db-password">
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Purchase Date</th>
                                         <td>
-                                            <input type="date" class="form-control" name="purchase_date" id="edit-purchase-date">
+                                            <input type="date" class="form-control" name="purchase_date"
+                                                id="edit-purchase-date">
                                         </td>
                                         <th>Expiry Date</th>
                                         <td>
-                                            <input type="date" class="form-control" name="expiry_date" id="edit-expiry-date">
+                                            <input type="date" class="form-control" name="expiry_date"
+                                                id="edit-expiry-date">
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Server Cost</th>
                                         <td colspan="3">
-                                            <input type="number" step="0.01" class="form-control" name="server_cost" id="edit-server-cost">
+                                            <input type="number" step="0.01" class="form-control" name="server_cost"
+                                                id="edit-server-cost">
                                         </td>
                                     </tr>
                                     <tr>
@@ -944,15 +1057,15 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                     <tr>
                                         <th>Memory Usage</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="memory_usage" id="edit-memory-usage"
-                                                placeholder="e.g. 5.6 GB / 8 GB">
+                                            <input type="text" class="form-control" name="memory_usage"
+                                                id="edit-memory-usage" placeholder="e.g. 5.6 GB / 8 GB">
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Disk Space</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="disk_space" id="edit-disk-space"
-                                                placeholder="e.g. 120 GB / 150 GB">
+                                            <input type="text" class="form-control" name="disk_space"
+                                                id="edit-disk-space" placeholder="e.g. 120 GB / 150 GB">
                                         </td>
                                     </tr>
                                     <tr>
@@ -968,7 +1081,8 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                     <tr>
                                         <th>Linked Services</th>
                                         <td colspan="3">
-                                            <textarea class="form-control" name="linked_services" rows="2" id="edit-linked-services"
+                                            <textarea class="form-control" name="linked_services" rows="2"
+                                                id="edit-linked-services"
                                                 placeholder="e.g. Nginx, MySQL, Docker"></textarea>
                                         </td>
                                     </tr>
@@ -985,7 +1099,8 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                     <tr>
                                         <th>Notes</th>
                                         <td colspan="3">
-                                            <textarea class="form-control" name="notes" rows="2" id="edit-notes"></textarea>
+                                            <textarea class="form-control" name="notes" rows="2"
+                                                id="edit-notes"></textarea>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -998,30 +1113,86 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                         <button type="submit" class="btn btn-primary">Save Server</button>
                     </div>
                 </form>
+                <script>
+                    document.getElementById("editHostForm").addEventListener("submit", function (e) {
+                        e.preventDefault();
+                        let form = this;
+                        let formData = new FormData(form);
+                        let hostId = document.getElementById("edit-host-id").value;
+
+                        fetch(`/update_host_data/${hostId}/`, {
+                            method: "POST",
+                            body: formData,
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest",
+                                "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
+                            }
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                // remove old errors
+                                form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+                                form.querySelectorAll(".invalid-feedback").forEach(el => el.innerText = "");
+
+                                if (data.success) {
+                                    // ✅ Close modal
+                                    let modalEl = document.getElementById("editHostModal");
+                                    let modal = bootstrap.Modal.getInstance(modalEl);
+                                    modal.hide();
+
+                                    // ✅ Toast
+                                    showToast(data.message, "success");
+
+                                    // ✅ Refresh
+                                    setTimeout(() => window.location.reload(), 1000);
+                                } else {
+                                    if (data.errors) {
+                                        for (let field in data.errors) {
+                                            let input = form.querySelector(`[name="${field}"]`);
+                                            if (input) {
+                                                input.classList.add("is-invalid");
+                                                let feedback = input.closest("td,div").querySelector(".invalid-feedback");
+                                                if (feedback) {
+                                                    feedback.innerText = data.errors[field].join(", ");
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (data.errors["__all__"]) {
+                                        showToast(data.errors["__all__"].join(", "), "danger");
+                                    }
+                                }
+                            })
+                            .catch(err => {
+                                console.error("Error:", err);
+                                showToast("Unexpected error while updating host data.", "danger");
+                            });
+                    });
+
+                </script>
             </div>
         </div>
     </div>
 
     <!-- Delete Host Confirmation Modal -->
-<div class="modal fade" id="deleteHostModal" tabindex="-1" aria-labelledby="deleteHostLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content text-center">
-      <div class="modal-header border-0">
-        <h5 class="modal-title w-100" id="deleteHostLabel">Confirm Delete</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to delete this host?
-      </div>
-      <div class="modal-footer justify-content-center border-0">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" id="confirmDeleteHostBtn">Delete</button>
-      </div>
+    <div class="modal fade" id="deleteHostModal" tabindex="-1" aria-labelledby="deleteHostLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-center">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title w-100" id="deleteHostLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this host?
+                </div>
+                <div class="modal-footer justify-content-center border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteHostBtn">Delete</button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
 </div>
 
 {% endblock %}
-

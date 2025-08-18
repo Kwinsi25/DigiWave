@@ -36,12 +36,14 @@
     gap: 10px;
 ">
   {% for message in messages %}
-  <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert" aria-live="assertive" aria-atomic="true" style="min-width: 250px;">
+  <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert"
+    aria-live="assertive" aria-atomic="true" style="min-width: 250px;">
     <div class="d-flex">
       <div class="toast-body">
         {{ message }}
       </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+        aria-label="Close"></button>
     </div>
   </div>
   {% endfor %}
@@ -158,31 +160,31 @@
               </tr>
             </thead>
             <tbody class="table-border-bottom-0">
-              {% for domain in page_obj  %}
+              {% for domain in page_obj %}
               <tr>
                 <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
 
                 <!-- Projects -->
                 <td>
                   {% if domain.project.exists %}
-                    {% for p in domain.project.all %}
-                      {{ p.project_id }}<br>
-                    {% endfor %}
+                  {% for p in domain.project.all %}
+                  {{ p.project_id }}<br>
+                  {% endfor %}
                   {% else %}
-                    <span class="text-muted">No Project</span>
+                  <span class="text-muted">No Project</span>
                   {% endif %}
                 </td>
 
                 <!-- Project Names (as links) -->
                 <td>
                   {% if domain.project.exists %}
-                    {% for p in domain.project.all %}
-                      <a href="#" class="fw-bold domain-link" data-domain-id="{{ domain.id }}">
-                        {{ p.project_name }}
-                      </a><br>
-                    {% endfor %}
+                  {% for p in domain.project.all %}
+                  <a href="#" class="fw-bold domain-link" data-domain-id="{{ domain.id }}">
+                    {{ p.project_name }}
+                  </a><br>
+                  {% endfor %}
                   {% else %}
-                    <span class="text-muted">No Project</span>
+                  <span class="text-muted">No Project</span>
                   {% endif %}
                 </td>
                 <td>
@@ -223,17 +225,17 @@
           <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
           <script>
             document.addEventListener("DOMContentLoaded", function () {
-    const toasts = document.querySelectorAll('#toast-container .toast');
-    toasts.forEach(function(toast) {
-      setTimeout(() => {
-        toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-        toast.style.opacity = "0";
-        toast.style.transform = "translateX(100%)";
-        setTimeout(() => toast.remove(), 500);
-      }, 3000); // Auto-hide after 3 seconds
-    });
-  });
-  
+              const toasts = document.querySelectorAll('#toast-container .toast');
+              toasts.forEach(function (toast) {
+                setTimeout(() => {
+                  toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                  toast.style.opacity = "0";
+                  toast.style.transform = "translateX(100%)";
+                  setTimeout(() => toast.remove(), 500);
+                }, 3000); // Auto-hide after 3 seconds
+              });
+            });
+
             $(document).ready(function () {
               const domainDetailsUrl = "{% url 'get_domain_details' %}";
 
@@ -314,11 +316,11 @@
                   $("#edit-linked-services").val(d.linked_services || '');
                   $("#edit-notes").val(d.notes || '');
                   $("#edit-projects option").prop("selected", false);
-                    if (d.projects && d.projects.length > 0) {
-                        d.projects.forEach(p => {
-                            $(`#edit-projects option[value='${p.id}']`).prop("selected", true);
-                        });
-                    }
+                  if (d.projects && d.projects.length > 0) {
+                    d.projects.forEach(p => {
+                      $(`#edit-projects option[value='${p.id}']`).prop("selected", true);
+                    });
+                  }
                   $("#editDomainModal").modal("show");
                 });
               });
@@ -326,39 +328,39 @@
               // DELETE action
               let domainIdToDelete = null;
 
-$(document).on("click", ".delete-domain", function(e) {
-    e.preventDefault();
-    domainIdToDelete = $(this).data("domain-id");
-    if (!domainIdToDelete) return console.error("Domain ID missing!");
+              $(document).on("click", ".delete-domain", function (e) {
+                e.preventDefault();
+                domainIdToDelete = $(this).data("domain-id");
+                if (!domainIdToDelete) return console.error("Domain ID missing!");
 
-    // Show Bootstrap modal
-    var deleteModal = new bootstrap.Modal(document.getElementById('deleteDomainModal'));
-    deleteModal.show();
-});
+                // Show Bootstrap modal
+                var deleteModal = new bootstrap.Modal(document.getElementById('deleteDomainModal'));
+                deleteModal.show();
+              });
 
-// Handle confirm delete
-$(document).on("click", "#confirmDeleteDomainBtn", function() {
-    if (!domainIdToDelete) return;
+              // Handle confirm delete
+              $(document).on("click", "#confirmDeleteDomainBtn", function () {
+                if (!domainIdToDelete) return;
 
-    $.ajax({
-        url: `/delete_domain/${domainIdToDelete}/`,
-        type: "POST",
-        data: { csrfmiddlewaretoken: '{{ csrf_token }}' },
-        success: function(res) {
-            // Simply refresh the page
-            location.reload();
-        },
-        error: function(err) {
-            console.error("Error deleting domain.", err);
-            // Optional: show a Bootstrap alert instead of default alert
-        }
-    });
+                $.ajax({
+                  url: `/delete_domain/${domainIdToDelete}/`,
+                  type: "POST",
+                  data: { csrfmiddlewaretoken: '{{ csrf_token }}' },
+                  success: function (res) {
+                    // Simply refresh the page
+                    location.reload();
+                  },
+                  error: function (err) {
+                    console.error("Error deleting domain.", err);
+                    // Optional: show a Bootstrap alert instead of default alert
+                  }
+                });
 
-    // Hide the modal
-    var deleteModalEl = document.getElementById('deleteDomainModal');
-    var deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
-    deleteModalInstance.hide();
-});
+                // Hide the modal
+                var deleteModalEl = document.getElementById('deleteDomainModal');
+                var deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
+                deleteModalInstance.hide();
+              });
 
 
             });
@@ -368,74 +370,76 @@ $(document).on("click", "#confirmDeleteDomainBtn", function() {
         </div>
         <!-- Records Per Page & Pagination -->
         <div class="d-flex justify-content-between align-items-center mt-3">
-    <!-- Records Per Page Dropdown -->
-    <div class="d-flex align-items-center">
-        <form method="GET" id="recordsForm" class="d-flex align-items-center">
-            <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
-            <select class="form-select form-select-sm" name="recordsPerPage" id="recordsPerPage" style="width: auto;">
+          <!-- Records Per Page Dropdown -->
+          <div class="d-flex align-items-center">
+            <form method="GET" id="recordsForm" class="d-flex align-items-center">
+              <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
+              <select class="form-select form-select-sm" name="recordsPerPage" id="recordsPerPage" style="width: auto;">
                 {% for option in records_options %}
-                    <option value="{{ option }}" {% if records_per_page == option %}selected{% endif %}>
-                        {{ option }}
-                    </option>
+                <option value="{{ option }}" {% if records_per_page == option %}selected{% endif %}>
+                  {{ option }}
+                </option>
                 {% endfor %}
-            </select>
-        </form>
-    </div>
+              </select>
+            </form>
+          </div>
 
-    <!-- Pagination -->
-    <nav aria-label="Page navigation" class="mt-3">
-        <ul class="pagination justify-content-end mb-0">
+          <!-- Pagination -->
+          <nav aria-label="Page navigation" class="mt-3">
+            <ul class="pagination justify-content-end mb-0">
 
-            <!-- Previous -->
-            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+              <!-- Previous -->
+              <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
                 {% if page_obj.has_previous %}
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&recordsPerPage={{ records_per_page }}">
-                        <i class="bx bx-chevrons-left"></i>
-                    </a>
+                <a class="page-link"
+                  href="?page={{ page_obj.previous_page_number }}&recordsPerPage={{ records_per_page }}">
+                  <i class="bx bx-chevrons-left"></i>
+                </a>
                 {% else %}
-                    <span class="page-link disabled">
-                        <i class="bx bx-chevrons-left"></i>
-                    </span>
+                <span class="page-link disabled">
+                  <i class="bx bx-chevrons-left"></i>
+                </span>
                 {% endif %}
-            </li>
+              </li>
 
-            <!-- Page numbers -->
-            {% for num in page_obj.paginator.page_range %}
-                {% if num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
-                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                        <a class="page-link" href="?page={{ num }}&recordsPerPage={{ records_per_page }}">{{ num }}</a>
-                    </li>
+              <!-- Page numbers -->
+              {% for num in page_obj.paginator.page_range %}
+              {% if num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %} <li
+                class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}&recordsPerPage={{ records_per_page }}">{{ num }}</a>
+                </li>
                 {% endif %}
-            {% endfor %}
+                {% endfor %}
 
-            <!-- Next -->
-            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
-                {% if page_obj.has_next %}
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&recordsPerPage={{ records_per_page }}">
-                        <i class="bx bx-chevrons-right"></i>
-                    </a>
-                {% else %}
-                    <span class="page-link disabled">
-                        <i class="bx bx-chevrons-right"></i>
-                    </span>
-                {% endif %}
-            </li>
+                <!-- Next -->
+                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                  {% if page_obj.has_next %}
+                  <a class="page-link"
+                    href="?page={{ page_obj.next_page_number }}&recordsPerPage={{ records_per_page }}">
+                    <i class="bx bx-chevrons-right"></i>
+                  </a>
+                  {% else %}
+                  <span class="page-link disabled">
+                    <i class="bx bx-chevrons-right"></i>
+                  </span>
+                  {% endif %}
+                </li>
 
-        </ul>
-    </nav>
-</div>
+            </ul>
+          </nav>
+        </div>
 
-<script>
-document.getElementById('recordsPerPage').addEventListener('change', function() {
-    const form = document.getElementById('recordsForm');
-    const hiddenPage = document.createElement('input');
-    hiddenPage.type = 'hidden';
-    hiddenPage.name = 'page';
-    hiddenPage.value = 1;
-    form.appendChild(hiddenPage);
-    form.submit();
-});
-</script>
+        <script>
+          document.getElementById('recordsPerPage').addEventListener('change', function () {
+            const form = document.getElementById('recordsForm');
+            const hiddenPage = document.createElement('input');
+            hiddenPage.type = 'hidden';
+            hiddenPage.name = 'page';
+            hiddenPage.value = 1;
+            form.appendChild(hiddenPage);
+            form.submit();
+          });
+        </script>
 
       </div>
 
@@ -590,14 +594,15 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                       <option value="{{ project.id }}">{{ project.project_name }}</option>
                       {% endfor %}
                     </select>
-                    <small class="text-muted">Hold CTRL (Windows) or ⌘ (Mac) to select multiple projects. Leave empty if not linked to any project.</small>
+                    <small class="text-muted">Hold CTRL (Windows) or ⌘ (Mac) to select multiple projects. Leave empty if
+                      not linked to any project.</small>
                   </td>
                 </tr>
 
                 <tr>
                   <th>SSL Installed</th>
                   <td>
-                    <select class="form-select" name="sslInstalled" >
+                    <select class="form-select" name="sslInstalled">
                       <option value="True">Yes</option>
                       <option value="False">No</option>
                     </select>
@@ -669,10 +674,9 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                   <td colspan="3">
                     <select class="form-select" name="projects" id="edit-projects" multiple>
                       {% for project in projects %}
-                        <option value="{{ project.id }}"
-                          {% if project.id in assigned_project_ids %}selected{% endif %}>
-                          {{ project.project_name }}
-                        </option>
+                      <option value="{{ project.id }}" {% if project.id in assigned_project_ids %}selected{% endif %}>
+                        {{ project.project_name }}
+                      </option>
                       {% endfor %}
                     </select>
                     <small class="text-muted">Hold Ctrl (Cmd on Mac) to select multiple</small>
@@ -683,8 +687,8 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                 <tr>
                   <th>Domain Name</th>
                   <td colspan="3">
-                    <input type="text" class="form-control" id="edit-domain-name" name="domainName" 
-                           value="{{ domain.domain_name }}" required>
+                    <input type="text" class="form-control" id="edit-domain-name" name="domainName"
+                      value="{{ domain.domain_name }}" required>
                   </td>
                 </tr>
 
@@ -693,12 +697,12 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                   <th>Registrar</th>
                   <td>
                     <input type="text" class="form-control" id="edit-registrar" name="registrar"
-                           value="{{ domain.registrar }}">
+                      value="{{ domain.registrar }}">
                   </td>
                   <th>Purchase Date</th>
                   <td>
                     <input type="date" class="form-control" id="edit-purchase-date" name="purchaseDate"
-                           value="{{ domain.purchase_date }}">
+                      value="{{ domain.purchase_date }}">
                   </td>
                 </tr>
 
@@ -707,14 +711,16 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                   <th>Expiry Date</th>
                   <td>
                     <input type="date" class="form-control" id="edit-expiry-date" name="expiryDate"
-                           value="{{ domain.expiry_date }}">
+                      value="{{ domain.expiry_date }}">
                   </td>
                   <th>Renewal Status</th>
                   <td>
                     <select class="form-select" id="edit-renewal-status" name="renewalStatus">
                       <option value="Active" {% if domain.renewal_status == 'Active' %}selected{% endif %}>Active</option>
-                      <option value="Expired" {% if domain.renewal_status == 'Expired' %}selected{% endif %}>Expired</option>
-                      <option value="Pending" {% if domain.renewal_status == 'Pending' %}selected{% endif %}>Pending</option>
+                      <option value="Expired" {% if domain.renewal_status == 'Expired' %}selected{% endif %}>Expired
+                      </option>
+                      <option value="Pending" {% if domain.renewal_status == 'Pending' %}selected{% endif %}>Pending
+                      </option>
                     </select>
                   </td>
                 </tr>
@@ -723,8 +729,7 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                 <tr>
                   <th>DNS Configured</th>
                   <td>
-                    <input type="checkbox" id="edit-dns-configured" name="dnsConfigured" value="True"
-                           {% if domain.dns_configured %}checked{% endif %}>
+                    <input type="checkbox" id="edit-dns-configured" name="dnsConfigured" value="True" {% if domain.dns_configured %}checked{% endif %}>
                     <label for="edit-dns-configured">Yes</label>
                   </td>
                   <th>Nameservers</th>
@@ -738,14 +743,13 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                 <tr>
                   <th>SSL Installed</th>
                   <td>
-                    <input type="checkbox" id="edit-ssl-installed" name="sslInstalled" value="True"
-                           {% if domain.ssl_installed %}checked{% endif %}>
+                    <input type="checkbox" id="edit-ssl-installed" name="sslInstalled" value="True" {% if domain.ssl_installed %}checked{% endif %}>
                     <label for="edit-ssl-installed">Yes</label>
                   </td>
                   <th>SSL Expiry</th>
                   <td>
                     <input type="date" class="form-control" id="edit-ssl-expiry" name="sslExpiry"
-                           value="{{ domain.ssl_expiry }}">
+                      value="{{ domain.ssl_expiry }}">
                   </td>
                 </tr>
 
@@ -754,12 +758,12 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                   <th>Credentials User</th>
                   <td>
                     <input type="text" class="form-control" id="edit-credentials-user" name="credentialsUser"
-                           value="{{ domain.credentials_user }}">
+                      value="{{ domain.credentials_user }}">
                   </td>
                   <th>Credentials Pass</th>
                   <td>
                     <input type="password" class="form-control" id="edit-credentials-pass" name="credentialsPass"
-                           value="{{ domain.credentials_pass }}">
+                      value="{{ domain.credentials_pass }}">
                   </td>
                 </tr>
 
@@ -768,7 +772,7 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                   <th>Linked Services</th>
                   <td colspan="3">
                     <input type="text" class="form-control" id="edit-linked-services" name="linkedServices"
-                           placeholder="e.g. Email Hosting, Website Hosting" value="{{ domain.linked_services }}">
+                      placeholder="e.g. Email Hosting, Website Hosting" value="{{ domain.linked_services }}">
                   </td>
                 </tr>
 

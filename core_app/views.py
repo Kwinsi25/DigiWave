@@ -96,12 +96,13 @@ def save_project(request):
                 project.team_members.clear()
 
             return JsonResponse({"success": True, "message": "Project saved successfully."})
-        except ValidationError as ve:
-            return JsonResponse({"success": False, "errors": ve.message_dict})
-        except Exception as e:
-            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}})
 
-    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}})
+        except ValidationError as ve:
+            return JsonResponse({"success": False, "errors": ve.message_dict}, status=400)
+        except Exception as e:
+            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
+
+    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}}, status=405)
 
 def get_project_details(request):
     """
@@ -231,22 +232,27 @@ def update_project(request, id):
             return JsonResponse({"success": True, "message": "Project updated successfully!"})
 
         except ValidationError as ve:
-            return JsonResponse({"success": False, "errors": ve.message_dict})
-        except Exception as e:
-            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}})
+            return JsonResponse({"success": False, "errors": ve.message_dict}, status=400)
 
-    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}})
+        except Exception as e:
+            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
+
+    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}}, status=405)
+
 
 def delete_project(request, id):
     """
     Delete a project by its ID.
     """
-    project = get_object_or_404(Project, id=id)
-    project.delete()
-    # Add message to request
-    messages.success(request, "Project deleted successfully!")
-    # Send JSON with redirect URL
-    return JsonResponse({"success": True, "redirect_url": "/projects/"})
+    if request.method == "POST":
+        try:
+            project = get_object_or_404(Project, id=id)
+            project.delete()
+            return JsonResponse({"success": True, "message": "Project deleted successfully!"})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": f"Error deleting project: {str(e)}"}, status=500)
+
+    return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
 
 # -----------------------------
 # Host View
@@ -328,18 +334,15 @@ def add_host_data(request):
             # set ManyToMany projects
             host_data.project.set(projects)
 
-            messages.success(request, "Host Data saved successfully.")
+            return JsonResponse({"success": True, "message": "Host Data saved successfully!"})
+
         except ValidationError as ve:
-            for field, errors in ve.message_dict.items():
-                for error in errors:
-                    messages.error(request, f"{field}: {error}")
+            return JsonResponse({"success": False, "errors": ve.message_dict}, status=400)
+
         except Exception as e:
-            messages.error(request, f"Failed to save Host Data: {str(e)}")
+            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
 
-        return redirect("host_list")
-
-    messages.error(request, "Invalid request method.")
-    return redirect("host_list")
+    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}}, status=405)
 
 def get_host_details(request):
     """
@@ -450,33 +453,27 @@ def update_host_data(request, id):
 
             host.full_clean()
             host.save()
-            messages.success(request, "Host Data updated successfully.")
+            return JsonResponse({"success": True, "message": "Host Data updated successfully!"})
 
+        except ValidationError as ve:
+            return JsonResponse({"success": False, "errors": ve.message_dict}, status=400)
         except Exception as e:
-            messages.error(request, f"Failed to update Host Data: {str(e)}")
+            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
 
-        return redirect('host_list')
-
-    messages.error(request, "Invalid request method.")
-    return redirect('host_list')
+    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}}, status=405)
 
 def delete_host(request, id):
     """
-    Delete a host/server record by its ID.
+    Delete a host/server record by its ID (AJAX).
     """
     if request.method == "POST":
         try:
             host = get_object_or_404(HostData, id=id)
             host.delete()
-            messages.success(request, "Host deleted successfully.")
-            return JsonResponse({
-                "success": True,
-                "redirect_url": reverse('host_list')  # Redirect back to list page
-            })
+            return JsonResponse({"success": True, "message": "Host deleted successfully!"})
         except Exception as e:
-            messages.error(request, f"Failed to delete host: {str(e)}")
-            return JsonResponse({"success": False, "error": str(e)})
-    return JsonResponse({"success": False, "error": "Invalid request method"})
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=405)
 
 # -----------------------------
 # Domain View
