@@ -2,23 +2,84 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 import os,re
+from django.core.validators import RegexValidator, MinLengthValidator, EmailValidator
 
 # -----------------------------
 # User table for team members
 # -----------------------------
 class User(models.Model):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=15, blank=True, null=True)
+    first_name = models.CharField(
+        max_length=50,
+        validators=[MinLengthValidator(2, "First name must be at least 2 characters.")]
+    )
+    last_name = models.CharField(
+        max_length=50,
+        validators=[MinLengthValidator(2, "Last name must be at least 2 characters.")]
+    )
+    username = models.CharField(
+        max_length=30,
+        unique=True,
+        validators=[RegexValidator(
+            regex=r'^[\w.@+-]+$',
+            message="Username can contain letters, digits and @/./+/-/_ only."
+        )]
+    )
+    email = models.EmailField(
+        unique=True,
+        validators=[EmailValidator(message="Enter a valid email address.")]
+    )
+    phone = models.CharField(
+        max_length=15,
+        blank=True,
+        null=True,
+        validators=[RegexValidator(
+            regex=r'^\+?\d{10,15}$',
+            message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
+        )]
+    )
     designation = models.CharField(max_length=100, blank=True, null=True)
+    
+    password = models.CharField(
+        max_length=128,
+        validators=[MinLengthValidator(8, "Password must be at least 8 characters.")]
+    )
+    
+    profile_picture = models.ImageField(
+        upload_to='profile_pics/',
+        blank=True,
+        null=True
+    )
+    
+    is_active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.first_name} {self.last_name} ({self.username})"
 
+    class Meta:
+        ordering = ['-created_at']
+
+    def clean(self):
+        # Call the default clean first
+        super().clean()
+
+        #Password complexity: at least 1 uppercase, 1 lowercase, 1 digit, 1 special char
+        if self.password:
+            if not re.search(r'[A-Z]', self.password):
+                raise ValidationError({'password': "Password must contain at least one uppercase letter."})
+            if not re.search(r'[a-z]', self.password):
+                raise ValidationError({'password': "Password must contain at least one lowercase letter."})
+            if not re.search(r'\d', self.password):
+                raise ValidationError({'password': "Password must contain at least one digit."})
+            if not re.search(r'[!@#$%^&*(),.?":{}|<>]', self.password):
+                raise ValidationError({'password': "Password must contain at least one special character."})
+
+
+        # prevent first name = last name
+        if self.first_name and self.last_name and self.first_name.lower() == self.last_name.lower():
+            raise ValidationError("First name and last name cannot be the same.")
 # -----------------------------
 # Project model
 # -----------------------------
@@ -43,14 +104,15 @@ class Project(models.Model):
 
     project_id = models.CharField(max_length=10, unique=True, blank=True, null=True)
     start_date = models.DateField(blank=True, null=True)
-    project_name = models.CharField(max_length=255)
+    project_name = models.CharField(max_length=255, blank=False, null=False)
     technologies = models.CharField(max_length=255, blank=True, null=True)
     app_mode = models.CharField(max_length=50, blank=True, null=True)
-    status = models.CharField(max_length=20, choices=PROJECT_STATUS_CHOICES, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=PROJECT_STATUS_CHOICES, default="Ongoing")
+
     deadline = models.DateField(blank=True, null=True)
     team_members = models.ManyToManyField(User, blank=True, related_name="projects")
     payment_percentage = models.PositiveIntegerField(default=0, blank=True, null=True)
-    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='Pending', blank=True, null=True)
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default="Pending")
     live_link = models.URLField(blank=True, null=True)
 
     # Expenses & Income
@@ -84,13 +146,22 @@ class Project(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
     def clean(self):
         if self.start_date and self.deadline:
             if self.deadline < self.start_date:
                 raise ValidationError("Deadline cannot be before the start date.")
+            
+        if self.status == "Completed" and not self.completed_date:
+            raise ValidationError("Completed projects must have a completion date.")
+
+        if self.contract_signed == "Yes" and not self.approval_amount:
+            raise ValidationError("Approval amount is required when contract is signed.")
+
+        if self.quotation_sent == "Yes" and not self.quotation_amount:
+            raise ValidationError("Quotation amount is required when quotation is sent.")
+        
+        if self.payment_percentage is not None and (self.payment_percentage < 0 or self.payment_percentage > 100):
+            raise ValidationError("Payment percentage must be between 0 and 100.")
 
     def save(self, *args, **kwargs):
         if not self.project_id:
@@ -117,7 +188,7 @@ class HostData(models.Model):
         ('Expired', 'Expired'),
     ]
 
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='host_data')
+    project = models.ManyToManyField(Project, related_name='host_data',blank=True)
     company_name = models.CharField(max_length=255, blank=True, null=True)
     hosting_provider = models.CharField(max_length=255, blank=True, null=True)
     server_name = models.CharField(max_length=255, blank=True, null=True)  # New
@@ -151,19 +222,33 @@ class HostData(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def clean(self):
+        errors = {}
+
+        # Expiry must be after purchase
         if self.purchase_date and self.expiry_date:
             if self.expiry_date < self.purchase_date:
-                raise ValidationError("Expiry date cannot be before purchase date.")
+                errors['expiry_date'] = ["Expiry date cannot be before purchase date."]
+
+        # Cost must be non-negative
+        if self.server_cost is not None and self.server_cost < 0:
+            errors['server_cost'] = ["Server cost cannot be negative."]
+
+        # At least one identifier should exist
+        if not self.server_name and not self.hosting_provider:
+            errors['server_name'] = ["Either server name or hosting provider must be provided."]
+
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self):
-        return f"{self.project.project_id} - {self.hosting_provider or 'No Provider'}"
+        return f"{self.hosting_provider or 'No Provider'}"
 
 
 # -----------------------------
 # Domain model
 # -----------------------------
 class Domain(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='domains')
+    project = models.ManyToManyField(Project, related_name='domains',blank=True)
     domain_name = models.CharField(max_length=255, blank=True, null=True)
     purchase_date = models.DateField(blank=True, null=True)
     expiry_date = models.DateField(blank=True, null=True)
@@ -184,15 +269,29 @@ class Domain(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def clean(self):
+        errors = {}
+
+        # Expiry must be after purchase
         if self.purchase_date and self.expiry_date:
             if self.expiry_date < self.purchase_date:
-                raise ValidationError("Expiry date cannot be before purchase date.")
-        if self.expiry_date and not self.left_days:
+                errors["expiry_date"] = "Expiry date cannot be before purchase date."
+
+        # Auto-calc left_days if expiry exists
+        if self.expiry_date:
             today = timezone.now().date()
             self.left_days = max((self.expiry_date - today).days, 0)
+        if not self.domain_name:
+            errors["domain_name"] = "Domain name is required."
+        # Cost-related validation example
+        if self.ssl_expiry and self.expiry_date and self.ssl_expiry > self.expiry_date:
+            errors["ssl_expiry"] = "SSL expiry cannot be after domain expiry."
+
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self):
-        return f"{self.domain_name or 'No Domain'} ({self.project.project_id})"
+        project_list = ", ".join([p.project_id for p in self.project.all()]) or "No Project"
+        return f"{self.domain_name or 'No Domain'} ({project_list})"
 
 
 # from django.db import models

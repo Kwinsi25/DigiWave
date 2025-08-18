@@ -26,4 +26,6 @@ urlpatterns = [
     path("update_domain/<int:id>/", update_domain, name="update_domain"),
     path('delete_domain/<int:id>/', delete_domain, name='delete_domain'),
 
+    #employees
+    path('employees/', user_list, name='user_list'),
 ]

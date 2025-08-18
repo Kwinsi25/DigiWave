@@ -26,26 +26,28 @@
 
 {% block content %}
 {% if messages %}
-<div>
+<div id="toast-container" style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 3000;  /* above sidebar/navbar */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+">
   {% for message in messages %}
-  <div class="alert alert-{{ message.tags }} mt-2">
-    {{ message }}
+  <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert" aria-live="assertive" aria-atomic="true" style="min-width: 250px;">
+    <div class="d-flex">
+      <div class="toast-body">
+        {{ message }}
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
   </div>
   {% endfor %}
 </div>
-
-<script>
-  setTimeout(function () {
-    document.querySelectorAll('.alert').forEach(function (alert) {
-      alert.style.transition = "opacity 0.5s ease";
-      alert.style.opacity = "0";
-      setTimeout(function () {
-        alert.remove();
-      }, 500);
-    });
-  }, 3000);
-</script>
 {% endif %}
+
 <div class="content-wrapper">
 
   <!-- Content -->
@@ -160,12 +162,28 @@
               <tr>
                 <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
 
-                <td>{{ domain.project.project_id }}</td>
+                <!-- Projects -->
                 <td>
-                  <a href="#" class="text-dark fw-bold domain-link" data-domain-id="{{ domain.id }}">
-                    {{ domain.project.project_name }}
-                  </a>
+                  {% if domain.project.exists %}
+                    {% for p in domain.project.all %}
+                      {{ p.project_id }}<br>
+                    {% endfor %}
+                  {% else %}
+                    <span class="text-muted">No Project</span>
+                  {% endif %}
+                </td>
 
+                <!-- Project Names (as links) -->
+                <td>
+                  {% if domain.project.exists %}
+                    {% for p in domain.project.all %}
+                      <a href="#" class="fw-bold domain-link" data-domain-id="{{ domain.id }}">
+                        {{ p.project_name }}
+                      </a><br>
+                    {% endfor %}
+                  {% else %}
+                    <span class="text-muted">No Project</span>
+                  {% endif %}
                 </td>
                 <td>
                   <a href="#">{{ domain.domain_name }}</a>
@@ -204,6 +222,18 @@
           {% block extra_js %}
           <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
           <script>
+            document.addEventListener("DOMContentLoaded", function () {
+    const toasts = document.querySelectorAll('#toast-container .toast');
+    toasts.forEach(function(toast) {
+      setTimeout(() => {
+        toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(100%)";
+        setTimeout(() => toast.remove(), 500);
+      }, 3000); // Auto-hide after 3 seconds
+    });
+  });
+  
             $(document).ready(function () {
               const domainDetailsUrl = "{% url 'get_domain_details' %}";
 
@@ -283,38 +313,53 @@
                   $("#edit-credentials-pass").val(d.credentials_pass || '');
                   $("#edit-linked-services").val(d.linked_services || '');
                   $("#edit-notes").val(d.notes || '');
-
+                  $("#edit-projects option").prop("selected", false);
+                    if (d.projects && d.projects.length > 0) {
+                        d.projects.forEach(p => {
+                            $(`#edit-projects option[value='${p.id}']`).prop("selected", true);
+                        });
+                    }
                   $("#editDomainModal").modal("show");
                 });
               });
 
               // DELETE action
-              $(document).on("click", ".delete-domain", function (e) {
-    e.preventDefault();
-    const domainId = $(this).data("domain-id");
-    if (!domainId) return console.error("Domain ID missing!");
+              let domainIdToDelete = null;
 
-    if (confirm("Are you sure you want to delete this domain?")) {
-        $.ajax({
-            url: `/delete_domain/${domainId}/`,
-            type: "POST",
-            data: { csrfmiddlewaretoken: '{{ csrf_token }}' },
-            success: function (res) {
-                if (res.success) {
-                    // ✅ Redirect so Django messages are shown
-                    window.location.href = res.redirect_url;
-                } else {
-                    // For error, still use alert or handle differently
-                    alert(res.error || "Error deleting domain");
-                }
-            },
-            error: function (err) {
-                alert("Error deleting domain.");
-                console.error(err);
-            }
-        });
-    }
+$(document).on("click", ".delete-domain", function(e) {
+    e.preventDefault();
+    domainIdToDelete = $(this).data("domain-id");
+    if (!domainIdToDelete) return console.error("Domain ID missing!");
+
+    // Show Bootstrap modal
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteDomainModal'));
+    deleteModal.show();
 });
+
+// Handle confirm delete
+$(document).on("click", "#confirmDeleteDomainBtn", function() {
+    if (!domainIdToDelete) return;
+
+    $.ajax({
+        url: `/delete_domain/${domainIdToDelete}/`,
+        type: "POST",
+        data: { csrfmiddlewaretoken: '{{ csrf_token }}' },
+        success: function(res) {
+            // Simply refresh the page
+            location.reload();
+        },
+        error: function(err) {
+            console.error("Error deleting domain.", err);
+            // Optional: show a Bootstrap alert instead of default alert
+        }
+    });
+
+    // Hide the modal
+    var deleteModalEl = document.getElementById('deleteDomainModal');
+    var deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
+    deleteModalInstance.hide();
+});
+
 
             });
 
@@ -502,21 +547,21 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                 <tr>
                   <th>Registrar</th>
                   <td>
-                    <input type="text" class="form-control" name="registrar">
+                    <input type="text" class="form-control" name="registrar" required>
                   </td>
                   <th>Purchase Date</th>
                   <td>
-                    <input type="date" class="form-control" name="purchaseDate">
+                    <input type="date" class="form-control" name="purchaseDate" required>
                   </td>
                 </tr>
                 <tr>
                   <th>Expiry Date</th>
                   <td>
-                    <input type="date" class="form-control" name="expiryDate">
+                    <input type="date" class="form-control" name="expiryDate" required>
                   </td>
                   <th>Renewal Status</th>
                   <td>
-                    <select class="form-select" name="renewalStatus">
+                    <select class="form-select" name="renewalStatus" required>
                       <option value="Active">Active</option>
                       <option value="Expired">Expired</option>
                       <option value="Pending">Pending</option>
@@ -526,7 +571,7 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                 <tr>
                   <th>DNS Configured</th>
                   <td>
-                    <select class="form-select" name="dnsConfigured">
+                    <select class="form-select" name="dnsConfigured" required>
                       <option value="True">Yes</option>
                       <option value="False">No</option>
                     </select>
@@ -538,21 +583,21 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                   </td>
                 </tr>
                 <tr>
-                  <th>Associated Project</th>
+                  <th>Associated Projects</th>
                   <td colspan="3">
-                    <select class="form-select" name="project" required>
-                      <option value="">-- Select Project --</option>
+                    <select class="form-select" name="projects" multiple>
                       {% for project in projects %}
-                      <option value="{{ project.project_name }}">{{ project.project_name }}</option>
+                      <option value="{{ project.id }}">{{ project.project_name }}</option>
                       {% endfor %}
                     </select>
+                    <small class="text-muted">Hold CTRL (Windows) or ⌘ (Mac) to select multiple projects. Leave empty if not linked to any project.</small>
                   </td>
                 </tr>
 
                 <tr>
                   <th>SSL Installed</th>
                   <td>
-                    <select class="form-select" name="sslInstalled">
+                    <select class="form-select" name="sslInstalled" >
                       <option value="True">Yes</option>
                       <option value="False">No</option>
                     </select>
@@ -618,82 +663,123 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
           <div class="table-responsive">
             <table class="table table-bordered align-middle">
               <tbody>
+                <!-- Projects Multi-Select -->
+                <tr>
+                  <th>Project(s)</th>
+                  <td colspan="3">
+                    <select class="form-select" name="projects" id="edit-projects" multiple>
+                      {% for project in projects %}
+                        <option value="{{ project.id }}"
+                          {% if project.id in assigned_project_ids %}selected{% endif %}>
+                          {{ project.project_name }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                    <small class="text-muted">Hold Ctrl (Cmd on Mac) to select multiple</small>
+                  </td>
+                </tr>
+
+                <!-- Domain Name -->
                 <tr>
                   <th>Domain Name</th>
                   <td colspan="3">
-                    <input type="text" class="form-control" id="edit-domain-name" name="domainName" required>
+                    <input type="text" class="form-control" id="edit-domain-name" name="domainName" 
+                           value="{{ domain.domain_name }}" required>
                   </td>
                 </tr>
+
+                <!-- Registrar & Purchase Date -->
                 <tr>
                   <th>Registrar</th>
                   <td>
-                    <input type="text" class="form-control" id="edit-registrar" name="registrar">
+                    <input type="text" class="form-control" id="edit-registrar" name="registrar"
+                           value="{{ domain.registrar }}">
                   </td>
                   <th>Purchase Date</th>
                   <td>
-                    <input type="date" class="form-control" id="edit-purchase-date" name="purchaseDate">
+                    <input type="date" class="form-control" id="edit-purchase-date" name="purchaseDate"
+                           value="{{ domain.purchase_date }}">
                   </td>
                 </tr>
+
+                <!-- Expiry Date & Renewal Status -->
                 <tr>
                   <th>Expiry Date</th>
                   <td>
-                    <input type="date" class="form-control" id="edit-expiry-date" name="expiryDate">
+                    <input type="date" class="form-control" id="edit-expiry-date" name="expiryDate"
+                           value="{{ domain.expiry_date }}">
                   </td>
                   <th>Renewal Status</th>
                   <td>
                     <select class="form-select" id="edit-renewal-status" name="renewalStatus">
-                      <option value="Active">Active</option>
-                      <option value="Expired">Expired</option>
-                      <option value="Pending">Pending</option>
+                      <option value="Active" {% if domain.renewal_status == 'Active' %}selected{% endif %}>Active</option>
+                      <option value="Expired" {% if domain.renewal_status == 'Expired' %}selected{% endif %}>Expired</option>
+                      <option value="Pending" {% if domain.renewal_status == 'Pending' %}selected{% endif %}>Pending</option>
                     </select>
                   </td>
                 </tr>
+
+                <!-- DNS Configured & Nameservers -->
                 <tr>
                   <th>DNS Configured</th>
                   <td>
-                    <input type="checkbox" id="edit-dns-configured" name="dnsConfigured" value="True">
+                    <input type="checkbox" id="edit-dns-configured" name="dnsConfigured" value="True"
+                           {% if domain.dns_configured %}checked{% endif %}>
                     <label for="edit-dns-configured">Yes</label>
                   </td>
                   <th>Nameservers</th>
                   <td>
                     <textarea class="form-control" id="edit-nameservers" name="nameservers"
-                      placeholder="e.g. ns1.example.com&#10;ns2.example.com"></textarea>
+                      placeholder="e.g. ns1.example.com&#10;ns2.example.com">{{ domain.nameservers }}</textarea>
                   </td>
                 </tr>
+
+                <!-- SSL Installed & SSL Expiry -->
                 <tr>
                   <th>SSL Installed</th>
                   <td>
-                    <input type="checkbox" id="edit-ssl-installed" name="sslInstalled" value="True">
+                    <input type="checkbox" id="edit-ssl-installed" name="sslInstalled" value="True"
+                           {% if domain.ssl_installed %}checked{% endif %}>
                     <label for="edit-ssl-installed">Yes</label>
                   </td>
                   <th>SSL Expiry</th>
                   <td>
-                    <input type="date" class="form-control" id="edit-ssl-expiry" name="sslExpiry">
+                    <input type="date" class="form-control" id="edit-ssl-expiry" name="sslExpiry"
+                           value="{{ domain.ssl_expiry }}">
                   </td>
                 </tr>
+
+                <!-- Credentials -->
                 <tr>
                   <th>Credentials User</th>
                   <td>
-                    <input type="text" class="form-control" id="edit-credentials-user" name="credentialsUser">
+                    <input type="text" class="form-control" id="edit-credentials-user" name="credentialsUser"
+                           value="{{ domain.credentials_user }}">
                   </td>
                   <th>Credentials Pass</th>
                   <td>
-                    <input type="password" class="form-control" id="edit-credentials-pass" name="credentialsPass">
+                    <input type="password" class="form-control" id="edit-credentials-pass" name="credentialsPass"
+                           value="{{ domain.credentials_pass }}">
                   </td>
                 </tr>
+
+                <!-- Linked Services -->
                 <tr>
                   <th>Linked Services</th>
                   <td colspan="3">
                     <input type="text" class="form-control" id="edit-linked-services" name="linkedServices"
-                      placeholder="e.g. Email Hosting, Website Hosting">
+                           placeholder="e.g. Email Hosting, Website Hosting" value="{{ domain.linked_services }}">
                   </td>
                 </tr>
+
+                <!-- Notes -->
                 <tr>
                   <th>Notes</th>
                   <td colspan="3">
-                    <textarea class="form-control" id="edit-notes" name="notes" rows="2"></textarea>
+                    <textarea class="form-control" id="edit-notes" name="notes" rows="2">{{ domain.notes }}</textarea>
                   </td>
                 </tr>
+
               </tbody>
             </table>
           </div>
@@ -707,5 +793,26 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
     </div>
   </div>
 </div>
+
+
+<!-- Delete Domain Confirmation Modal -->
+<div class="modal fade" id="deleteDomainModal" tabindex="-1" aria-labelledby="deleteDomainLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center">
+      <div class="modal-header border-0">
+        <h5 class="modal-title w-100" id="deleteDomainLabel">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this domain?
+      </div>
+      <div class="modal-footer justify-content-center border-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteDomainBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 {% endblock %}

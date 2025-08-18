@@ -26,3 +26,4 @@ from .models import Project, HostData, Domain, User
 admin.site.register(Project)
 admin.site.register(HostData)
 admin.site.register(Domain)
+admin.site.register(User)

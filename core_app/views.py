@@ -81,6 +81,8 @@ def save_project(request):
                 contract_signed=data.get("contract_signed")
             )
 
+             #  Run backend validation
+            project.full_clean()   # will call clean() + field validations
             project.save()
 
             # Save team members (comma-separated usernames)
@@ -93,16 +95,13 @@ def save_project(request):
             else:
                 project.team_members.clear()
 
-            messages.success(request, "Project saved successfully.")
+            return JsonResponse({"success": True, "message": "Project saved successfully."})
+        except ValidationError as ve:
+            return JsonResponse({"success": False, "errors": ve.message_dict})
         except Exception as e:
-            #Add error message
-            messages.error(request, f"Failed to save project: {str(e)}")
+            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}})
 
-        # Always redirect to project list
-        return redirect('project_list')
-
-    messages.error(request, "Invalid request method.")
-    return redirect('project_list')
+    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}})
 
 def get_project_details(request):
     """
@@ -177,60 +176,66 @@ def update_project(request, id):
     # Now you have the full project object
     print(project.project_name)  # for testing
     if request.method == "POST":
-        data = request.POST
+        try:
+            data = request.POST
 
-        # Basic info
-        project.project_name = data.get("project_name")
-        project.start_date = data.get("start_date") or None
-        project.deadline = data.get("deadline") or None
-        project.technologies = data.get("technologies")
-        project.app_mode = data.get("app_mode")
-        project.status = data.get("status")
+            # Basic info
+            project.project_name = data.get("project_name")
+            project.start_date = data.get("start_date") or None
+            project.deadline = data.get("deadline") or None
+            project.technologies = data.get("technologies")
+            project.app_mode = data.get("app_mode")
+            project.status = data.get("status")
 
-        # Payment info
-        project.payment_percentage = data.get("payment_percentage") or 0
-        project.payment_status = data.get("payment_status")
+            # Payment info
+            project.payment_percentage = data.get("payment_percentage") or 0
+            project.payment_status = data.get("payment_status")
 
-        # Links
-        project.live_link = data.get("live_link")
-        project.postman_collection = data.get("postman_collection")
-        project.data_folder = data.get("data_folder")
-        project.other_link = data.get("other_link")
+            # Links
+            project.live_link = data.get("live_link")
+            project.postman_collection = data.get("postman_collection")
+            project.data_folder = data.get("data_folder")
+            project.other_link = data.get("other_link")
 
-        # Financials
-        project.expense = data.get("expense") or 0
-        project.developer_charge = data.get("developer_charge") or 0
-        project.server_charge = data.get("server_charge") or 0
-        project.third_party_api_charge = data.get("third_party_api_charge") or 0
-        project.income = data.get("income") or 0
-        project.free_service = data.get("free_service")
+            # Financials
+            project.expense = data.get("expense") or 0
+            project.developer_charge = data.get("developer_charge") or 0
+            project.server_charge = data.get("server_charge") or 0
+            project.third_party_api_charge = data.get("third_party_api_charge") or 0
+            project.income = data.get("income") or 0
+            project.free_service = data.get("free_service")
 
-        # Sales / lead tracking
-        project.inquiry_date = data.get("inquiry_date") or None
-        project.lead_source = data.get("lead_source")
-        project.quotation_sent = data.get("quotation_sent")
-        project.demo_given = data.get("demo_given")
-        project.quotation_amount = data.get("quotation_amount") or 0
-        project.approval_amount = data.get("approval_amount") or 0
+            # Sales / lead tracking
+            project.inquiry_date = data.get("inquiry_date") or None
+            project.lead_source = data.get("lead_source")
+            project.quotation_sent = data.get("quotation_sent")
+            project.demo_given = data.get("demo_given")
+            project.quotation_amount = data.get("quotation_amount") or 0
+            project.approval_amount = data.get("approval_amount") or 0
 
-        # Completion / client info
-        project.completed_date = data.get("completed_date") or None
-        project.client_industry = data.get("client_industry")
-        project.contract_signed = data.get("contract_signed")
+            # Completion / client info
+            project.completed_date = data.get("completed_date") or None
+            project.client_industry = data.get("client_industry")
+            project.contract_signed = data.get("contract_signed")
 
-        # Save project first before updating many-to-many
-        project.save()
+            # Save project first before updating many-to-many
+            project.full_clean()
 
-        # Team members (ManyToMany)
-        team_member_ids = request.POST.getlist("team_members")
-        members = User.objects.filter(id__in=team_member_ids)
-        project.team_members.set(members)
+            project.save()
 
-        messages.success(request, "Project updated successfully!")
-        return redirect("project_list")  # Change to your project list URL name
+            # Team members (ManyToMany)
+            team_member_ids = request.POST.getlist("team_members")
+            members = User.objects.filter(id__in=team_member_ids)
+            project.team_members.set(members)
 
-    messages.error(request, "Invalid request method.")
-    return redirect("project_list")
+            return JsonResponse({"success": True, "message": "Project updated successfully!"})
+
+        except ValidationError as ve:
+            return JsonResponse({"success": False, "errors": ve.message_dict})
+        except Exception as e:
+            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}})
+
+    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}})
 
 def delete_project(request, id):
     """
@@ -260,7 +265,8 @@ def host_list(request):
         page_number = 1
 
     projects = Project.objects.all()
-    host_data_list = HostData.objects.select_related('project').all()
+    host_data_list = HostData.objects.prefetch_related('project').all()
+    print(host_data_list)
 
     paginator = Paginator(host_data_list, records_per_page)
     page_obj = paginator.get_page(page_number)
@@ -279,11 +285,12 @@ def add_host_data(request):
     """
     if request.method == "POST":
         try:
-            project_id = request.POST.get("project")
-            project = Project.objects.get(id=project_id)
-
-            host_data = HostData.objects.create(
-                project=project,
+            # multiple projects selected
+            project_ids = request.POST.getlist("project")
+            projects = Project.objects.filter(id__in=project_ids) if project_ids else Project.objects.none()
+            
+            host_data = HostData(
+                # project=project,
                 company_name=request.POST.get("company_name"),
                 hosting_provider=request.POST.get("hosting_provider"),
                 server_name=request.POST.get("server_name"),
@@ -314,17 +321,25 @@ def add_host_data(request):
                 notes=request.POST.get("notes"),
             )
 
+            # run model-level validations
             host_data.full_clean()
             host_data.save()
-            messages.success(request, "Host Data saved successfully.")
 
+            # set ManyToMany projects
+            host_data.project.set(projects)
+
+            messages.success(request, "Host Data saved successfully.")
+        except ValidationError as ve:
+            for field, errors in ve.message_dict.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
         except Exception as e:
             messages.error(request, f"Failed to save Host Data: {str(e)}")
 
-        return redirect('host_list')
+        return redirect("host_list")
 
     messages.error(request, "Invalid request method.")
-    return redirect('host_list')
+    return redirect("host_list")
 
 def get_host_details(request):
     """
@@ -342,11 +357,11 @@ def get_host_details(request):
         return JsonResponse({"success": False, "error": "Invalid host ID"}, status=400)
     
     host = get_object_or_404(HostData, id=host_id)
-
+    # ManyToMany → return list of {id, name}
+    projects = [{"id": p.id, "name": p.project_name} for p in host.project.all()]
     data = {
         "host_id": host.id,
-        "project_id": host.project.id if host.project else None,
-        "project": host.project.project_name if host.project else None,
+        "projects": projects,   # list of projects
         "company_name": host.company_name,
         "server_name": host.server_name,
         "hosting_provider": host.hosting_provider,
@@ -392,10 +407,16 @@ def update_host_data(request, id):
         try:
             host = get_object_or_404(HostData, id=int(host_id))
 
-            # Project
-            project_id = request.POST.get("project")
-            project = Project.objects.get(id=project_id) if project_id else None
-            host.project = project
+            # ---- Projects (ManyToMany) ----
+            project_ids = request.POST.getlist("project")  # multiple selected
+            if project_ids:
+                projects = Project.objects.filter(id__in=project_ids)
+                if not projects.exists():
+                    messages.error(request, "Invalid project(s) selected.")
+                    return redirect("host_list")
+                host.project.set(projects)  
+            else:
+                host.project.clear()  # allow "no project"
 
             # Update all fields
             host.company_name = request.POST.get("company_name")
@@ -474,19 +495,23 @@ def domain_list(request):
         page_number = 1
 
     projects = Project.objects.all()
-    host_data_list = HostData.objects.select_related('project').all()
-    domains = Domain.objects.select_related('project').all()
+
+    # ✅ For HostData also you changed to ManyToMany
+    host_data_list = HostData.objects.prefetch_related("project").all()
+
+    # ✅ For Domain use prefetch_related instead of select_related
+    domains = Domain.objects.prefetch_related("project").order_by("id")
 
     # Paginate domains
     paginator = Paginator(domains, records_per_page)
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'domain.html', {
-        'projects': projects,
-        'host_data_list': host_data_list,
-        'page_obj': page_obj,  # Send paginated domains
-        'records_per_page': records_per_page,
-        'records_options': [20, 50, 100, 200, 300],
+    return render(request, "domain.html", {
+        "projects": projects,
+        "host_data_list": host_data_list,
+        "page_obj": page_obj,  # paginated domains
+        "records_per_page": records_per_page,
+        "records_options": [20, 50, 100, 200, 300],
     })
 
 def add_domain(request):
@@ -495,9 +520,9 @@ def add_domain(request):
     """
     if request.method == "POST":
         try:
-            project_name = request.POST.get('project')
-            project = get_object_or_404(Project, project_name=project_name)
-
+            # Multiple projects allowed (can also be none)
+            project_ids = request.POST.getlist('projects')  # <-- multiple
+            projects = Project.objects.filter(id__in=project_ids)
             # Convert date strings to date objects
             purchase_date_str = request.POST.get('purchaseDate')
             expiry_date_str = request.POST.get('expiryDate')
@@ -508,7 +533,6 @@ def add_domain(request):
             ssl_expiry = datetime.strptime(ssl_expiry_str, "%Y-%m-%d").date() if ssl_expiry_str else None
 
             domain = Domain(
-                project=project,
                 domain_name=request.POST.get('domainName'),
                 purchase_date=purchase_date,
                 expiry_date=expiry_date,
@@ -528,9 +552,15 @@ def add_domain(request):
             if expiry_date:
                 today = timezone.now().date()
                 domain.left_days = max((expiry_date - today).days, 0)
-
+            domain.full_clean()
             domain.save()
+           # Attach selected projects (can be empty also)
+            if projects.exists():
+                domain.project.set(projects)   # ✅ correct, matches model field
+
+
             messages.success(request, f"Domain '{domain.domain_name}' added successfully!")
+
         except Exception as e:
             messages.error(request, f"Error saving domain: {str(e)}")
 
@@ -558,7 +588,11 @@ def get_domain_details(request):
 
     data = {
         "id": domain.id,
-        "project_name": domain.project.project_name if domain.project else None,
+        # ManyToMany projects → return both IDs and names
+        "projects": [
+            {"id": p.id, "name": p.project_name, "code": p.project_id}
+            for p in domain.project.all()
+        ],
         "domain_name": domain.domain_name,
         "registrar": domain.registrar,
         "purchase_date": domain.purchase_date.strftime("%Y-%m-%d") if domain.purchase_date else None,
@@ -585,11 +619,12 @@ def update_domain(request, id):
             domain = get_object_or_404(Domain, id=id)
 
             # Get project from project name
-            project_name = request.POST.get('project')
-            if project_name:
-                project = get_object_or_404(Project, project_name=project_name)
-                domain.project = project
-
+            project_ids = request.POST.getlist('projects')  # Multiple project IDs from the form
+            if project_ids:
+                projects = Project.objects.filter(id__in=project_ids)
+                domain.project.set(projects)  # Replace all projects
+            else:
+                domain.project.clear()
             # Convert dates
             purchase_date_str = request.POST.get('purchaseDate')
             expiry_date_str = request.POST.get('expiryDate')
@@ -663,3 +698,28 @@ def delete_domain(request, id):
         "error": "Invalid request method",
         "redirect_url": redirect('domain_list').url
     })
+
+# -----------------------------
+# User Management
+# -----------------------------
+def user_list(request):
+    users = User.objects.all().order_by('-created_at')
+
+    # Pagination
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(users, 10)  # 10 users per page
+    page_obj = paginator.get_page(page_number)
+
+    # Statistics
+    total_users = users.count()
+    active_users = users.filter(is_active=True).count()
+    inactive_users = users.filter(is_active=False).count()
+
+    context = {
+        'page_obj': page_obj,
+        'total_users': total_users,
+        'active_users': active_users,
+        'inactive_users': inactive_users,
+    }
+
+    return render(request, 'user.html', context)

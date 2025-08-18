@@ -26,25 +26,26 @@
 
 {% block content %}
 {% if messages %}
-<div>
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} mt-2">
+<div id="toast-container" style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 3000;  /* above sidebar/navbar */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+">
+  {% for message in messages %}
+  <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert" aria-live="assertive" aria-atomic="true" style="min-width: 250px;">
+    <div class="d-flex">
+      <div class="toast-body">
         {{ message }}
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
     </div>
-    {% endfor %}
+  </div>
+  {% endfor %}
 </div>
-
-<script>
-    setTimeout(function () {
-        document.querySelectorAll('.alert').forEach(function (alert) {
-            alert.style.transition = "opacity 0.5s ease";
-            alert.style.opacity = "0";
-            setTimeout(function () {
-                alert.remove();
-            }, 500);
-        });
-    }, 3000);
-</script>
 {% endif %}
 <div class="content-wrapper">
 
@@ -168,12 +169,27 @@
                             {% for host in page_obj  %}
                             <tr>
                                 <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
-                                <td>{{ host.project.project_id }}</td>
+                                <td>
+                                    {% if host.project.exists %}
+                                        {% for p in host.project.all %}
+                                            {{ p.project_id }} <br>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted"> - </span>
+                                    {% endif %}
+                                </td>
                                 <td>{{ host.company_name }}</td>
-                                <td><a href="#" data-bs-toggle="modal" data-bs-target="#hostDetailsModal"
-                                        class="text-dark fw-bold host-link" data-host-id="{{ host.id }}">
-                                        {{ host.project.project_name }}
-                                    </a>
+                                <td>
+                                    {% if host.project.exists %}
+                                        {% for p in host.project.all %}
+                                            <a href="#" data-bs-toggle="modal" data-bs-target="#hostDetailsModal"
+                                                class="fw-bold host-link" data-host-id="{{ host.id }}">
+                                        {{ p.project_name }} 
+                                    </a> <br>
+                                     {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">No Project</span>
+                                    {% endif %}
                                 </td>
                                 <td>{{ host.hosting_provider }}</td>
                                 <td>{{ host.server_type }}</td>
@@ -219,6 +235,17 @@
                     {% block extra_js %}
                     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
                    <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+    const toasts = document.querySelectorAll('#toast-container .toast');
+    toasts.forEach(function(toast) {
+      setTimeout(() => {
+        toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(100%)";
+        setTimeout(() => toast.remove(), 500);
+      }, 3000); // Auto-hide after 3 seconds
+    });
+  });
 $(document).ready(function() {
     const hostDetailsUrl = "{% url 'get_host_details' %}";
 
@@ -278,8 +305,14 @@ $(document).ready(function() {
             $("#editHostForm").attr("action", `/update_host_data/${hostId}/`);
             $("#edit-host-id").val(hostId);
 
-            // Fill EDIT form fields
-            $("#edit-project").val(h.project_id || '');
+            // Clear old selection
+            $("#edit-project").val([]);
+
+            // If backend returned multiple projects
+            if (h.projects && h.projects.length > 0) {
+                const ids = h.projects.map(p => p.id.toString());
+                $("#edit-project").val(ids).trigger("change");  // works with normal select or select2
+            }
             $("#edit-company-name").val(h.company_name || '');
             $("#edit-server-name").val(h.server_name || '');
             $("#edit-hosting-provider").val(h.hosting_provider || '');
@@ -314,33 +347,44 @@ $(document).ready(function() {
     });
 
     // deleet modal
-    $(document).on("click", ".delete-host", function(e) {
-    e.preventDefault();
-    const hostId = $(this).data("host-id");
-    if (!hostId) return console.error("Host ID missing!");
+    let hostIdToDelete = null;
 
-    if (confirm("Are you sure you want to delete this host?")) {
-        $.ajax({
-            url: `/delete_host/${hostId}/`,
-            type: "POST",
-            data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}'
-            },
-            success: function(res) {
-               if (res.success) {
-                    // Redirect to project list where messages are shown
-                    window.location.href = res.redirect_url;
-                } else {
-                    alert(res.error || "Error deleting project");
-                }
-            },
-            error: function(err) {
-                alert("Error deleting host.");
-                console.error(err);
-            }
-        });
-    }
+$(document).on("click", ".delete-host", function(e) {
+    e.preventDefault();
+    hostIdToDelete = $(this).data("host-id");
+    if (!hostIdToDelete) return console.error("Host ID missing!");
+
+    // Show Bootstrap modal
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteHostModal'));
+    deleteModal.show();
 });
+
+// Handle confirm delete
+$(document).on("click", "#confirmDeleteHostBtn", function() {
+    if (!hostIdToDelete) return;
+
+    $.ajax({
+        url: `/delete_host/${hostIdToDelete}/`,
+        type: "POST",
+        data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function(res) {
+            // Simply refresh the page
+            location.reload();
+        },
+        error: function(err) {
+            // Optional: you can show a Bootstrap alert instead of alert()
+            console.error("Error deleting host.", err);
+        }
+    });
+
+    // Hide the modal
+    var deleteModalEl = document.getElementById('deleteHostModal');
+    var deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
+    deleteModalInstance.hide();
+});
+
 });
 </script>
 
@@ -554,47 +598,49 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                             <table class="table table-bordered align-middle">
                                 <tbody>
                                     <tr>
-                                        <th>Project</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="project" required>
-                                                {% for project in projects %}
-                                                <option value="{{ project.id }}">{{ project.project_name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </td>
-                                    </tr>
+                                            <th>Project(s)</th>
+                                            <td colspan="3">
+                                                <select class="form-select" name="project" id="add-project" multiple>
+                                                    {% for project in projects %}
+                                                        <option value="{{ project.id }}">{{ project.project_name }}</option>
+                                                    {% endfor %}
+                                                </select>
+
+                                                <small class="text-muted">Hold Ctrl (Windows) or Command (Mac) to select multiple</small>
+                                            </td>
+                                        </tr>
                                     <tr>
                                         <th>Company Name</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="company_name">
+                                            <input type="text" class="form-control" name="company_name" required>
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Hosting Provider</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="hosting_provider">
+                                            <input type="text" class="form-control" name="hosting_provider" required>
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Server Name</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="server_name">
+                                            <input type="text" class="form-control" name="server_name" required>
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Server Type</th>
                                         <td>
-                                            <input type="text" class="form-control" name="server_type">
+                                            <input type="text" class="form-control" name="server_type" required>
                                         </td>
                                         <th>Plan / Package</th>
                                         <td>
-                                            <input type="text" class="form-control" name="plan_package">
+                                            <input type="text" class="form-control" name="plan_package" required>
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Server IP</th>
                                         <td>
-                                            <input type="text" class="form-control" name="server_ip">
+                                            <input type="text" class="form-control" name="server_ip" required>
                                         </td>
                                         <th>Location</th>
                                         <td>
@@ -604,13 +650,13 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                     <tr>
                                         <th>Operating System</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="operating_system">
+                                            <input type="text" class="form-control" name="operating_system" required>
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Control Panel</th>
                                         <td>
-                                            <input type="text" class="form-control" name="control_panel">
+                                            <input type="text" class="form-control" name="control_panel" required>
                                         </td>
                                         <th>Login URL</th>
                                         <td>
@@ -656,17 +702,17 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                     <tr>
                                         <th>Purchase Date</th>
                                         <td>
-                                            <input type="date" class="form-control" name="purchase_date">
+                                            <input type="date" class="form-control" name="purchase_date" required>
                                         </td>
                                         <th>Expiry Date</th>
                                         <td>
-                                            <input type="date" class="form-control" name="expiry_date">
+                                            <input type="date" class="form-control" name="expiry_date" required>
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Server Cost</th>
                                         <td colspan="3">
-                                            <input type="number" step="0.01" class="form-control" name="server_cost">
+                                            <input type="number" step="0.01" class="form-control" name="server_cost" required>
                                         </td>
                                     </tr>
                                     <tr>
@@ -701,6 +747,7 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                         <th>Backup Status</th>
                                         <td colspan="3">
                                             <select class="form-select" name="backup_status">
+                                                <option value="">-- Select --</option>
                                                 <option value="Scheduled">Scheduled</option>
                                                 <option value="Completed">Completed</option>
                                                 <option value="Failed">Failed</option>
@@ -717,7 +764,8 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                     <tr>
                                         <th>Status</th>
                                         <td colspan="3">
-                                            <select class="form-select" name="status">
+                                            <select class="form-select" name="status" required>
+                                                <option value="">-- Select --</option>
                                                 <option value="Active">Active</option>
                                                 <option value="Inactive">Inactive</option>
                                                 <option value="Expired">Expired</option>
@@ -765,11 +813,13 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
                                     <tr>
                                         <th>Project</th>
                                         <td colspan="3">
-                                            <select class="form-select" name="project" id="edit-project" required>
+                                           <select class="form-select" name="project" id="edit-project" multiple>
                                                 {% for project in projects %}
-                                                <option value="{{ project.id }}">{{ project.project_name }}</option>
+                                                    <option value="{{ project.id }}">{{ project.project_name }}</option>
                                                 {% endfor %}
                                             </select>
+
+
                                         </td>
                                     </tr>
                                     <tr>
@@ -951,6 +1001,26 @@ document.getElementById('recordsPerPage').addEventListener('change', function() 
             </div>
         </div>
     </div>
+
+    <!-- Delete Host Confirmation Modal -->
+<div class="modal fade" id="deleteHostModal" tabindex="-1" aria-labelledby="deleteHostLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center">
+      <div class="modal-header border-0">
+        <h5 class="modal-title w-100" id="deleteHostLabel">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this host?
+      </div>
+      <div class="modal-footer justify-content-center border-0">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteHostBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div>
 
 {% endblock %}
