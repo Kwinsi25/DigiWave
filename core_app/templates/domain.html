@@ -1,0 +1,711 @@
+{% extends "base.html" %}
+{% block title %}All Domains{% endblock %}
+
+{% block extra_css %}
+<style>
+  .scrollable-table-body {
+    max-height: 400px;
+    /* Adjust height as needed */
+    overflow-y: auto;
+  }
+
+  .scrollable-table-body table {
+    margin-bottom: 0;
+    /* Avoid extra spacing */
+  }
+
+  /* Optional: Fix the header */
+  .scrollable-table-body thead th {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 1;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div>
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }} mt-2">
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+  setTimeout(function () {
+    document.querySelectorAll('.alert').forEach(function (alert) {
+      alert.style.transition = "opacity 0.5s ease";
+      alert.style.opacity = "0";
+      setTimeout(function () {
+        alert.remove();
+      }, 500);
+    });
+  }, 3000);
+</script>
+{% endif %}
+<div class="content-wrapper">
+
+  <!-- Content -->
+  <div class="container-xxl flex-grow-1 container-p-y">
+
+    <div class="row mb-4">
+      <!-- Total domains -->
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="mb-1">Total Domains</h6>
+              <h4 class="fw-bold">120</h4>
+            </div>
+            <div class="avatar bg-primary text-white rounded-circle p-2">
+              <i class="bx bx-globe fs-4"></i>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+
+      <!-- Active -->
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="mb-1">Active</h6>
+              <h4 class="fw-bold text-info">35</h4>
+            </div>
+            <div class="avatar bg-info text-white rounded-circle p-2">
+              <i class="bx bx-check-shield fs-4"></i>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Expired -->
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="mb-1">Expired</h6>
+              <h4 class="fw-bold text-success">60</h4>
+            </div>
+            <div class="avatar bg-danger text-white rounded-circle p-2">
+              <i class="bx bx-block fs-4"></i>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Expiring soon -->
+      <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="mb-1">Expiring Soon</h6>
+              <h4 class="fw-bold text-danger">10</h4>
+            </div>
+            <div class="avatar bg-warning text-white rounded-circle p-2">
+              <i class="bx bx-time-five fs-4"></i>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Domains Table -->
+    <div class="card">
+      <div class="card-body">
+
+        <!-- Add Project Button and Title with Filter -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="mb-0">All Domains</h4>
+          <div class="d-flex gap-2">
+            <!-- Filter Button -->
+            <button type="button" class="btn btn-outline-secondary" title="Filter Projects">
+              <i class="bx bx-filter-alt"></i>
+            </button>
+
+            <!-- Add Project Button -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDomainDataModal">
+              <i class="bx bx-plus"></i> Add Domain
+            </button>
+
+          </div>
+        </div>
+
+        <div class="table-responsive text-nowrap scrollable-table-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Sr No.</th>
+                <th>Project ID</th>
+                <th>Project Name</th>
+                <th>Domain Name</th>
+                <th>Purchase Date</th>
+                <th>Expiry Date</th>
+                <th>Left Days</th>
+                <th>Registrar</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody class="table-border-bottom-0">
+              {% for domain in page_obj  %}
+              <tr>
+                <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+
+                <td>{{ domain.project.project_id }}</td>
+                <td>
+                  <a href="#" class="text-dark fw-bold domain-link" data-domain-id="{{ domain.id }}">
+                    {{ domain.project.project_name }}
+                  </a>
+
+                </td>
+                <td>
+                  <a href="#">{{ domain.domain_name }}</a>
+                </td>
+                <td>{{ domain.purchase_date|date:"Y-m-d" }}</td>
+                <td>{{ domain.expiry_date|date:"Y-m-d" }}</td>
+                <td>
+                  {% if domain.left_days is not None %}
+                  {{ domain.left_days }} days
+                  {% else %}
+                  -
+                  {% endif %}
+                </td>
+                <td>{{ domain.registrar }}</td>
+                <td>{{ domain.notes }}</td>
+                <td>
+                  <a href="#" class="text-primary me-2 edit-domain" data-domain-id="{{ domain.id }}" title="Edit">
+                    <i class="bx bx-edit"></i>
+                  </a>
+                  <a href="#" class="text-danger delete-domain" data-domain-id="{{ domain.id }}" title="Delete">
+                    <i class="bx bx-trash"></i>
+                  </a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="9" class="text-center">No domains found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+
+
+
+          </table>
+
+          {% block extra_js %}
+          <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+          <script>
+            $(document).ready(function () {
+              const domainDetailsUrl = "{% url 'get_domain_details' %}";
+
+              // VIEW modal
+              $(document).on("click", ".domain-link", function (e) {
+                e.preventDefault();
+                const domainId = $(this).data("domain-id");
+                if (!domainId) return console.error("Domain ID missing!");
+
+                $.get(domainDetailsUrl, { id: domainId, mode: "view" }, function (res) {
+                  if (!res.success) return console.error(res.error);
+                  const d = res.domain;
+
+                  // ✅ Update modal title dynamically
+                  $("#domainDetailsModalLabel").html(
+                    `<i class="bx bx-folder-open me-2"></i> Project Details: ${d.project_name || '-'}`
+                  );
+
+                  $("#dd-domain-name").text(d.domain_name || '-');
+                  $("#dd-registrar").text(d.registrar || '-');
+                  $("#dd-purchase-date").text(d.purchase_date || '-');
+                  $("#dd-expiry-date").text(d.expiry_date || '-');
+
+                  $("#dd-renewal-status")
+                    .removeClass()
+                    .addClass('badge ' +
+                      (d.renewal_status === "Pending" ? 'bg-label-warning' :
+                        d.renewal_status === "Active" ? 'bg-label-success' :
+                          'bg-label-danger'))
+                    .text(d.renewal_status || '-');
+
+                  $("#dd-dns-configured")
+                    .removeClass()
+                    .addClass('badge ' + (d.dns_configured ? 'bg-label-success' : 'bg-label-danger'))
+                    .text(d.dns_configured ? 'Yes' : 'No');
+
+                  $("#dd-nameservers").html((d.nameservers || '').replace(/\n/g, '<br>'));
+
+                  $("#dd-ssl-installed")
+                    .removeClass()
+                    .addClass('badge ' + (d.ssl_installed ? 'bg-label-success' : 'bg-label-danger'))
+                    .text(d.ssl_installed ? 'Yes' : 'No');
+
+                  $("#dd-ssl-expiry").text(d.ssl_expiry || '-');
+                  $("#dd-credentials").html(
+                    `<strong>User:</strong> ${d.credentials_user || '-'}<br>
+             <strong>Pass:</strong> ${d.credentials_pass || '-'}`
+                  );
+                  $("#dd-linked-services").text(d.linked_services || '-');
+                  $("#dd-notes").text(d.notes || '-');
+
+                  $("#domainDetailsModal").modal("show");
+                });
+              });
+
+              // EDIT modal
+              $(document).on("click", ".edit-domain", function (e) {
+                e.preventDefault();
+                const domainId = $(this).data("domain-id");
+                if (!domainId) return console.error("Domain ID missing!");
+
+                $.get(domainDetailsUrl, { id: domainId, mode: "edit" }, function (res) {
+                  if (!res.success) return console.error(res.error);
+                  const d = res.domain;
+
+                  $("#editDomainForm").attr("action", `/update_domain/${domainId}/`);
+                  $("#edit-domain-name").val(d.domain_name || '');
+                  $("#edit-registrar").val(d.registrar || '');
+                  $("#edit-purchase-date").val(d.purchase_date || '');
+                  $("#edit-expiry-date").val(d.expiry_date || '');
+                  $("#edit-renewal-status").val(d.renewal_status || '');
+                  $("#edit-dns-configured").prop('checked', d.dns_configured);
+                  $("#edit-nameservers").val(d.nameservers || '');
+                  $("#edit-ssl-installed").prop('checked', d.ssl_installed);
+                  $("#edit-ssl-expiry").val(d.ssl_expiry || '');
+                  $("#edit-credentials-user").val(d.credentials_user || '');
+                  $("#edit-credentials-pass").val(d.credentials_pass || '');
+                  $("#edit-linked-services").val(d.linked_services || '');
+                  $("#edit-notes").val(d.notes || '');
+
+                  $("#editDomainModal").modal("show");
+                });
+              });
+
+              // DELETE action
+              $(document).on("click", ".delete-domain", function (e) {
+    e.preventDefault();
+    const domainId = $(this).data("domain-id");
+    if (!domainId) return console.error("Domain ID missing!");
+
+    if (confirm("Are you sure you want to delete this domain?")) {
+        $.ajax({
+            url: `/delete_domain/${domainId}/`,
+            type: "POST",
+            data: { csrfmiddlewaretoken: '{{ csrf_token }}' },
+            success: function (res) {
+                if (res.success) {
+                    // ✅ Redirect so Django messages are shown
+                    window.location.href = res.redirect_url;
+                } else {
+                    // For error, still use alert or handle differently
+                    alert(res.error || "Error deleting domain");
+                }
+            },
+            error: function (err) {
+                alert("Error deleting domain.");
+                console.error(err);
+            }
+        });
+    }
+});
+
+            });
+
+          </script>
+          {% endblock %}
+        </div>
+        <!-- Records Per Page & Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+    <!-- Records Per Page Dropdown -->
+    <div class="d-flex align-items-center">
+        <form method="GET" id="recordsForm" class="d-flex align-items-center">
+            <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
+            <select class="form-select form-select-sm" name="recordsPerPage" id="recordsPerPage" style="width: auto;">
+                {% for option in records_options %}
+                    <option value="{{ option }}" {% if records_per_page == option %}selected{% endif %}>
+                        {{ option }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Page navigation" class="mt-3">
+        <ul class="pagination justify-content-end mb-0">
+
+            <!-- Previous -->
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                {% if page_obj.has_previous %}
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&recordsPerPage={{ records_per_page }}">
+                        <i class="bx bx-chevrons-left"></i>
+                    </a>
+                {% else %}
+                    <span class="page-link disabled">
+                        <i class="bx bx-chevrons-left"></i>
+                    </span>
+                {% endif %}
+            </li>
+
+            <!-- Page numbers -->
+            {% for num in page_obj.paginator.page_range %}
+                {% if num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}&recordsPerPage={{ records_per_page }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            <!-- Next -->
+            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                {% if page_obj.has_next %}
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&recordsPerPage={{ records_per_page }}">
+                        <i class="bx bx-chevrons-right"></i>
+                    </a>
+                {% else %}
+                    <span class="page-link disabled">
+                        <i class="bx bx-chevrons-right"></i>
+                    </span>
+                {% endif %}
+            </li>
+
+        </ul>
+    </nav>
+</div>
+
+<script>
+document.getElementById('recordsPerPage').addEventListener('change', function() {
+    const form = document.getElementById('recordsForm');
+    const hiddenPage = document.createElement('input');
+    hiddenPage.type = 'hidden';
+    hiddenPage.name = 'page';
+    hiddenPage.value = 1;
+    form.appendChild(hiddenPage);
+    form.submit();
+});
+</script>
+
+      </div>
+
+      <!--/ All Projects Table -->
+
+    </div>
+    <!-- /Content -->
+
+    <div class="content-backdrop fade"></div>
+  </div>
+  <!-- Content wrapper -->
+
+</div>
+<!-- Layout page -->
+</div>
+<!-- Layout container -->
+</div>
+<!-- Layout wrapper -->
+<!-- domain Details Modal -->
+<div class="modal fade" id="domainDetailsModal" tabindex="-1" aria-labelledby="domainDetailsModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header table-primary text-white">
+        <h5 class="modal-title" id="domainDetailsModalLabel">
+
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped align-middle">
+            <tbody>
+              <tr>
+                <th>Domain Name</th>
+                <td colspan="3" id="dd-domain-name"></td>
+              </tr>
+              <tr>
+                <th>Registrar</th>
+                <td id="dd-registrar"></td>
+                <th>Purchase Date</th>
+                <td id="dd-purchase-date"></td>
+              </tr>
+              <tr>
+                <th>Expiry Date</th>
+                <td id="dd-expiry-date"></td>
+                <th>Renewal Status</th>
+                <td><span id="dd-renewal-status" class="badge"></span></td>
+              </tr>
+              <tr>
+                <th>DNS Configured</th>
+                <td><span id="dd-dns-configured" class="badge"></span></td>
+                <th>Nameservers</th>
+                <td id="dd-nameservers"></td>
+              </tr>
+              <tr>
+                <th>SSL Installed</th>
+                <td><span id="dd-ssl-installed" class="badge"></span></td>
+                <th>SSL Expiry</th>
+                <td id="dd-ssl-expiry"></td>
+              </tr>
+              <tr>
+                <th>Credentials</th>
+                <td colspan="3" id="dd-credentials"></td>
+              </tr>
+              <tr>
+                <th>Linked Services</th>
+                <td colspan="3" id="dd-linked-services"></td>
+              </tr>
+              <tr>
+                <th>Notes</th>
+                <td colspan="3" id="dd-notes"></td>
+              </tr>
+
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Add Domain Data Modal -->
+<div class="modal fade" id="addDomainDataModal" tabindex="-1" aria-labelledby="addDomainDataModalLabel"
+  aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header table-primary text-white">
+        <h5 class="modal-title" id="addDomainDataModalLabel">
+          <i class="bx bx-world me-2"></i> Add New Domain Data
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form id="domainDataForm" method="POST" action="{% url 'add_domain' %}">
+        {% csrf_token %}
+        <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <tbody>
+                <tr>
+                  <th>Domain Name</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control" name="domainName" required>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Registrar</th>
+                  <td>
+                    <input type="text" class="form-control" name="registrar">
+                  </td>
+                  <th>Purchase Date</th>
+                  <td>
+                    <input type="date" class="form-control" name="purchaseDate">
+                  </td>
+                </tr>
+                <tr>
+                  <th>Expiry Date</th>
+                  <td>
+                    <input type="date" class="form-control" name="expiryDate">
+                  </td>
+                  <th>Renewal Status</th>
+                  <td>
+                    <select class="form-select" name="renewalStatus">
+                      <option value="Active">Active</option>
+                      <option value="Expired">Expired</option>
+                      <option value="Pending">Pending</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <th>DNS Configured</th>
+                  <td>
+                    <select class="form-select" name="dnsConfigured">
+                      <option value="True">Yes</option>
+                      <option value="False">No</option>
+                    </select>
+                  </td>
+                  <th>Nameservers</th>
+                  <td>
+                    <input type="text" class="form-control" name="nameservers"
+                      placeholder="e.g. ns1.example.com, ns2.example.com">
+                  </td>
+                </tr>
+                <tr>
+                  <th>Associated Project</th>
+                  <td colspan="3">
+                    <select class="form-select" name="project" required>
+                      <option value="">-- Select Project --</option>
+                      {% for project in projects %}
+                      <option value="{{ project.project_name }}">{{ project.project_name }}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>SSL Installed</th>
+                  <td>
+                    <select class="form-select" name="sslInstalled">
+                      <option value="True">Yes</option>
+                      <option value="False">No</option>
+                    </select>
+                  </td>
+                  <th>SSL Expiry</th>
+                  <td>
+                    <input type="date" class="form-control" name="sslExpiry">
+                  </td>
+                </tr>
+                <tr>
+                  <th>Credentials User</th>
+                  <td>
+                    <input type="text" class="form-control" name="credentialsUser">
+                  </td>
+                  <th>Credentials Pass</th>
+                  <td>
+                    <input type="password" class="form-control" name="credentialsPass">
+                  </td>
+                </tr>
+                <tr>
+                  <th>Linked Services</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control" name="linkedServices"
+                      placeholder="e.g. Email Hosting, Website Hosting">
+                  </td>
+                </tr>
+                <tr>
+                  <th>Notes</th>
+                  <td colspan="3">
+                    <textarea class="form-control" name="notes" rows="2"></textarea>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Domain</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- update domain data modal -->
+<!-- Edit Domain Modal -->
+<div class="modal fade" id="editDomainModal" tabindex="-1" aria-labelledby="editDomainModalLabel" aria-hidden="true"
+  data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header table-primary text-white">
+        <h5 class="modal-title" id="editDomainModalLabel">
+          <i class="bx bx-edit-alt me-2"></i> Edit Domain
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form id="editDomainForm" method="POST" action="">
+        {% csrf_token %}
+        <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <tbody>
+                <tr>
+                  <th>Domain Name</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control" id="edit-domain-name" name="domainName" required>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Registrar</th>
+                  <td>
+                    <input type="text" class="form-control" id="edit-registrar" name="registrar">
+                  </td>
+                  <th>Purchase Date</th>
+                  <td>
+                    <input type="date" class="form-control" id="edit-purchase-date" name="purchaseDate">
+                  </td>
+                </tr>
+                <tr>
+                  <th>Expiry Date</th>
+                  <td>
+                    <input type="date" class="form-control" id="edit-expiry-date" name="expiryDate">
+                  </td>
+                  <th>Renewal Status</th>
+                  <td>
+                    <select class="form-select" id="edit-renewal-status" name="renewalStatus">
+                      <option value="Active">Active</option>
+                      <option value="Expired">Expired</option>
+                      <option value="Pending">Pending</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <th>DNS Configured</th>
+                  <td>
+                    <input type="checkbox" id="edit-dns-configured" name="dnsConfigured" value="True">
+                    <label for="edit-dns-configured">Yes</label>
+                  </td>
+                  <th>Nameservers</th>
+                  <td>
+                    <textarea class="form-control" id="edit-nameservers" name="nameservers"
+                      placeholder="e.g. ns1.example.com&#10;ns2.example.com"></textarea>
+                  </td>
+                </tr>
+                <tr>
+                  <th>SSL Installed</th>
+                  <td>
+                    <input type="checkbox" id="edit-ssl-installed" name="sslInstalled" value="True">
+                    <label for="edit-ssl-installed">Yes</label>
+                  </td>
+                  <th>SSL Expiry</th>
+                  <td>
+                    <input type="date" class="form-control" id="edit-ssl-expiry" name="sslExpiry">
+                  </td>
+                </tr>
+                <tr>
+                  <th>Credentials User</th>
+                  <td>
+                    <input type="text" class="form-control" id="edit-credentials-user" name="credentialsUser">
+                  </td>
+                  <th>Credentials Pass</th>
+                  <td>
+                    <input type="password" class="form-control" id="edit-credentials-pass" name="credentialsPass">
+                  </td>
+                </tr>
+                <tr>
+                  <th>Linked Services</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control" id="edit-linked-services" name="linkedServices"
+                      placeholder="e.g. Email Hosting, Website Hosting">
+                  </td>
+                </tr>
+                <tr>
+                  <th>Notes</th>
+                  <td colspan="3">
+                    <textarea class="form-control" id="edit-notes" name="notes" rows="2"></textarea>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Update Domain</button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

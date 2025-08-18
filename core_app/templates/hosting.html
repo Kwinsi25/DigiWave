@@ -1,0 +1,957 @@
+{% extends "base.html" %}
+{% block title %}All Hosts{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scrollable-table-body {
+        max-height: 400px;
+        /* Adjust height as needed */
+        overflow-y: auto;
+    }
+
+    .scrollable-table-body table {
+        margin-bottom: 0;
+        /* Avoid extra spacing */
+    }
+
+    /* Optional: Fix the header */
+    .scrollable-table-body thead th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div>
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} mt-2">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    setTimeout(function () {
+        document.querySelectorAll('.alert').forEach(function (alert) {
+            alert.style.transition = "opacity 0.5s ease";
+            alert.style.opacity = "0";
+            setTimeout(function () {
+                alert.remove();
+            }, 500);
+        });
+    }, 3000);
+</script>
+{% endif %}
+<div class="content-wrapper">
+
+    <!-- Content -->
+    <div class="container-xxl flex-grow-1 container-p-y">
+
+        <!-- Project Status Cards -->
+        <div class="row mb-4">
+            <!-- Total Servers -->
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Servers</h6>
+                            <h4 class="fw-bold text-primary">12</h4>
+                        </div>
+                        <div class="avatar bg-primary text-white rounded-circle p-2">
+                            <i class="bx bx-server fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Running Servers -->
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Running Servers</h6>
+                            <h4 class="fw-bold text-success">10</h4>
+                        </div>
+                        <div class="avatar bg-success text-white rounded-circle p-2">
+                            <i class="bx bx-play-circle fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Down Servers -->
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Down Servers</h6>
+                            <h4 class="fw-bold text-danger">2</h4>
+                        </div>
+                        <div class="avatar bg-danger text-white rounded-circle p-2">
+                            <i class="bx bx-error fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- High CPU Load -->
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">High CPU Load</h6>
+                            <h4 class="fw-bold text-warning">3</h4>
+                        </div>
+                        <div class="avatar bg-warning text-white rounded-circle p-2">
+                            <i class="bx bx-line-chart fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Domains Table -->
+        <div class="card">
+            <div class="card-body">
+
+                <!-- Add Project Button and Title with Filter -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">All Hostdata</h4>
+                    <div class="d-flex gap-2">
+                        <!-- Filter Button -->
+                        <button type="button" class="btn btn-outline-secondary" title="Filter Projects">
+                            <i class="bx bx-filter-alt"></i>
+                        </button>
+
+
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#addHostDataModal">
+                            <i class="bx bx-plus"></i> Add hostdata
+                        </button>
+
+                    </div>
+                </div>
+
+                <div class="table-responsive text-nowrap scrollable-table-body">
+                    <table class="table">
+                        <thead>
+
+                            <tr>
+                                <th>Sr No.</th>
+                                <th>Project ID</th>
+                                <th>Company Name</th>
+                                <th>Project Name</th>
+                                <th>Hosting Provider</th>
+                                <th>Server Type</th>
+                                <th>Plan / Package</th>
+                                <th>Server IP</th>
+                                <th>Control Panel</th>
+                                <th>Login URL</th>
+                                <th>Username</th>
+                                <th>Password</th>
+                                <th>SSH / FTP Access</th>
+                                <th>Database Name</th>
+                                <th>DB User / Pass</th>
+                                <th>Purchase Date</th>
+                                <th>Expiry Date</th>
+                                <th>Server Cost</th>
+                                <th>Status</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-border-bottom-0">
+                            {% for host in page_obj  %}
+                            <tr>
+                                <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                                <td>{{ host.project.project_id }}</td>
+                                <td>{{ host.company_name }}</td>
+                                <td><a href="#" data-bs-toggle="modal" data-bs-target="#hostDetailsModal"
+                                        class="text-dark fw-bold host-link" data-host-id="{{ host.id }}">
+                                        {{ host.project.project_name }}
+                                    </a>
+                                </td>
+                                <td>{{ host.hosting_provider }}</td>
+                                <td>{{ host.server_type }}</td>
+                                <td>{{ host.plan_package }}</td>
+                                <td>{{ host.server_ip }}</td>
+                                <td>{{ host.control_panel }}</td>
+                                <td><a href="{{ host.login_url }}" target="_blank">{{ host.login_url }}</a></td>
+                                <td>{{ host.username }}</td>
+                                <td>{{ host.password }}</td>
+                                <td>{{ host.ssh_ftp_access }}</td>
+                                <td>{{ host.database_name }}</td>
+                                <td>{{ host.db_username }} / {{ host.db_password }}</td>
+                                <td>{{ host.purchase_date }}</td>
+                                <td>{{ host.expiry_date }}</td>
+                                <td>₹{{ host.server_cost }}</td>
+                                <td><span class="badge 
+                                        {% if host.status == 'Active' %}bg-label-success
+                                        {% elif host.status == 'Inactive' %}bg-label-warning
+                                        {% elif host.status == 'Expired' %}bg-label-danger
+                                        {% else %}bg-label-secondary
+                                        {% endif %}
+                                    ">
+                                        {{ host.status }}
+                                    </span>
+                                </td>
+
+                                <td>{{ host.notes }}</td>
+                                <td>
+                                    <a href="#" class="text-primary me-2 action-icon edit-host" title="Edit" data-host-id="{{ host.id }}">
+                                        <i class="bx bx-edit-alt"></i>
+                                    </a>
+
+                                    <a href="#" class="text-danger action-icon delete-host" title="Delete" data-host-id="{{ host.id }}">
+                                        <i class="bx bx-trash"></i>
+                                    </a>
+
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                        </tbody>
+                    </table>
+                    {% block extra_js %}
+                    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                   <script>
+$(document).ready(function() {
+    const hostDetailsUrl = "{% url 'get_host_details' %}";
+
+    // VIEW modal
+    $(document).on("click", ".host-link", function(e) {
+        e.preventDefault();
+        const hostId = $(this).data("host-id");
+        if (!hostId) return console.error("Host ID missing!");
+
+        $.get(hostDetailsUrl, { id: hostId, mode: "view" }, function(res) {
+            if (!res.success) return console.error(res.error);
+            const h = res.host;
+
+            // Fill VIEW modal fields
+            $("#hd-server-name").text(h.server_name || '-');
+            $("#hd-server-ip").text(h.server_ip || '-');
+            $("#hd-location").text(h.location || '-');
+            $("#hd-operating-system").text(h.operating_system || '-');
+            $("#hd-server-type").text(h.server_type || '-');
+
+            // Status badge
+            $("#hd-status").text(h.status || '-')
+                .removeClass()
+                .addClass('badge ' + (h.status === "Active" ? 'bg-label-success' :
+                                       h.status === "Inactive" ? 'bg-label-warning' : 'bg-label-danger'));
+
+            // Backup badge
+            $("#hd-backup-status").text(h.backup_status || '-')
+                .removeClass()
+                .addClass('badge ' + (h.backup_status === "Scheduled" ? 'bg-label-info' :
+                                       h.backup_status === "Completed" ? 'bg-label-success' : 'bg-label-danger'));
+
+            $("#hd-cpu-usage").text(h.cpu_usage || '-');
+            $("#hd-uptime").text(h.uptime || '-');
+            $("#hd-memory-usage").text(h.memory_usage || '-');
+            $("#hd-disk-space").text(h.disk_space || '-');
+            $("#hd-ssh-username").text(h.ssh_username || '-');
+            $("#hd-ssh-ftp-access").text(h.ssh_ftp_access || '-');
+            $("#hd-linked-services").text(h.linked_services || '-');
+            $("#hd-notes").text(h.notes || '-');
+
+            $("#hostDetailsModal").modal("show");
+        });
+    });
+
+    // EDIT modal
+    $(document).on("click", ".edit-host", function(e) {
+        e.preventDefault();
+        const hostId = $(this).data("host-id");
+        if (!hostId) return console.error("Host ID missing on Edit button!");
+
+        $.get(hostDetailsUrl, { id: hostId, mode: "edit" }, function(res) {
+            if (!res.success) return console.error(res.error);
+            const h = res.host;
+
+            // Set form action and hidden input
+            $("#editHostForm").attr("action", `/update_host_data/${hostId}/`);
+            $("#edit-host-id").val(hostId);
+
+            // Fill EDIT form fields
+            $("#edit-project").val(h.project_id || '');
+            $("#edit-company-name").val(h.company_name || '');
+            $("#edit-server-name").val(h.server_name || '');
+            $("#edit-hosting-provider").val(h.hosting_provider || '');
+            $("#edit-server-type").val(h.server_type || '');
+            $("#edit-plan-package").val(h.plan_package || '');
+            $("#edit-server-ip").val(h.server_ip || '');
+            $("#edit-location").val(h.location || '');
+            $("#edit-operating-system").val(h.operating_system || '');
+            $("#edit-control-panel").val(h.control_panel || '');
+            $("#edit-login-url").val(h.login_url || '');
+            $("#edit-username").val(h.username || '');
+            $("#edit-password").val(h.password || '');
+            $("#edit-ssh-username").val(h.ssh_username || '');
+            $("#edit-ssh-ftp-access").val(h.ssh_ftp_access || '');
+            $("#edit-database-name").val(h.database_name || '');
+            $("#edit-db-username").val(h.db_username || '');
+            $("#edit-db-password").val(h.db_password || '');
+            $("#edit-purchase-date").val(h.purchase_date || '');
+            $("#edit-expiry-date").val(h.expiry_date || '');
+            $("#edit-server-cost").val(h.server_cost || '');
+            $("#edit-uptime").val(h.uptime || '');
+            $("#edit-cpu-usage").val(h.cpu_usage || '');
+            $("#edit-memory-usage").val(h.memory_usage || '');
+            $("#edit-disk-space").val(h.disk_space || '');
+            $("#edit-backup-status").val(h.backup_status || '');
+            $("#edit-linked-services").val(h.linked_services || '');
+            $("#edit-status").val(h.status || '');
+            $("#edit-notes").val(h.notes || '');
+
+            $("#editHostModal").modal("show");
+        });
+    });
+
+    // deleet modal
+    $(document).on("click", ".delete-host", function(e) {
+    e.preventDefault();
+    const hostId = $(this).data("host-id");
+    if (!hostId) return console.error("Host ID missing!");
+
+    if (confirm("Are you sure you want to delete this host?")) {
+        $.ajax({
+            url: `/delete_host/${hostId}/`,
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(res) {
+               if (res.success) {
+                    // Redirect to project list where messages are shown
+                    window.location.href = res.redirect_url;
+                } else {
+                    alert(res.error || "Error deleting project");
+                }
+            },
+            error: function(err) {
+                alert("Error deleting host.");
+                console.error(err);
+            }
+        });
+    }
+});
+});
+</script>
+
+                    {% endblock %}
+                </div>
+                <!-- Records Per Page & Pagination -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+
+    <!-- Records Per Page Dropdown -->
+    <div class="d-flex align-items-center">
+        <form method="GET" id="recordsForm" class="d-flex align-items-center">
+            <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
+            <select class="form-select form-select-sm" name="recordsPerPage" id="recordsPerPage" style="width: auto;">
+                {% for option in records_options %}
+                    <option value="{{ option }}" {% if records_per_page == option %}selected{% endif %}>
+                        {{ option }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Page navigation" class="mt-3">
+        <ul class="pagination justify-content-end mb-0">
+
+            <!-- Previous Button -->
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                {% if page_obj.has_previous %}
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}&recordsPerPage={{ records_per_page }}">
+                        <i class="bx bx-chevrons-left"></i>
+                    </a>
+                {% else %}
+                    <span class="page-link disabled">
+                        <i class="bx bx-chevrons-left"></i>
+                    </span>
+                {% endif %}
+            </li>
+
+            <!-- Always show first page -->
+            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                <a class="page-link" href="?page=1&recordsPerPage={{ records_per_page }}">1</a>
+            </li>
+
+            <!-- Show second page if exists -->
+            {% if page_obj.paginator.num_pages >= 2 %}
+                <li class="page-item {% if page_obj.number == 2 %}active{% endif %}">
+                    <a class="page-link" href="?page=2&recordsPerPage={{ records_per_page }}">2</a>
+                </li>
+            {% endif %}
+
+            <!-- Ellipsis -->
+            {% if page_obj.paginator.num_pages > 4 %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+
+            <!-- Second last page (if not duplicate of 2) -->
+            {% if page_obj.paginator.num_pages > 2 and page_obj.paginator.num_pages|add:'-1' != 2 %}
+                <li class="page-item {% if page_obj.number == page_obj.paginator.num_pages|add:'-1' %}active{% endif %}">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages|add:'-1' }}&recordsPerPage={{ records_per_page }}">
+                        {{ page_obj.paginator.num_pages|add:'-1' }}
+                    </a>
+                </li>
+            {% endif %}
+
+            <!-- Last page (if not duplicate of 2) -->
+            {% if page_obj.paginator.num_pages > 1 and page_obj.paginator.num_pages != 2 %}
+                <li class="page-item {% if page_obj.number == page_obj.paginator.num_pages %}active{% endif %}">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&recordsPerPage={{ records_per_page }}">
+                        {{ page_obj.paginator.num_pages }}
+                    </a>
+                </li>
+            {% endif %}
+
+            <!-- Next Button -->
+            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                {% if page_obj.has_next %}
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}&recordsPerPage={{ records_per_page }}">
+                        <i class="bx bx-chevrons-right"></i>
+                    </a>
+                {% else %}
+                    <span class="page-link disabled">
+                        <i class="bx bx-chevrons-right"></i>
+                    </span>
+                {% endif %}
+            </li>
+
+        </ul>
+    </nav>
+</div>
+
+<script>
+document.getElementById('recordsPerPage').addEventListener('change', function() {
+    const form = document.getElementById('recordsForm');
+    const hiddenPage = document.createElement('input');
+    hiddenPage.type = 'hidden';
+    hiddenPage.name = 'page';
+    hiddenPage.value = 1;
+    form.appendChild(hiddenPage);
+    form.submit();
+});
+</script>
+
+            </div>
+
+            <!--/ All Projects Table -->
+
+        </div>
+        <!-- /Content -->
+
+        <div class="content-backdrop fade"></div>
+    </div>
+    <!-- Content wrapper -->
+    <!-- host Details Modal -->
+    <div class="modal fade" id="hostDetailsModal" tabindex="-1" aria-labelledby="hostDetailsModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header table-primary text-white">
+                <h5 class="modal-title" id="hostDetailsModalLabel">
+                    <i class="bx bx-folder-open me-2"></i> Project Details: {{ host.project.project_name }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle">
+                        <tbody>
+                            <tr>
+                                <th>Server Name</th>
+                                <td colspan="3" id="hd-server-name"></td>
+                            </tr>
+                            <tr>
+                                <th>IP Address</th>
+                                <td id="hd-server-ip"></td>
+                                <th>Location</th>
+                                <td id="hd-location"></td>
+                            </tr>
+                            <tr>
+                                <th>Operating System</th>
+                                <td id="hd-operating-system"></td>
+                                <th>Server Type</th>
+                                <td id="hd-server-type"></td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                    <td>
+                                        <span id="hd-status" class="badge"></span>
+                                    </td>
+                                <th>Uptime</th>
+                                <td id="hd-uptime"></td>
+                            </tr>
+                            <tr>
+                                <th>CPU Usage</th>
+                               <td id="hd-cpu-usage"></td>
+                                <th>Memory Usage</th>
+                                <td id="hd-memory-usage"></td>
+                            </tr>
+                            <tr>
+                                <th>Disk Space</th>
+                                <td id="hd-disk-space"></td>
+                                <th>Backup Status</th>
+                                    <td>
+                                        <span id="hd-backup-status" class="badge"></span>
+                                    </td>
+                            </tr>
+                            <tr>
+                            <th>Credentials</th>
+                            <td colspan="3">
+                                <strong>User:</strong> <span id="hd-ssh-username"></span><br>
+                                <strong>SSH Key / Password:</strong> <span id="hd-ssh-ftp-access"></span>
+                            </td>
+                        </tr>
+
+                            
+                            <tr>
+                                <th>Linked Services</th>
+                                <td id="hd-linked-services" colspan="3"></td>
+                            </tr>
+                        
+                            <tr>
+                                <th>Notes</th>
+                                <td id="hd-notes" colspan="3"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Add Host Data Modal -->
+    <div class="modal fade" id="addHostDataModal" tabindex="-1" aria-labelledby="addHostDataModalLabel"
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header table-primary text-white">
+                    <h5 class="modal-title" id="addHostDataModalLabel">
+                        <i class="bx bx-plus me-2"></i> Add New Server / Host Data
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+
+                <form id="hostDataForm" method="POST" action="{% url 'add_host_data' %}">
+                    {% csrf_token %}
+                    <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle">
+                                <tbody>
+                                    <tr>
+                                        <th>Project</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="project" required>
+                                                {% for project in projects %}
+                                                <option value="{{ project.id }}">{{ project.project_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Company Name</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="company_name">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Hosting Provider</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="hosting_provider">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Server Name</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="server_name">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Server Type</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="server_type">
+                                        </td>
+                                        <th>Plan / Package</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="plan_package">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Server IP</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="server_ip">
+                                        </td>
+                                        <th>Location</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="location">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Operating System</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="operating_system">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Control Panel</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="control_panel">
+                                        </td>
+                                        <th>Login URL</th>
+                                        <td>
+                                            <input type="url" class="form-control" name="login_url">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Username</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="username">
+                                        </td>
+                                        <th>Password</th>
+                                        <td>
+                                            <input type="password" class="form-control" name="password">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>SSH Username</th>
+                                        <td><input type="text" name="ssh_username"  class="form-control"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>SSH / FTP Access</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="ssh_ftp_access">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Database Name</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="database_name">
+                                        </td>
+                                        <th>DB Username</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="db_username">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>DB Password</th>
+                                        <td colspan="3">
+                                            <input type="password" class="form-control" name="db_password">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Purchase Date</th>
+                                        <td>
+                                            <input type="date" class="form-control" name="purchase_date">
+                                        </td>
+                                        <th>Expiry Date</th>
+                                        <td>
+                                            <input type="date" class="form-control" name="expiry_date">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Server Cost</th>
+                                        <td colspan="3">
+                                            <input type="number" step="0.01" class="form-control" name="server_cost">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Uptime</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="uptime"
+                                                placeholder="e.g. 32 days">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>CPU Usage</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="cpu_usage"
+                                                placeholder="e.g. 76%">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Memory Usage</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="memory_usage"
+                                                placeholder="e.g. 5.6 GB / 8 GB">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Disk Space</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="disk_space"
+                                                placeholder="e.g. 120 GB / 150 GB">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Backup Status</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="backup_status">
+                                                <option value="Scheduled">Scheduled</option>
+                                                <option value="Completed">Completed</option>
+                                                <option value="Failed">Failed</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Linked Services</th>
+                                        <td colspan="3">
+                                            <textarea class="form-control" name="linked_services" rows="2"
+                                                placeholder="e.g. Nginx, MySQL, Docker"></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Status</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="status">
+                                                <option value="Active">Active</option>
+                                                <option value="Inactive">Inactive</option>
+                                                <option value="Expired">Expired</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Notes</th>
+                                        <td colspan="3">
+                                            <textarea class="form-control" name="notes" rows="2"></textarea>
+                                        </td>
+                                    </tr>
+                                </tbody>
+
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Server</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- update host data modal -->
+    <div class="modal fade" id="editHostModal" tabindex="-1" aria-labelledby="editHostModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header table-primary text-white">
+                <h5 class="modal-title" id="editHostModalLabel">
+                    <i class="bx bx-edit-alt me-2"></i> Edit Server / Host Data
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form id="editHostForm" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="host_id" id="edit-host-id">
+                    <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle">
+                                <tbody>
+                                    <tr>
+                                        <th>Project</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="project" id="edit-project" required>
+                                                {% for project in projects %}
+                                                <option value="{{ project.id }}">{{ project.project_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Company Name</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="company_name" id="edit-company-name">
+                                        </td>
+                                    </tr>
+                                        <th>Hosting Provider</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="hosting_provider" id="edit-hosting-provider">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Server Name</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="server_name" id="edit-server-name">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Server Type</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="server_type" id="edit-server-type">
+                                        </td>
+                                        <th>Plan / Package</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="plan_package" id="edit-plan-package">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Server IP</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="server_ip" id="edit-server-ip">
+                                        </td>
+                                        <th>Location</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="location" id="edit-location">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Operating System</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="operating_system" id="edit-operating-system">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Control Panel</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="control_panel" id="edit-control-panel">
+                                        </td>
+                                        <th>Login URL</th>
+                                        <td>
+                                            <input type="url" class="form-control" name="login_url" id="edit-login-url">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Username</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="username" id="edit-username">
+                                        </td>
+                                        <th>Password</th>
+                                        <td>
+                                            <input type="password" class="form-control" name="password" id="edit-password">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>SSH Username</th>
+                                        <td><input type="text" name="ssh_username" id="edit-ssh-username" class="form-control"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>SSH / FTP Access</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="ssh_ftp_access" id="edit-ssh-ftp-access">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Database Name</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="database_name" id="edit-database-name">
+                                        </td>
+                                        <th>DB Username</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="db_username" id="edit-db-username">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>DB Password</th>
+                                        <td colspan="3">
+                                            <input type="password" class="form-control" name="db_password" id="edit-db-password">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Purchase Date</th>
+                                        <td>
+                                            <input type="date" class="form-control" name="purchase_date" id="edit-purchase-date">
+                                        </td>
+                                        <th>Expiry Date</th>
+                                        <td>
+                                            <input type="date" class="form-control" name="expiry_date" id="edit-expiry-date">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Server Cost</th>
+                                        <td colspan="3">
+                                            <input type="number" step="0.01" class="form-control" name="server_cost" id="edit-server-cost">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Uptime</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="uptime" id="edit-uptime"
+                                                placeholder="e.g. 32 days">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>CPU Usage</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="cpu_usage" id="edit-cpu-usage"
+                                                placeholder="e.g. 76%">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Memory Usage</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="memory_usage" id="edit-memory-usage"
+                                                placeholder="e.g. 5.6 GB / 8 GB">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Disk Space</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="disk_space" id="edit-disk-space"
+                                                placeholder="e.g. 120 GB / 150 GB">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Backup Status</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="backup_status" id="edit-backup-status">
+                                                <option value="Scheduled">Scheduled</option>
+                                                <option value="Completed">Completed</option>
+                                                <option value="Failed">Failed</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Linked Services</th>
+                                        <td colspan="3">
+                                            <textarea class="form-control" name="linked_services" rows="2" id="edit-linked-services"
+                                                placeholder="e.g. Nginx, MySQL, Docker"></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Status</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="status" id="edit-status">
+                                                <option value="Active">Active</option>
+                                                <option value="Inactive">Inactive</option>
+                                                <option value="Expired">Expired</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Notes</th>
+                                        <td colspan="3">
+                                            <textarea class="form-control" name="notes" rows="2" id="edit-notes"></textarea>
+                                        </td>
+                                    </tr>
+                                </tbody>
+
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Server</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
