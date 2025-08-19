@@ -80,6 +80,7 @@ class User(models.Model):
         # prevent first name = last name
         if self.first_name and self.last_name and self.first_name.lower() == self.last_name.lower():
             raise ValidationError("First name and last name cannot be the same.")
+
 # -----------------------------
 # Project model
 # -----------------------------
@@ -104,7 +105,7 @@ class Project(models.Model):
 
     project_id = models.CharField(max_length=10, unique=True, blank=True, null=True)
     start_date = models.DateField(blank=True, null=True)
-    project_name = models.CharField(max_length=255, blank=False, null=False)
+    project_name = models.CharField(max_length=255,  unique=True,blank=False, null=False)
     technologies = models.CharField(max_length=255, blank=True, null=True)
     app_mode = models.CharField(max_length=50, blank=True, null=True)
     status = models.CharField(max_length=20, choices=PROJECT_STATUS_CHOICES, default="Ongoing")
@@ -162,6 +163,11 @@ class Project(models.Model):
         
         if self.payment_percentage is not None and (self.payment_percentage < 0 or self.payment_percentage > 100):
             raise ValidationError("Payment percentage must be between 0 and 100.")
+    
+        if self.project_name:
+            qs = Project.objects.filter(project_name__iexact=self.project_name).exclude(pk=self.pk)
+            if qs.exists():
+                raise ValidationError("A project with this name already exists.")
 
     def save(self, *args, **kwargs):
         if not self.project_id:

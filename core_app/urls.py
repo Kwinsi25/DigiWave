@@ -28,4 +28,8 @@ urlpatterns = [
 
     #employees
     path('employees/', user_list, name='user_list'),
+    path('add_user/', add_user, name='add_user'),
+    path("get_user/<int:id>/", get_user, name="get_user"),
+    path('update_user/<int:id>/', update_user, name='update_user'),
+    path('delete_user/<int:id>/', delete_user, name='delete_user'),
 ]

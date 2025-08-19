@@ -7,6 +7,8 @@ from .models import *
 from django.urls import reverse
 from datetime import datetime
 from django.core.paginator import Paginator
+from django.utils import timezone
+from datetime import timedelta
 
 # -----------------------------
 # Dashboard
@@ -30,17 +32,29 @@ def project_list(request):
         page_number = 1 
     projects = Project.objects.all().prefetch_related('team_members') 
     users = User.objects.all() 
-    # Fetch all users for the dropdown 
-    # # Paginate 
+    
+    # Paginate 
     paginator = Paginator(projects, records_per_page) 
     page_obj = paginator.get_page(page_number) # Safe pagination 
     print(users) 
+    # Count stats
+    total_projects = projects.count()
+    ongoing_count = projects.filter(status="Ongoing").count()
+    completed_count = projects.filter(status="Completed").count()
+    cancelled_count = projects.filter(status="Cancelled").count()
+    on_hold_count = projects.filter(status="On Hold").count()
     return render(request, 'project.html', 
-                  { 'projects': projects, 
-                   'users': users, 
-                   'page_obj': page_obj, 
-                   'records_per_page': records_per_page, 
-                   'records_options': [20, 50, 100, 200, 300] })
+                { 'projects': projects, 
+                'users': users, 
+                'page_obj': page_obj, 
+                'records_per_page': records_per_page, 
+                'records_options': [20, 50, 100, 200, 300] ,
+                'total_projects': total_projects,
+                'ongoing_count': ongoing_count,
+                'completed_count': completed_count,
+                'cancelled_count': cancelled_count,
+                'on_hold_count': on_hold_count,
+                   })
 
 def save_project(request):
     """
@@ -274,6 +288,18 @@ def host_list(request):
     host_data_list = HostData.objects.prefetch_related('project').all()
     print(host_data_list)
 
+    # Dashboard counts
+    total_servers = host_data_list.count()
+    running_servers = host_data_list.filter(status="Active").count()
+    down_servers = host_data_list.filter(status="Inactive").count()
+
+    # High CPU Load -> assume > 80% 
+    high_cpu_servers = host_data_list.filter(
+        cpu_usage__regex=r'^\d+%'  # ensure valid percentage
+    ).filter(
+        cpu_usage__gte="80%"  # adjust based on how you store cpu_usage
+    ).count()
+
     paginator = Paginator(host_data_list, records_per_page)
     page_obj = paginator.get_page(page_number)
 
@@ -282,6 +308,10 @@ def host_list(request):
         'page_obj': page_obj,
         'records_per_page': records_per_page,
         'records_options': [20, 50, 100, 200, 300],
+        'total_servers': total_servers,
+        'running_servers': running_servers,
+        'down_servers': down_servers,
+        'high_cpu_servers': high_cpu_servers,
     })
 
 
@@ -493,15 +523,29 @@ def domain_list(request):
 
     projects = Project.objects.all()
 
-    # ✅ For HostData also you changed to ManyToMany
+    #For HostData also you changed to ManyToMany
     host_data_list = HostData.objects.prefetch_related("project").all()
 
-    # ✅ For Domain use prefetch_related instead of select_related
+    #For Domain use prefetch_related instead of select_related
     domains = Domain.objects.prefetch_related("project").order_by("id")
 
     # Paginate domains
     paginator = Paginator(domains, records_per_page)
     page_obj = paginator.get_page(page_number)
+
+    #Dashboard counts
+    today = timezone.now().date()
+
+    total_domains = domains.count()
+
+    active_domains = domains.filter(expiry_date__gte=today).count()
+
+    expired_domains = domains.filter(expiry_date__lt=today).count()
+
+    expiring_soon_domains = domains.filter(
+        expiry_date__gte=today,
+        expiry_date__lte=today + timedelta(days=30)
+    ).count()
 
     return render(request, "domain.html", {
         "projects": projects,
@@ -509,6 +553,10 @@ def domain_list(request):
         "page_obj": page_obj,  # paginated domains
         "records_per_page": records_per_page,
         "records_options": [20, 50, 100, 200, 300],
+        "total_domains": total_domains,
+        "active_domains": active_domains,
+        "expired_domains": expired_domains,
+        "expiring_soon_domains": expiring_soon_domains,
     })
 
 def add_domain(request):
@@ -700,7 +748,7 @@ def delete_domain(request, id):
 # User Management
 # -----------------------------
 def user_list(request):
-    users = User.objects.all().order_by('-created_at')
+    users = User.objects.all().order_by('id')
 
     # Pagination
     page_number = request.GET.get('page', 1)
@@ -710,13 +758,120 @@ def user_list(request):
     # Statistics
     total_users = users.count()
     active_users = users.filter(is_active=True).count()
+    new_users_this_month = users.filter(
+        created_at__year=timezone.now().year,
+        created_at__month=timezone.now().month
+    ).count()
     inactive_users = users.filter(is_active=False).count()
 
     context = {
         'page_obj': page_obj,
         'total_users': total_users,
         'active_users': active_users,
+        'new_users_this_month': new_users_this_month,
         'inactive_users': inactive_users,
     }
 
     return render(request, 'user.html', context)
+
+def add_user(request):
+    if request.method == "POST":
+        try:
+            user = User(
+                first_name=request.POST.get("first_name"),
+                last_name=request.POST.get("last_name"),
+                username=request.POST.get("username"),
+                email=request.POST.get("email"),
+                phone=request.POST.get("phone") or None,
+                designation=request.POST.get("designation") or None,
+                password=request.POST.get("password"),
+                is_active=True if request.POST.get("is_active") == "on" else False,
+            )
+
+            # Handle profile picture upload
+            if "profile_picture" in request.FILES:
+                user.profile_picture = request.FILES["profile_picture"]
+
+            # run model validations
+            user.full_clean()
+            user.save()
+
+            return JsonResponse({"success": True, "message": "User added successfully!"})
+        except ValidationError as ve:
+            return JsonResponse({"success": False, "errors": ve.message_dict}, status=400)
+        except Exception as e:
+            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
+
+    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method"]}}, status=405)
+
+def get_user(request, id):
+    """
+    Return JSON details of a user for editing in modal.
+    """
+    user = get_object_or_404(User, id=id)
+    print(f"Fetching details for user ID: {user.id}, Picture: {user.profile_picture.url if user.profile_picture else 'No picture'}")
+
+    return JsonResponse({
+        "id": user.id,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "username": user.username,
+        "email": user.email,
+        "phone": user.phone,
+        "designation": user.designation,
+        "is_active": user.is_active,
+        "projects": [p.project_name for p in user.projects.all()],
+        "profile_picture_url": request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None,
+
+    })
+
+def update_user(request, id):
+    print(f"Updating user with ID: {id}")
+    """
+    Update an existing user record via AJAX.
+    """
+    if request.method == "POST":
+        try:
+            user = get_object_or_404(User, id=id)
+
+            # Update fields
+            user.first_name = request.POST.get("first_name")
+            user.last_name = request.POST.get("last_name")
+            user.username = request.POST.get("username")
+            user.email = request.POST.get("email")
+            user.phone = request.POST.get("phone") or None
+            user.designation = request.POST.get("designation") or None
+
+            # Update password only if provided
+            password = request.POST.get("password")
+            if password:
+                user.password = password  # (⚠️ plain-text in your model)
+
+            # Profile picture
+            if request.FILES.get("profile_picture"):
+                user.profile_picture = request.FILES["profile_picture"]
+
+            # Checkbox
+            user.is_active = True if request.POST.get("is_active") else False
+
+            user.full_clean()
+            user.save()
+
+            return JsonResponse({"success": True, "message": "User updated successfully!"})
+        except ValidationError as ve:
+            return JsonResponse({"success": False, "errors": ve.message_dict})
+        except Exception as e:
+            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}})
+
+    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}})
+
+def delete_user(request, id):
+    if request.method == "POST":
+        try:
+            user = get_object_or_404(User, id=id)
+            user.delete()
+            return JsonResponse({"success": True, "message": "User deleted successfully!"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=405)

@@ -92,7 +92,7 @@
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
                             <h6 class="mb-1">Total Projects</h6>
-                            <h4 class="fw-bold">120</h4>
+                            <h4 class="fw-bold">{{total_projects}}</h4>
                         </div>
                         <div class="avatar bg-primary text-white rounded-circle p-2">
                             <i class="bx bx-folder-open fs-4"></i>
@@ -108,7 +108,7 @@
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
                             <h6 class="mb-1">In Progress</h6>
-                            <h4 class="fw-bold text-info">35</h4>
+                            <h4 class="fw-bold text-info">{{ongoing_count}}</h4>
                         </div>
                         <div class="avatar bg-info text-white rounded-circle p-2">
                             <i class="bx bx-loader-circle fs-4"></i>
@@ -123,7 +123,7 @@
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
                             <h6 class="mb-1">Completed</h6>
-                            <h4 class="fw-bold text-success">60</h4>
+                            <h4 class="fw-bold text-success">{{completed_count}}</h4>
                         </div>
                         <div class="avatar bg-success text-white rounded-circle p-2">
                             <i class="bx bx-check-circle fs-4"></i>
@@ -138,7 +138,7 @@
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
                             <h6 class="mb-1">Cancelled</h6>
-                            <h4 class="fw-bold text-danger">10</h4>
+                            <h4 class="fw-bold text-danger">{{cancelled_count}}</h4>
                         </div>
                         <div class="avatar bg-danger text-white rounded-circle p-2">
                             <i class="bx bx-x-circle fs-4"></i>
@@ -231,17 +231,30 @@
                                         {% for member in project.team_members.all %}
                                         <li data-bs-toggle="tooltip"
                                             title="{{ member.first_name }} {{ member.last_name }}"
-                                            class="avatar avatar-xs pull-up">
-                                            <img src="{{ member.profile.avatar.url|default:'/static/default-avatar.png' }}"
-                                                alt="Avatar" class="rounded-circle" />
+                                            class="avatar avatar-xs pull-up d-flex align-items-center justify-content-center bg-warning text-primary rounded-circle me-3">
+                                            <i class="bx bx-user fs-6"></i>
                                         </li>
+                                        {% if forloop.counter|divisibleby:5 %}
+                                            <br>
+                                        {% endif %}
                                         {% endfor %}
+                                        
                                     </ul>
                                 </td>
+
+
                                 <td>
-                                    <span class="badge bg-label-warning">{{ project.payment_percentage }}%
-                                        {{project.payment_status }}</span>
-                                </td>
+    {% if project.payment_status == 'Pending' %}
+        <span class="badge bg-label-warning">{{ project.payment_percentage }}% {{ project.payment_status }}</span>
+    {% elif project.payment_status == 'Advanced' %}
+        <span class="badge bg-label-info">{{ project.payment_percentage }}% {{ project.payment_status }}</span>
+    {% elif project.payment_status == 'Paid' %}
+        <span class="badge bg-label-success">{{ project.payment_percentage }}% {{ project.payment_status }}</span>
+    {% else %}
+        <span class="badge bg-label-secondary">{{ project.payment_percentage }}% {{ project.payment_status }}</span>
+    {% endif %}
+</td>
+
                                 <td>
                                     {% if project.live_link %}
                                     <a href="{{ project.live_link }}" target="_blank">{{ project.live_link|urlize }}</a>
@@ -352,7 +365,18 @@
                                 $("#pd-approval-amount").text(p.approval_amount ? `₹${p.approval_amount}` : "");
                                 $("#pd-deadline").text(p.deadline);
                                 $("#pd-completed-date").text(p.completed_date);
-                                $("#pd-payment-status").html(`<span class="badge bg-primary">${p.payment_percentage}% ${p.payment_status}</span>`);
+                                let statusClass = '';
+                                if (p.payment_status === 'Pending') {
+                                    statusClass = 'bg-warning';
+                                } else if (p.payment_status === 'Advanced') {
+                                    statusClass = 'bg-info';
+                                } else if (p.payment_status === 'Paid') {
+                                    statusClass = 'bg-success';
+                                } else {
+                                    statusClass = 'bg-secondary';
+                                }
+
+                                $("#pd-payment-status").html(`<span class="badge ${statusClass}">${p.payment_percentage}% ${p.payment_status}</span>`);
                                 $("#pd-client-industry").text(p.client_industry);
                                 $("#pd-contract-signed").html(`<span class="badge bg-${p.contract_signed === 'Yes' ? 'success' : 'danger'}">${p.contract_signed}</span>`);
                                 if (p.live_link) {
