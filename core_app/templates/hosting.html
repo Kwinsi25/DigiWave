@@ -537,7 +537,7 @@
     <!-- Content wrapper -->
     <!-- host Details Modal -->
     <div class="modal fade" id="hostDetailsModal" tabindex="-1" aria-labelledby="hostDetailsModalLabel"
-        aria-hidden="true">
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header table-primary text-white">
@@ -616,566 +616,659 @@
     </div>
 
     <!-- Add Host Data Modal -->
-    <div class="modal fade" id="addHostDataModal" tabindex="-1" aria-labelledby="addHostDataModalLabel"
-        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header table-primary text-white">
-                    <h5 class="modal-title" id="addHostDataModalLabel">
-                        <i class="bx bx-plus me-2"></i> Add New Server / Host Data
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+   <div class="modal fade" id="addHostDataModal" tabindex="-1" aria-labelledby="addHostDataModalLabel"
+     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header table-primary text-white">
+                <h5 class="modal-title" id="addHostDataModalLabel">
+                    <i class="bx bx-plus me-2"></i> Add New Server / Host Data
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
-                </div>
-
-                <form id="hostDataForm" method="POST">
-                    {% csrf_token %}
-                    <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle">
-                                <tbody>
-                                    <tr>
-                                        <th>Project(s)</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="project" id="add-project" multiple>
-                                                {% for project in projects %}
-                                                <option value="{{ project.id }}">{{ project.project_name }}</option>
-                                                {% endfor %}
-                                            </select>
-
-                                            <small class="text-muted">Hold Ctrl (Windows) or Command (Mac) to select
-                                                multiple</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Company Name</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="company_name" required>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Hosting Provider</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="hosting_provider" required>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Server Name</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="server_name" required>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Server Type</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="server_type" required>
-                                        </td>
-                                        <th>Plan / Package</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="plan_package" required>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Server IP</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="server_ip" required>
-                                        </td>
-                                        <th>Location</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="location">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Operating System</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="operating_system" required>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Control Panel</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="control_panel" required>
-                                        </td>
-                                        <th>Login URL</th>
-                                        <td>
-                                            <input type="url" class="form-control" name="login_url">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Username</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="username">
-                                        </td>
-                                        <th>Password</th>
-                                        <td>
-                                            <input type="password" class="form-control" name="password">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>SSH Username</th>
-                                        <td><input type="text" name="ssh_username" class="form-control"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>SSH / FTP Access</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="ssh_ftp_access">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Database Name</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="database_name">
-                                        </td>
-                                        <th>DB Username</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="db_username">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>DB Password</th>
-                                        <td colspan="3">
-                                            <input type="password" class="form-control" name="db_password">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Purchase Date</th>
-                                        <td>
-                                            <input type="date" class="form-control" name="purchase_date" required>
-                                        </td>
-                                        <th>Expiry Date</th>
-                                        <td>
-                                            <input type="date" class="form-control" name="expiry_date" required>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Server Cost</th>
-                                        <td colspan="3">
-                                            <input type="number" step="0.01" class="form-control" name="server_cost"
-                                                required>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Uptime</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="uptime"
-                                                placeholder="e.g. 32 days">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>CPU Usage</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="cpu_usage"
-                                                placeholder="e.g. 76%">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Memory Usage</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="memory_usage"
-                                                placeholder="e.g. 5.6 GB / 8 GB">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Disk Space</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="disk_space"
-                                                placeholder="e.g. 120 GB / 150 GB">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Backup Status</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="backup_status">
-                                                <option value="">-- Select --</option>
-                                                <option value="Scheduled">Scheduled</option>
-                                                <option value="Completed">Completed</option>
-                                                <option value="Failed">Failed</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Linked Services</th>
-                                        <td colspan="3">
-                                            <textarea class="form-control" name="linked_services" rows="2"
-                                                placeholder="e.g. Nginx, MySQL, Docker"></textarea>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Status</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="status" required>
-                                                <option value="">-- Select --</option>
-                                                <option value="Active">Active</option>
-                                                <option value="Inactive">Inactive</option>
-                                                <option value="Expired">Expired</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Notes</th>
-                                        <td colspan="3">
-                                            <textarea class="form-control" name="notes" rows="2"></textarea>
-                                        </td>
-                                    </tr>
-                                </tbody>
-
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Save Server</button>
-                    </div>
-                </form>
-                <script>
-                    document.getElementById("hostDataForm").addEventListener("submit", function (e) {
-                        e.preventDefault();
-                        let form = this;
-                        let formData = new FormData(form);
-
-                        fetch("/add_host_data/", {
-                            method: "POST",
-                            body: formData,
-                            headers: {
-                                "X-Requested-With": "XMLHttpRequest",
-                                "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
-                            }
-                        })
-                            .then(res => res.json())
-                            .then(data => {
-                                // clear validation errors
-                                form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
-                                form.querySelectorAll(".invalid-feedback").forEach(el => el.innerText = "");
-
-                                if (data.success) {
-                                    // Close modal
-                                    let modalEl = document.getElementById("addHostDataModal");
-                                    let modal = bootstrap.Modal.getInstance(modalEl);
-                                    modal.hide();
-
-                                    // Show success toast
-                                    showToast(data.message, "success");
-
-                                    // Reload after short delay
-                                    setTimeout(() => window.location.reload(), 1000);
-                                } else {
-                                    if (data.errors) {
-                                        for (let field in data.errors) {
-                                            let input = form.querySelector(`[name="${field}"]`);
-                                            if (input) {
-                                                input.classList.add("is-invalid");
-                                                let feedback = input.closest("td,div").querySelector(".invalid-feedback");
-                                                if (feedback) {
-                                                    feedback.innerText = data.errors[field].join(", ");
-                                                }
-                                            }
-                                        }
-                                    }
-                                    if (data.errors["__all__"]) {
-                                        showToast(data.errors["__all__"].join(", "), "danger");
-                                    }
-                                }
-                            })
-                            .catch(err => {
-                                console.error("Error:", err);
-                                showToast("Unexpected error while saving host data.", "danger");
-                            });
-                    });
-
-                </script>
             </div>
-        </div>
-    </div>
 
-    <!-- update host data modal -->
-    <div class="modal fade" id="editHostModal" tabindex="-1" aria-labelledby="editHostModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header table-primary text-white">
-                    <h5 class="modal-title" id="editHostModalLabel">
-                        <i class="bx bx-edit-alt me-2"></i> Edit Server / Host Data
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-
-                <form id="editHostForm" method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="host_id" id="edit-host-id">
-                    <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle">
-                                <tbody>
-                                    <tr>
-                                        <th>Project</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="project" id="edit-project" multiple>
-                                                {% for project in projects %}
+            <form id="hostDataForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <tbody>
+                                <!-- Project(s) -->
+                                <tr>
+                                    <th>Project(s)</th>
+                                    <td colspan="3">
+                                        <select class="form-select" name="project" id="add-project" multiple>
+                                            {% for project in projects %}
                                                 <option value="{{ project.id }}">{{ project.project_name }}</option>
-                                                {% endfor %}
-                                            </select>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="text-muted">Hold Ctrl (Windows) or Command (Mac) to select multiple</small>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
 
+                                <!-- Company Name -->
+                                <tr>
+                                    <th>Company Name</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="company_name" required>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
 
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Company Name</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="company_name"
-                                                id="edit-company-name">
-                                        </td>
-                                    </tr>
+                                <!-- Hosting Provider -->
+                                <tr>
                                     <th>Hosting Provider</th>
                                     <td colspan="3">
-                                        <input type="text" class="form-control" name="hosting_provider"
-                                            id="edit-hosting-provider">
+                                        <input type="text" class="form-control" name="hosting_provider" required>
+                                        <div class="invalid-feedback"></div>
                                     </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Server Name</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="server_name"
-                                                id="edit-server-name">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Server Type</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="server_type"
-                                                id="edit-server-type">
-                                        </td>
-                                        <th>Plan / Package</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="plan_package"
-                                                id="edit-plan-package">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Server IP</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="server_ip"
-                                                id="edit-server-ip">
-                                        </td>
-                                        <th>Location</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="location" id="edit-location">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Operating System</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="operating_system"
-                                                id="edit-operating-system">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Control Panel</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="control_panel"
-                                                id="edit-control-panel">
-                                        </td>
-                                        <th>Login URL</th>
-                                        <td>
-                                            <input type="url" class="form-control" name="login_url" id="edit-login-url">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Username</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="username" id="edit-username">
-                                        </td>
-                                        <th>Password</th>
-                                        <td>
-                                            <input type="password" class="form-control" name="password"
-                                                id="edit-password">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>SSH Username</th>
-                                        <td><input type="text" name="ssh_username" id="edit-ssh-username"
-                                                class="form-control"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>SSH / FTP Access</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="ssh_ftp_access"
-                                                id="edit-ssh-ftp-access">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Database Name</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="database_name"
-                                                id="edit-database-name">
-                                        </td>
-                                        <th>DB Username</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="db_username"
-                                                id="edit-db-username">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>DB Password</th>
-                                        <td colspan="3">
-                                            <input type="password" class="form-control" name="db_password"
-                                                id="edit-db-password">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Purchase Date</th>
-                                        <td>
-                                            <input type="date" class="form-control" name="purchase_date"
-                                                id="edit-purchase-date">
-                                        </td>
-                                        <th>Expiry Date</th>
-                                        <td>
-                                            <input type="date" class="form-control" name="expiry_date"
-                                                id="edit-expiry-date">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Server Cost</th>
-                                        <td colspan="3">
-                                            <input type="number" step="0.01" class="form-control" name="server_cost"
-                                                id="edit-server-cost">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Uptime</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="uptime" id="edit-uptime"
-                                                placeholder="e.g. 32 days">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>CPU Usage</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="cpu_usage" id="edit-cpu-usage"
-                                                placeholder="e.g. 76%">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Memory Usage</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="memory_usage"
-                                                id="edit-memory-usage" placeholder="e.g. 5.6 GB / 8 GB">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Disk Space</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="disk_space"
-                                                id="edit-disk-space" placeholder="e.g. 120 GB / 150 GB">
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Backup Status</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="backup_status" id="edit-backup-status">
-                                                <option value="Scheduled">Scheduled</option>
-                                                <option value="Completed">Completed</option>
-                                                <option value="Failed">Failed</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Linked Services</th>
-                                        <td colspan="3">
-                                            <textarea class="form-control" name="linked_services" rows="2"
-                                                id="edit-linked-services"
-                                                placeholder="e.g. Nginx, MySQL, Docker"></textarea>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Status</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="status" id="edit-status">
-                                                <option value="Active">Active</option>
-                                                <option value="Inactive">Inactive</option>
-                                                <option value="Expired">Expired</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Notes</th>
-                                        <td colspan="3">
-                                            <textarea class="form-control" name="notes" rows="2"
-                                                id="edit-notes"></textarea>
-                                        </td>
-                                    </tr>
-                                </tbody>
+                                </tr>
 
-                            </table>
-                        </div>
+                                <!-- Server Name -->
+                                <tr>
+                                    <th>Server Name</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="server_name" required>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Server Type & Plan -->
+                                <tr>
+                                    <th>Server Type</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="server_type" required>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>Plan / Package</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="plan_package" required>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Server IP & Location -->
+                                <tr>
+                                    <th>Server IP</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="server_ip" required>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>Location</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="location">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Operating System -->
+                                <tr>
+                                    <th>Operating System</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="operating_system" required>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Control Panel & Login URL -->
+                                <tr>
+                                    <th>Control Panel</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="control_panel" required>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>Login URL</th>
+                                    <td>
+                                        <input type="url" class="form-control" name="login_url">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Username & Password -->
+                                <tr>
+                                    <th>Username</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="username">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>Password</th>
+                                    <td>
+                                        <input type="password" class="form-control" name="password">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- SSH Username & Access -->
+                                <tr>
+                                    <th>SSH Username</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="ssh_username">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>SSH / FTP Access</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="ssh_ftp_access">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Database Fields -->
+                                <tr>
+                                    <th>Database Name</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="database_name">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>DB Username</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="db_username">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>DB Password</th>
+                                    <td colspan="3">
+                                        <input type="password" class="form-control" name="db_password">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Purchase & Expiry Date -->
+                                <tr>
+                                    <th>Purchase Date</th>
+                                    <td>
+                                        <input type="date" class="form-control" name="purchase_date" required>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>Expiry Date</th>
+                                    <td>
+                                        <input type="date" class="form-control" name="expiry_date" required>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Server Cost -->
+                                <tr>
+                                    <th>Server Cost</th>
+                                    <td colspan="3">
+                                        <input type="number" step="0.01" class="form-control" name="server_cost" required>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Other Metrics -->
+                                <tr>
+                                    <th>Uptime</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="uptime" placeholder="e.g. 32 days">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>CPU Usage</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="cpu_usage" placeholder="e.g. 76%">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Memory Usage</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="memory_usage" placeholder="e.g. 5.6 GB / 8 GB">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Disk Space</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="disk_space" placeholder="e.g. 120 GB / 150 GB">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Backup Status -->
+                                <tr>
+                                    <th>Backup Status</th>
+                                    <td colspan="3">
+                                        <select class="form-select" name="backup_status">
+                                            <option value="">-- Select --</option>
+                                            <option value="Scheduled">Scheduled</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="Failed">Failed</option>
+                                        </select>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Linked Services -->
+                                <tr>
+                                    <th>Linked Services</th>
+                                    <td colspan="3">
+                                        <textarea class="form-control" name="linked_services" rows="2" placeholder="e.g. Nginx, MySQL, Docker"></textarea>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Status -->
+                                <tr>
+                                    <th>Status</th>
+                                    <td colspan="3">
+                                        <select class="form-select" name="status" required>
+                                            <option value="">-- Select --</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Inactive">Inactive</option>
+                                            <option value="Expired">Expired</option>
+                                        </select>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Notes -->
+                                <tr>
+                                    <th>Notes</th>
+                                    <td colspan="3">
+                                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
+                </div>
 
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Save Server</button>
-                    </div>
-                </form>
-                <script>
-                    document.getElementById("editHostForm").addEventListener("submit", function (e) {
-                        e.preventDefault();
-                        let form = this;
-                        let formData = new FormData(form);
-                        let hostId = document.getElementById("edit-host-id").value;
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Server</button>
+                </div>
+            </form>
 
-                        fetch(`/update_host_data/${hostId}/`, {
-                            method: "POST",
-                            body: formData,
-                            headers: {
-                                "X-Requested-With": "XMLHttpRequest",
-                                "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
-                            }
-                        })
-                            .then(res => res.json())
-                            .then(data => {
-                                // remove old errors
-                                form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
-                                form.querySelectorAll(".invalid-feedback").forEach(el => el.innerText = "");
+            <script>
+                document.getElementById("hostDataForm").addEventListener("submit", function (e) {
+                    e.preventDefault();
+                    let form = this;
+                    let formData = new FormData(form);
 
-                                if (data.success) {
-                                    // ✅ Close modal
-                                    let modalEl = document.getElementById("editHostModal");
-                                    let modal = bootstrap.Modal.getInstance(modalEl);
-                                    modal.hide();
+                    fetch("/add_host_data/", {
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        // Clear validation errors
+                        form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+                        form.querySelectorAll(".invalid-feedback").forEach(el => el.innerText = "");
 
-                                    // ✅ Toast
-                                    showToast(data.message, "success");
+                        if (data.success) {
+                            let modalEl = document.getElementById("addHostDataModal");
+                            let modal = bootstrap.Modal.getInstance(modalEl);
+                            modal.hide();
 
-                                    // ✅ Refresh
-                                    setTimeout(() => window.location.reload(), 1000);
-                                } else {
-                                    if (data.errors) {
-                                        for (let field in data.errors) {
-                                            let input = form.querySelector(`[name="${field}"]`);
-                                            if (input) {
-                                                input.classList.add("is-invalid");
-                                                let feedback = input.closest("td,div").querySelector(".invalid-feedback");
-                                                if (feedback) {
-                                                    feedback.innerText = data.errors[field].join(", ");
-                                                }
-                                            }
+                            showToast(data.message, "success");
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            if (data.errors) {
+                                for (let field in data.errors) {
+                                    let input = form.querySelector(`[name="${field}"]`);
+                                    if (input) {
+                                        input.classList.add("is-invalid");
+                                        let feedback = input.closest("td,div").querySelector(".invalid-feedback");
+                                        if (!feedback) {
+                                            feedback = document.createElement("div");
+                                            feedback.classList.add("invalid-feedback");
+                                            input.parentNode.appendChild(feedback);
                                         }
-                                    }
-                                    if (data.errors["__all__"]) {
-                                        showToast(data.errors["__all__"].join(", "), "danger");
+                                        feedback.innerText = data.errors[field].join(", ");
                                     }
                                 }
-                            })
-                            .catch(err => {
-                                console.error("Error:", err);
-                                showToast("Unexpected error while updating host data.", "danger");
-                            });
+                            }
+                            if (data.errors["__all__"]) {
+                                showToast(data.errors["__all__"].join(", "), "danger");
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error:", err);
+                        showToast("Unexpected error while saving host data.", "danger");
                     });
-
-                </script>
-            </div>
+                });
+            </script>
         </div>
     </div>
+</div>
+
+
+    <!-- update host data modal -->
+<div class="modal fade" id="editHostModal" tabindex="-1" aria-labelledby="editHostModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header table-primary text-white">
+                <h5 class="modal-title" id="editHostModalLabel">
+                    <i class="bx bx-edit-alt me-2"></i> Edit Server / Host Data
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form id="editHostForm" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="host_id" id="edit-host-id">
+                <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <tbody>
+                                <!-- Project(s) -->
+                                <tr>
+                                    <th>Project</th>
+                                    <td colspan="3">
+                                        <select class="form-select" name="project" id="edit-project" multiple>
+                                            {% for project in projects %}
+                                                <option value="{{ project.id }}">{{ project.project_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Company Name -->
+                                <tr>
+                                    <th>Company Name</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="company_name" id="edit-company-name">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Hosting Provider -->
+                                <tr>
+                                    <th>Hosting Provider</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="hosting_provider" id="edit-hosting-provider">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Server Name -->
+                                <tr>
+                                    <th>Server Name</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="server_name" id="edit-server-name">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Server Type & Plan -->
+                                <tr>
+                                    <th>Server Type</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="server_type" id="edit-server-type">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>Plan / Package</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="plan_package" id="edit-plan-package">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Server IP & Location -->
+                                <tr>
+                                    <th>Server IP</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="server_ip" id="edit-server-ip">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>Location</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="location" id="edit-location">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Operating System -->
+                                <tr>
+                                    <th>Operating System</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="operating_system" id="edit-operating-system">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Control Panel & Login URL -->
+                                <tr>
+                                    <th>Control Panel</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="control_panel" id="edit-control-panel">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>Login URL</th>
+                                    <td>
+                                        <input type="url" class="form-control" name="login_url" id="edit-login-url">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Username & Password -->
+                                <tr>
+                                    <th>Username</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="username" id="edit-username">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>Password</th>
+                                    <td>
+                                        <input type="password" class="form-control" name="password" id="edit-password">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- SSH Username & Access -->
+                                <tr>
+                                    <th>SSH Username</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="ssh_username" id="edit-ssh-username">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>SSH / FTP Access</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="ssh_ftp_access" id="edit-ssh-ftp-access">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Database Fields -->
+                                <tr>
+                                    <th>Database Name</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="database_name" id="edit-database-name">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>DB Username</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="db_username" id="edit-db-username">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>DB Password</th>
+                                    <td colspan="3">
+                                        <input type="password" class="form-control" name="db_password" id="edit-db-password">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Purchase & Expiry Date -->
+                                <tr>
+                                    <th>Purchase Date</th>
+                                    <td>
+                                        <input type="date" class="form-control" name="purchase_date" id="edit-purchase-date">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>Expiry Date</th>
+                                    <td>
+                                        <input type="date" class="form-control" name="expiry_date" id="edit-expiry-date">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Server Cost -->
+                                <tr>
+                                    <th>Server Cost</th>
+                                    <td colspan="3">
+                                        <input type="number" step="0.01" class="form-control" name="server_cost" id="edit-server-cost">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Other Metrics -->
+                                <tr>
+                                    <th>Uptime</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="uptime" id="edit-uptime" placeholder="e.g. 32 days">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>CPU Usage</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="cpu_usage" id="edit-cpu-usage" placeholder="e.g. 76%">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Memory Usage</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="memory_usage" id="edit-memory-usage" placeholder="e.g. 5.6 GB / 8 GB">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Disk Space</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="disk_space" id="edit-disk-space" placeholder="e.g. 120 GB / 150 GB">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Backup Status -->
+                                <tr>
+                                    <th>Backup Status</th>
+                                    <td colspan="3">
+                                        <select class="form-select" name="backup_status" id="edit-backup-status">
+                                            <option value="">-- Select --</option>
+                                            <option value="Scheduled">Scheduled</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="Failed">Failed</option>
+                                        </select>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Linked Services -->
+                                <tr>
+                                    <th>Linked Services</th>
+                                    <td colspan="3">
+                                        <textarea class="form-control" name="linked_services" rows="2" id="edit-linked-services" placeholder="e.g. Nginx, MySQL, Docker"></textarea>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Status -->
+                                <tr>
+                                    <th>Status</th>
+                                    <td colspan="3">
+                                        <select class="form-select" name="status" id="edit-status">
+                                            <option value="">-- Select --</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Inactive">Inactive</option>
+                                            <option value="Expired">Expired</option>
+                                        </select>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                                <!-- Notes -->
+                                <tr>
+                                    <th>Notes</th>
+                                    <td colspan="3">
+                                        <textarea class="form-control" name="notes" rows="2" id="edit-notes"></textarea>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Update Server</button>
+                </div>
+            </form>
+
+            <script>
+                document.getElementById("editHostForm").addEventListener("submit", function (e) {
+                    e.preventDefault();
+                    let form = this;
+                    let formData = new FormData(form);
+                    let hostId = document.getElementById("edit-host-id").value;
+
+                    fetch(`/update_host_data/${hostId}/`, {
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        // Clear previous errors
+                        form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+                        form.querySelectorAll(".invalid-feedback").forEach(el => el.innerText = "");
+
+                        if (data.success) {
+                            let modalEl = document.getElementById("editHostModal");
+                            let modal = bootstrap.Modal.getInstance(modalEl);
+                            modal.hide();
+                            showToast(data.message, "success");
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            if (data.errors) {
+                                for (let field in data.errors) {
+                                    let input = form.querySelector(`[name="${field}"]`);
+                                    if (input) {
+                                        input.classList.add("is-invalid");
+                                        let feedback = input.closest("td,div").querySelector(".invalid-feedback");
+                                        if (feedback) feedback.innerText = data.errors[field].join(", ");
+                                    }
+                                }
+                            }
+                            if (data.errors["__all__"]) {
+                                showToast(data.errors["__all__"].join(", "), "danger");
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error:", err);
+                        showToast("Unexpected error while updating host data.", "danger");
+                    });
+                });
+            </script>
+        </div>
+    </div>
+</div>
+
 
     <!-- Delete Host Confirmation Modal -->
-    <div class="modal fade" id="deleteHostModal" tabindex="-1" aria-labelledby="deleteHostLabel" aria-hidden="true">
+    <div class="modal fade" id="deleteHostModal" tabindex="-1" aria-labelledby="deleteHostLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content text-center">
                 <div class="modal-header border-0">

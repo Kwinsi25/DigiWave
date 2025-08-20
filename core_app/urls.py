@@ -32,4 +32,17 @@ urlpatterns = [
     path("get_user/<int:id>/", get_user, name="get_user"),
     path('update_user/<int:id>/', update_user, name='update_user'),
     path('delete_user/<int:id>/', delete_user, name='delete_user'),
+
+
+    #quotation
+    path('quotation/', quotation_list, name='quotation_list'),
+    path('add_quotation/', add_quotation, name='add_quotation'),
+    path('get_quotation/', get_quotation, name='get_quotation'),
+    path('update_quotation/<int:id>/', update_quotation, name='update_quotation'),
+    path("download_quotation/<int:id>/", download_quotation, name="download_quotation"),
+
+    #client
+    path('client/', client_list, name='client_list'),
+    path('add_client/', add_client, name='add_client'),
+    path('get_client/', get_client, name='get_client'),
 ]

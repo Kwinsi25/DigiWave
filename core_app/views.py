@@ -9,7 +9,15 @@ from datetime import datetime
 from django.core.paginator import Paginator
 from django.utils import timezone
 from datetime import timedelta
-
+from django.utils.dateparse import parse_date
+from collections import defaultdict
+import json
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from django.http import HttpResponse
+from django.http import JsonResponse, Http404
 # -----------------------------
 # Dashboard
 # -----------------------------
@@ -332,7 +340,7 @@ def add_host_data(request):
                 server_name=request.POST.get("server_name"),
                 server_type=request.POST.get("server_type"),
                 plan_package=request.POST.get("plan_package"),
-                server_ip=request.POST.get("server_ip"),
+                server_ip = request.POST.get("server_ip") or None,
                 location=request.POST.get("location"),
                 operating_system=request.POST.get("operating_system"),
                 control_panel=request.POST.get("control_panel"),
@@ -367,12 +375,15 @@ def add_host_data(request):
             return JsonResponse({"success": True, "message": "Host Data saved successfully!"})
 
         except ValidationError as ve:
-            return JsonResponse({"success": False, "errors": ve.message_dict}, status=400)
+            # ve.message_dict is a dict only if you raise ValidationError({'field': ['msg']})
+            errors = ve.message_dict if hasattr(ve, "message_dict") else {"__all__": ve.messages}
+            return JsonResponse({"success": False, "errors": errors}, status=400)
 
         except Exception as e:
             return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
 
     return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}}, status=405)
+
 
 def get_host_details(request):
     """
@@ -748,11 +759,18 @@ def delete_domain(request, id):
 # User Management
 # -----------------------------
 def user_list(request):
+    records_per_page = int(request.GET.get('recordsPerPage', 20))
+
+    try:
+        page_number = int(request.GET.get('page', 1))
+    except ValueError:
+        page_number = 1
+    if page_number < 1:
+        page_number = 1
     users = User.objects.all().order_by('id')
 
-    # Pagination
-    page_number = request.GET.get('page', 1)
-    paginator = Paginator(users, 10)  # 10 users per page
+     # Paginate
+    paginator = Paginator(users, records_per_page)
     page_obj = paginator.get_page(page_number)
 
     # Statistics
@@ -765,7 +783,9 @@ def user_list(request):
     inactive_users = users.filter(is_active=False).count()
 
     context = {
-        'page_obj': page_obj,
+        "page_obj": page_obj,  # paginated domains
+        "records_per_page": records_per_page,
+        "records_options": [20, 50, 100, 200, 300],
         'total_users': total_users,
         'active_users': active_users,
         'new_users_this_month': new_users_this_month,
@@ -875,3 +895,610 @@ def delete_user(request, id):
             return JsonResponse({"success": False, "error": str(e)}, status=500)
 
     return JsonResponse({"success": False, "error": "Invalid request method"}, status=405)
+
+
+# -----------------------------
+# Quotation View
+# -----------------------------
+
+def quotation_list(request):
+    records_per_page = int(request.GET.get('recordsPerPage', 20))
+
+    try:
+        page_number = int(request.GET.get('page', 1))
+    except ValueError:
+        page_number = 1
+    if page_number < 1:
+        page_number = 1
+    quotations = Quotation.objects.all()
+
+     # Paginate
+    paginator = Paginator(quotations, records_per_page)
+    page_obj = paginator.get_page(page_number)
+    
+    
+    # Today date for status check
+    today = timezone.now().date()
+
+    # Stats (optional, for cards like servers)
+    total_quotations = quotations.count()
+    active_quotations = quotations.filter(valid_until__gte=today).count()
+    expired_quotations = quotations.filter(valid_until__lt=today).count()
+    this_month_quotations = quotations.filter(date__month=today.month, date__year=today.year).count()
+
+    # get all users
+    users = User.objects.all()
+
+    context = {
+        "page_obj": page_obj,
+        "records_per_page": records_per_page,
+        "records_options": [20, 50, 100, 200, 300],
+        "today": today,
+        "total_quotations": total_quotations,
+        "active_quotations": active_quotations,
+        "expired_quotations": expired_quotations,
+        "this_month_quotations": this_month_quotations,
+        "users": users,
+    }
+    return render(request, "quotation.html", context)
+
+
+def add_quotation(request):
+    if request.method == "POST":
+        try:
+            data = request.POST
+            files = request.FILES
+
+            # prepared_by user (by ID)
+            prepared_by_user = None
+            prepared_by_value = data.get("prepared_by")
+            if prepared_by_value:
+                try:
+                    prepared_by_user = User.objects.get(id=prepared_by_value)
+                except User.DoesNotExist:
+                    prepared_by_user = None
+            
+            # Helper: parse dynamic service rows
+            def parse_services():
+                services = {"web": [], "mobile": [], "cloud": [], "ai_ml": []}
+
+                # Find all indices by checking keys like service[1][category]
+                indices = set()
+                for key in data:
+                    if key.startswith("service[") and key.endswith("][category]"):
+                        idx = key.split("[")[1].split("]")[0]
+                        indices.add(idx)
+
+                for index in indices:
+                    category = data.get(f"service[{index}][category]")
+                    description = data.get(f"service[{index}][description]")
+                    quantity = int(data.get(f"service[{index}][quantity]") or 1)
+                    unit_price = float(data.get(f"service[{index}][unit_price]") or 0)
+                    if category in services:
+                        services[category].append({
+                            "description": description,
+                            "quantity": quantity,
+                            "unit_price": unit_price
+                        })
+
+                return services
+
+
+            services = parse_services()
+            
+            # helper for JSON fields
+            def extract_json(prefix):
+                included = data.get(f"{prefix}[included]") == "true"
+                if not included:
+                    return []  # empty list if not selected
+
+                duration_raw = data.get(f"{prefix}[duration]") or ""
+                
+                import re
+                # Match number + optional unit
+                match = re.match(r'(\d+)\s*(\w+)?', duration_raw.strip())
+                if match:
+                    duration_value = int(match.group(1))       # numeric part
+                    duration_unit = match.group(2) or ""       # "day", "month", "year", etc.
+                else:
+                    duration_value = 0
+                    duration_unit = ""
+
+                return [{
+                    "included": True,
+                    "duration": str(duration_value) + " " + duration_unit,
+                    "unit_price": float(data.get(f"{prefix}[unit_price]") or 0),
+                }]
+
+            Quotation.objects.create(
+                company_name=data.get("company_name"),
+                company_address=data.get("company_address", ""),
+                company_phone=data.get("company_phone", ""),
+                company_email=data.get("company_email", ""),
+
+                # quotation_no=data.get("quotation_no") or "",  # auto-generated if blank
+                
+                date=parse_date(data.get("date")),
+                valid_until=parse_date(data.get("valid_until")),
+                prepared_by=prepared_by_user,
+                
+                client_name=data.get("client_name"),
+                client_contact=data.get("client_contact", ""),
+                client_address=data.get("client_address", ""),
+                
+
+                web_services=services["web"],
+                mobile_services=services["mobile"],
+                cloud_services=services["cloud"],
+                ai_ml_services=services["ai_ml"],
+
+                domain_registration = extract_json("domain_registration"),
+                server_hosting = extract_json("server_hosting"),
+                ssl_certificate = extract_json("ssl_certificate"),
+                email_hosting = extract_json("email_hosting"),
+                
+                discount_type=data.get("discount_type", "flat"),
+                discount_value=Decimal(data.get("discount_value") or 0),
+                tax_rate=Decimal(data.get("tax_rate") or 18),
+                
+                payment_terms=data.get("payment_terms", ""),
+                additional_notes=data.get("additional_notes", ""),
+                signatory_name=data.get("signatory_name", ""),
+                signatory_designation=data.get("signatory_designation", ""),
+                signature=files.get("signature"),
+            )
+
+            messages.success(request, "Quotation added successfully!")
+            return redirect("quotation_list")
+
+        except Exception as e:
+            messages.error(request, f"Error adding quotation: {str(e)}")
+            return redirect("quotation_list")
+        
+def get_quotation(request):
+    quotation_id = request.GET.get("id")
+    quotation = Quotation.objects.get(id=quotation_id)
+
+    # Merge services into single list with category
+    def add_category(services, category_label):
+        items = []
+        if services and isinstance(services, list):
+            for s in services:
+                items.append({
+                    "category": category_label,
+                    "description": s.get("description", "").strip().lower(),
+                    "quantity": int(s.get("quantity", 0)),
+                    "unit_price": float(s.get("unit_price", 0)),
+                    "total": float(s.get("total", 0)),
+                })
+        return items
+
+    raw_services = []
+    raw_services += add_category(quotation.web_services, "Web Development")
+    raw_services += add_category(quotation.mobile_services, "Mobile Development")
+    raw_services += add_category(quotation.cloud_services, "Cloud Services")
+    raw_services += add_category(quotation.ai_ml_services, "AI/ML Algorithms")
+
+    # Group by (category, description, unit_price)
+    grouped = defaultdict(lambda: {"quantity": 0, "total": 0})
+    for s in raw_services:
+        # key = (s["category"], s["description"], s["unit_price"])
+        key = (s["category"],)
+
+        grouped[key].update({
+            "category": s["category"],
+            "description": s["description"],
+            "unit_price": s["unit_price"],
+        })
+        print(f"Processing service: {s}")  # Debugging output
+        grouped[key]["quantity"] += s["quantity"]
+        grouped[key]["total"] += s["total"]
+
+    services = list(grouped.values())
+    print(f"Grouped services: {services}")  # Debugging output
+
+    # Helper for server/domain charges
+    def format_infra(items):
+        result = []
+        if items and isinstance(items, list):
+            for f in items:
+                if f.get("included"):
+                    result.append({
+                        "included": True,
+                        "duration": f.get("duration", ""),
+                        "unit_price": f.get("unit_price", 0),
+                        "total": f.get("total", 0),
+                    })
+        return result  # return list, can be empty
+
+
+
+    return JsonResponse({
+        # --- Company & Client Info ---
+        "quotation_no": quotation.quotation_no,
+        "date": quotation.date.strftime("%Y-%m-%d"),
+        "valid_until": quotation.valid_until.strftime("%Y-%m-%d"),
+        "prepared_by": str(quotation.prepared_by) if quotation.prepared_by else "",
+        "company_name": quotation.company_name,
+        "company_phone": quotation.company_phone,
+        "company_email": quotation.company_email,
+        "company_address": quotation.company_address,
+        "client_name": quotation.client_name,
+        "client_contact": quotation.client_contact,
+        "client_email": quotation.client_email,
+        "client_address": quotation.client_address,
+
+        # --- Services ---
+        "services": services,
+        "total_service_charge": str(quotation.total_service_charge),
+
+        # --- Server & Domain ---
+       "infra": {
+        "domain_registration": format_infra(quotation.domain_registration),
+        "server_hosting": format_infra(quotation.server_hosting),
+        "ssl_certificate": format_infra(quotation.ssl_certificate),
+        "email_hosting": format_infra(quotation.email_hosting),
+        },
+        "total_server_domain_charge": str(quotation.total_server_domain_charge),
+        
+
+        # --- Summary ---
+        "subtotal_services": str(quotation.total_service_charge),
+        "subtotal_infra": str(quotation.total_server_domain_charge),
+        "discount_type": quotation.discount_type,
+        "discount_value": str(quotation.discount_value),
+        "after_discount_total": str(quotation.after_discount_total),
+        "tax_rate": str(quotation.tax_rate),
+        "tax_amount": str(quotation.tax_amount),
+        "grand_total": str(quotation.grand_total),
+
+        # --- Other ---
+        "payment_terms": quotation.payment_terms,
+        "additional_notes": quotation.additional_notes,
+
+        # --- Signatory ---
+        "signature_url": quotation.signature.url if quotation.signature else None,
+        "sign_name": quotation.signatory_name,
+        "sign_designation": quotation.signatory_designation,
+    })
+
+def update_quotation(request, id):
+    from decimal import Decimal
+    quotation = get_object_or_404(Quotation, pk=id)
+
+    if request.method == "POST":
+        try:
+            data = request.POST
+            files = request.FILES
+
+            # prepared_by user (by ID) — same approach as add_quotation
+            prepared_by_user = None
+            prepared_by_value = data.get("prepared_by")
+            if prepared_by_value:
+                try:
+                    prepared_by_user = User.objects.get(id=prepared_by_value)
+                except User.DoesNotExist:
+                    prepared_by_user = None
+
+            # Helper: parse dynamic service rows (category-aware)
+            def parse_services():
+                services = {"web": [], "mobile": [], "cloud": [], "ai_ml": []}
+
+                indices = set()
+                for key in data:
+                    if key.startswith("service[") and key.endswith("][category]"):
+                        idx = key.split("[")[1].split("]")[0]
+                        indices.add(idx)
+
+                for index in indices:
+                    category = data.get(f"service[{index}][category]")
+                    description = data.get(f"service[{index}][description]")
+                    quantity = int(data.get(f"service[{index}][quantity]") or 1)
+                    unit_price = float(data.get(f"service[{index}][unit_price]") or 0)
+                    if category in services:
+                        services[category].append({
+                            "description": description,
+                            "quantity": quantity,
+                            "unit_price": unit_price
+                        })
+                return services
+
+            # Helper for JSON infra fields (domain/server/ssl/email)
+            def extract_json(prefix):
+                included = data.get(f"{prefix}[included]") == "true"
+                if not included:
+                    return []  # keep empty list when not selected
+
+                duration_raw = data.get(f"{prefix}[duration]") or ""
+                import re
+                match = re.match(r'(\d+)\s*(\w+)?', duration_raw.strip())
+                if match:
+                    duration_value = int(match.group(1))
+                    duration_unit = match.group(2) or ""
+                else:
+                    duration_value = 0
+                    duration_unit = ""
+
+                return [{
+                    "included": True,
+                    "duration": str(duration_value) + " " + duration_unit,
+                    "unit_price": float(data.get(f"{prefix}[unit_price]") or 0),
+                }]
+
+            # ---------- Assign simple fields ----------
+            quotation.company_name = data.get("company_name")
+            quotation.company_address = data.get("company_address", "")
+            quotation.company_phone = data.get("company_phone", "")
+            quotation.company_email = data.get("company_email", "")
+
+            quotation.date = parse_date(data.get("date"))
+            quotation.valid_until = parse_date(data.get("valid_until"))
+            quotation.prepared_by = prepared_by_user
+
+            quotation.client_name = data.get("client_name")
+            quotation.client_contact = data.get("client_contact", "")  # save() validates phone/email
+            quotation.client_address = data.get("client_address", "")
+
+            # ---------- Services (category-split) ----------
+            services = parse_services()
+            quotation.web_services = services["web"]
+            quotation.mobile_services = services["mobile"]
+            quotation.cloud_services = services["cloud"]
+            quotation.ai_ml_services = services["ai_ml"]
+
+            # ---------- Infra JSON blocks ----------
+            quotation.domain_registration = extract_json("domain_registration")
+            quotation.server_hosting = extract_json("server_hosting")
+            quotation.ssl_certificate = extract_json("ssl_certificate")
+            quotation.email_hosting = extract_json("email_hosting")
+
+            # ---------- Summary ----------
+            quotation.discount_type = data.get("discount_type", "flat")
+            quotation.discount_value = Decimal(data.get("discount_value") or 0)
+            quotation.tax_rate = Decimal(data.get("tax_rate") or 18)
+            quotation.payment_terms = data.get("payment_terms", "")
+            quotation.additional_notes = data.get("additional_notes", "")
+
+            # ---------- Signature / Signatory ----------
+            if files.get("signature"):
+                quotation.signature = files.get("signature")
+            quotation.signatory_name = data.get("signatory_name", "")
+            quotation.signatory_designation = data.get("signatory_designation", "")
+
+            # Persist (recalculations happen in model.save())
+            quotation.save()
+            messages.success(request, "Quotation updated successfully!")
+            return redirect("quotation_list")
+
+        except Exception as e:
+            messages.error(request, f"Error updating quotation: {str(e)}")
+            return redirect("quotation_list")
+
+    # Non-POST: just go back to list (same pattern used elsewhere)
+    return redirect("quotation_list")
+
+def download_quotation(request, id):
+    quotation = get_object_or_404(Quotation, pk=id)
+
+    # Prepare HTTP response as PDF
+    response = HttpResponse(content_type="application/pdf")
+    response['Content-Disposition'] = f'attachment; filename="quotation_{quotation.quotation_no}.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=A4)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    # --- Title ---
+    elements.append(Paragraph(f"Quotation #{quotation.quotation_no}", styles['Title']))
+    elements.append(Spacer(1, 12))
+
+    # --- Company & Client Info ---
+    company_client_table = [
+        ["Company", quotation.company_name or "-"],
+        ["Address", quotation.company_address or "-"],
+        ["Phone", quotation.company_phone or "-"],
+        ["Email", quotation.company_email or "-"],
+        ["Quotation Date", quotation.date.strftime("%Y-%m-%d")],
+        ["Valid Until", quotation.valid_until.strftime("%Y-%m-%d")],
+        ["Prepared By", str(quotation.prepared_by) if quotation.prepared_by else "-"],
+        ["Client Name", quotation.client_name],
+        ["Client Contact", quotation.client_contact or "-"],
+        ["Client Email", quotation.client_email or "-"],
+        ["Client Address", quotation.client_address or "-"],
+    ]
+    t = Table(company_client_table, colWidths=[120, 350])
+    t.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), colors.lightblue),
+                           ("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
+    elements.append(t)
+    elements.append(Spacer(1, 12))
+
+    # --- Service Charges ---
+    elements.append(Paragraph("1. Service Charges", styles['Heading2']))
+    service_data = [["Category", "Description", "Qty", "Unit Price", "Total"]]
+
+    def add_services(services, label):
+        if services:
+            for s in services:
+                total = float(s.get("quantity", 0)) * float(s.get("unit_price", 0))
+                service_data.append([
+                    label,
+                    s.get("description", ""),
+                    str(s.get("quantity", 0)),
+                    f"₹ {s.get('unit_price', 0)}",
+                    f"₹ {total}"
+                ])
+
+    add_services(quotation.web_services, "Web Development")
+    add_services(quotation.mobile_services, "Mobile Development")
+    add_services(quotation.cloud_services, "Cloud Services")
+    add_services(quotation.ai_ml_services, "AI/ML Algorithms")
+
+    if len(service_data) == 1:
+        service_data.append(["-", "No services", "-", "-", "-"])
+
+    t = Table(service_data, colWidths=[100, 150, 60, 80, 80])
+    t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
+    elements.append(t)
+    elements.append(Paragraph(f"Total Service Charge: ₹ {quotation.total_service_charge}", styles['Normal']))
+    elements.append(Spacer(1, 12))
+
+    # --- Server & Domain Charges ---
+    elements.append(Paragraph("2. Server & Domain Charges", styles['Heading2']))
+    infra_data = [["Type", "Duration", "Unit Price", "Total"]]
+
+    def add_infra(items, label):
+        if items:
+            for i in items:
+                if i.get("included"):
+                    infra_data.append([
+                        label,
+                        i.get("duration", "-"),
+                        f"₹ {i.get('unit_price', 0)}",
+                        f"₹ {i.get('total', 0)}"
+                    ])
+
+    add_infra(quotation.domain_registration, "Domain Registration")
+    add_infra(quotation.server_hosting, "Server Hosting")
+    add_infra(quotation.ssl_certificate, "SSL Certificate")
+    add_infra(quotation.email_hosting, "Email Hosting")
+
+    if len(infra_data) == 1:
+        infra_data.append(["-", "-", "-", "-"])
+
+    t = Table(infra_data, colWidths=[150, 100, 100, 100])
+    t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
+    elements.append(t)
+    elements.append(Paragraph(f"Total Infra Charge: ₹ {quotation.total_server_domain_charge}", styles['Normal']))
+    elements.append(Spacer(1, 12))
+
+    # --- Summary ---
+    elements.append(Paragraph("3. Summary", styles['Heading2']))
+    summary_table = [
+        ["Subtotal (Services)", f"₹ {quotation.total_service_charge}"],
+        ["Subtotal (Infra)", f"₹ {quotation.total_server_domain_charge}"],
+        [f"Discount ({quotation.discount_type})", str(quotation.discount_value)],
+        ["Tax Rate", f"{quotation.tax_rate}%"],
+        ["Tax Amount", f"₹ {quotation.tax_amount}"],
+        ["Grand Total", f"₹ {quotation.grand_total}"],
+    ]
+    t = Table(summary_table, colWidths=[200, 200])
+    t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
+    elements.append(t)
+    elements.append(Spacer(1, 12))
+
+    # --- Notes ---
+    elements.append(Paragraph("Payment Terms:", styles['Heading3']))
+    elements.append(Paragraph(quotation.payment_terms or "-", styles['Normal']))
+    elements.append(Paragraph("Additional Notes:", styles['Heading3']))
+    elements.append(Paragraph(quotation.additional_notes or "-", styles['Normal']))
+    elements.append(Spacer(1, 12))
+
+    # --- Signatory ---
+    elements.append(Paragraph("Authorized Signatory", styles['Heading2']))
+    sign_table = [
+        ["Name", quotation.signatory_name or "-"],
+        ["Designation", quotation.signatory_designation or "-"]
+    ]
+    t = Table(sign_table, colWidths=[150, 250])
+    t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
+    elements.append(t)
+
+    # Build PDF
+    doc.build(elements)
+    return response
+
+
+# -----------------------------
+# client Management
+# -----------------------------
+def client_list(request):
+    records_per_page = int(request.GET.get('recordsPerPage', 20))
+
+    try:
+        page_number = int(request.GET.get('page', 1))
+    except ValueError:
+        page_number = 1
+    if page_number < 1:
+        page_number = 1
+    clients = Client.objects.all().order_by('id')
+
+     # Paginate
+    paginator = Paginator(clients, records_per_page)
+    page_obj = paginator.get_page(page_number)
+
+    total_clients = clients.count()
+    
+    context = {
+        "page_obj": page_obj,  # paginated domains
+        "records_per_page": records_per_page,
+        "total_clients": total_clients,
+        "records_options": [20, 50, 100, 200, 300],
+    }
+
+    return render(request, 'client.html', context)
+
+
+def add_client(request):
+    if request.method == "POST":
+        try:
+            # Collect data from form
+            data = request.POST
+
+            client = Client(
+                name=data.get("name"),
+                email=data.get("email"),
+                phone=data.get("phone"),
+                address=data.get("address"),
+                city=data.get("city"),
+                state=data.get("state"),
+                country=data.get("country"),
+                pincode=data.get("pincode"),
+                company_name=data.get("company_name"),
+                gst_number=data.get("gst_number"),
+                website=data.get("website"),
+            )
+
+            # Run model validations (uses clean() + field validators)
+            client.full_clean()  
+            client.save()
+
+            messages.success(request, "Client added successfully!")
+            return redirect("client_list")  # Redirect to your client list page
+
+        except ValidationError as e:
+            # Convert error dict to readable messages
+            for field, errors in e.message_dict.items():
+                for err in errors:
+                    messages.error(request, f"{field}: {err}")
+            return redirect("client_list")
+
+        except Exception as e:
+            messages.error(request, f"Error adding client: {str(e)}")
+            return redirect("client_list")
+
+    # If GET request → redirect to list
+    return redirect("client_list")
+
+def get_client(request):
+    client_id = request.GET.get("id")
+    try:
+        client = Client.objects.get(id=client_id)
+    except Client.DoesNotExist:
+        raise Http404("Client not found")
+
+    return JsonResponse({
+        "id": client.id,
+        "name": client.name,
+        "email": client.email,
+        "phone": client.phone,
+        "address": client.address,
+        "city": client.city,
+        "state": client.state,
+        "country": client.country,
+        "pincode": client.pincode,
+        "company_name": client.company_name,
+        "gst_number": client.gst_number,
+        "website": client.website,
+        "created_at": client.created_at.strftime("%Y-%m-%d %H:%M"),
+        "updated_at": client.updated_at.strftime("%Y-%m-%d %H:%M"),
+    })

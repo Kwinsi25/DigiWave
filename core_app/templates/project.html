@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}All Domains{% endblock %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -227,33 +228,36 @@
                                 </td>
                                 <td>{{ project.deadline }}</td>
                                 <td>
-                                    <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center">
-                                        {% for member in project.team_members.all %}
-                                        <li data-bs-toggle="tooltip"
-                                            title="{{ member.first_name }} {{ member.last_name }}"
-                                            class="avatar avatar-xs pull-up d-flex align-items-center justify-content-center bg-warning text-primary rounded-circle me-3">
-                                            <i class="bx bx-user fs-6"></i>
-                                        </li>
-                                        {% if forloop.counter|divisibleby:5 %}
-                                            <br>
-                                        {% endif %}
-                                        {% endfor %}
-                                        
-                                    </ul>
-                                </td>
+    <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center flex-wrap" style="gap: 8px;">
+        {% for member in project.team_members.all %}
+        <li data-bs-toggle="tooltip"
+            title="{{ member.first_name }} {{ member.last_name }}"
+            class="avatar avatar-xs pull-up rounded-circle view-user"
+            data-user-id="{{ member.id }}"
+            style="width: 30px; height: 30px; cursor:pointer;">
+            
+            {% if member.profile_picture %}
+                <img src="{{ member.profile_picture.url }}" alt="{{ member.first_name }}" class="rounded-circle" style="width:100%; height:100%;" />
+            {% else %}
+                <img src="{% static 'img/avatars/default-avatar.png' %}" alt="{{ member.first_name }}" class="rounded-circle" style="width:100%; height:100%;" />
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</td>
 
 
                                 <td>
-    {% if project.payment_status == 'Pending' %}
-        <span class="badge bg-label-warning">{{ project.payment_percentage }}% {{ project.payment_status }}</span>
-    {% elif project.payment_status == 'Advanced' %}
-        <span class="badge bg-label-info">{{ project.payment_percentage }}% {{ project.payment_status }}</span>
-    {% elif project.payment_status == 'Paid' %}
-        <span class="badge bg-label-success">{{ project.payment_percentage }}% {{ project.payment_status }}</span>
-    {% else %}
-        <span class="badge bg-label-secondary">{{ project.payment_percentage }}% {{ project.payment_status }}</span>
-    {% endif %}
-</td>
+                                    {% if project.payment_status == 'Pending' %}
+                                    <span class="badge bg-label-warning">{{ project.payment_percentage }}% {{project.payment_status }}</span>
+                                    {% elif project.payment_status == 'Advanced' %}
+                                    <span class="badge bg-label-info">{{ project.payment_percentage }}% {{project.payment_status }}</span>
+                                    {% elif project.payment_status == 'Paid' %}
+                                    <span class="badge bg-label-success">{{ project.payment_percentage }}% {{project.payment_status }}</span>
+                                    {% else %}
+                                    <span class="badge bg-label-secondary">{{ project.payment_percentage }}% {{project.payment_status }}</span>
+                                    {% endif %}
+                                </td>
 
                                 <td>
                                     {% if project.live_link %}
@@ -630,9 +634,9 @@
         <div class="content-backdrop fade"></div>
     </div>
 
-    <div id="alert-container"
+    <!-- <div id="alert-container"
         style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1050;">
-    </div>
+    </div> -->
 
     <!-- Layout wrapper -->
     <!-- Add Project Modal -->
@@ -959,7 +963,7 @@
 
     <!-- Project Details Modal -->
     <div class="modal fade" id="projectDetailsModal" tabindex="-1" aria-labelledby="projectDetailsModalLabel"
-        aria-hidden="true">
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header table-primary text-white">
@@ -1345,7 +1349,7 @@
 
     <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel"
-        aria-hidden="true">
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content text-center">
                 <div class="modal-header border-0">
@@ -1363,4 +1367,122 @@
         </div>
     </div>
 
+    <!-- display user data -->
+                <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel"
+                    aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header table-info text-white">
+                                <h5 class="modal-title" id="viewUserModalLabel">
+                                    <i class="bx bx-user me-2"></i> User Details
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+
+                            <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered align-middle">
+                                        <tbody>
+                                            <tr>
+                                                <th>Username</th>
+                                                <td id="view-username" colspan="3"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>First Name</th>
+                                                <td id="view-firstname"></td>
+                                                <th>Last Name</th>
+                                                <td id="view-lastname"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Email</th>
+                                                <td id="view-email"></td>
+                                                <th>Phone</th>
+                                                <td id="view-phone"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Designation</th>
+                                                <td id="view-designation"></td>
+                                                <th>Status</th>
+                                                <td id="view-status"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Projects</th>
+                                                <td colspan="3">
+                                                    <ul id="view-projects" class="mb-0"></ul>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Profile Picture</th>
+                                                <td colspan="3" id="view-profile-picture"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <script>
+                                        document.addEventListener("DOMContentLoaded", function () {
+                                            const modalEl = document.getElementById("viewUserModal");
+                                            const viewUserModal = new bootstrap.Modal(modalEl);
+                                            document.querySelectorAll(".view-user").forEach(btn => {
+                                                btn.addEventListener("click", function (e) {
+                                                    e.preventDefault();
+                                                    const userId = this.dataset.userId;
+
+                                                    fetch(`/get_user/${userId}/`, {
+                                                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                                                    })
+                                                        .then(res => res.json())
+                                                        .then(data => {
+                                                            // Fill table fields
+                                                            document.getElementById("view-firstname").textContent = data.first_name;
+                                                            document.getElementById("view-lastname").textContent = data.last_name;
+                                                            document.getElementById("view-username").textContent = data.username;
+                                                            document.getElementById("view-email").textContent = data.email;
+                                                            document.getElementById("view-phone").textContent = data.phone || "-";
+                                                            document.getElementById("view-designation").textContent = data.designation || "-";
+                                                            document.getElementById("view-status").innerHTML = data.is_active
+                                                                ? `<span class="badge bg-label-success">Active</span>`
+                                                                : `<span class="badge bg-label-danger">Inactive</span>`;
+
+
+                                                            // Projects list
+                                                            let projectList = document.getElementById("view-projects");
+                                                            projectList.innerHTML = "";
+                                                            if (data.projects && data.projects.length) {
+                                                                data.projects.forEach(p => {
+                                                                    let li = document.createElement("li");
+                                                                    li.textContent = p;
+                                                                    projectList.appendChild(li);
+                                                                });
+                                                            } else {
+                                                                projectList.innerHTML = "<li>No projects assigned</li>";
+                                                            }
+
+                                                            // Profile picture
+                                                            document.getElementById("view-profile-picture").innerHTML = data.profile_picture_url
+                                                                ? `<a href="${data.profile_picture_url}" target="_blank">
+         <img src="${data.profile_picture_url}" class="img-thumbnail rounded" style="max-width:80px; max-height:80px;">
+       </a>`
+                                                                : "No picture";
+
+
+
+
+
+                                                            // Show modal
+                                                            // show with existing instance
+                                                            viewUserModal.show();
+                                                        })
+                                                        .catch(() => showToast("Error loading user details", "danger"));
+                                                });
+                                            });
+                                        });
+                                    </script>
+
+                                </div>
+                            </div>
+
+                            
+                        </div>
+                    </div>
+                </div>
     {% endblock %}

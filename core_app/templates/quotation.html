@@ -1,0 +1,1501 @@
+{% extends "base.html" %}
+{% block title %}All Quotations{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scrollable-table-body {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .scrollable-table-body table {
+        margin-bottom: 0;
+    }
+
+    .scrollable-table-body thead th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div id="toast-container" style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+">
+    {% for message in messages %}
+    <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert"
+        aria-live="assertive" aria-atomic="true" style="min-width: 250px;">
+        <div class="d-flex">
+            <div class="toast-body">
+                {{ message }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="content-wrapper">
+    <div class="container-xxl flex-grow-1 container-p-y">
+
+        <!-- Quotation Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Quotations</h6>
+                            <h4 class="fw-bold text-primary">{{ total_quotations }}</h4>
+                        </div>
+                        <div class="avatar bg-primary text-white rounded-circle p-2">
+                            <i class="bx bx-file fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Active Quotations</h6>
+                            <h4 class="fw-bold text-success">{{ active_quotations }}</h4>
+                        </div>
+                        <div class="avatar bg-success text-white rounded-circle p-2">
+                            <i class="bx bx-check-circle fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Expired Quotations</h6>
+                            <h4 class="fw-bold text-danger">{{ expired_quotations }}</h4>
+                        </div>
+                        <div class="avatar bg-danger text-white rounded-circle p-2">
+                            <i class="bx bx-x-circle fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">This Month</h6>
+                            <h4 class="fw-bold text-warning">{{ this_month_quotations }}</h4>
+                        </div>
+                        <div class="avatar bg-warning text-white rounded-circle p-2">
+                            <i class="bx bx-calendar fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quotation Table -->
+        <div class="card">
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">All Quotations</h4>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#addQuotationModal">
+                            <i class="bx bx-plus"></i> Add Quotation
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive text-nowrap scrollable-table-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sr No.</th>
+                                <th>Quotation No</th>
+                                <th>Date</th>
+                                <th>Valid Until</th>
+                                <th>Company Name</th>
+                                <th>Client Name</th>
+                                <th>Category</th>
+                                <th>Grand Total</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-border-bottom-0">
+                            {% for q in page_obj %}
+                            <tr>
+                                <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                                <td>{{ q.quotation_no }}</td>
+                                <td>{{ q.date }}</td>
+                                <td>{{ q.valid_until }}</td>
+                                <td>
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#viewQuotationModal"
+                                        class="fw-bold quotation-link" data-quotation-id="{{ q.id }}">
+                                        {{ q.company_name }}
+                                    </a>
+                                </td>
+                                <td>
+
+                                    {{ q.client_name }}
+
+                                </td>
+                                <td>{{ q.get_category_display }}</td>
+                                <td>₹{{ q.grand_total }}</td>
+                                <td>
+                                    <span
+                                        class="badge {% if q.valid_until >= today %}bg-label-success{% else %}bg-label-danger{% endif %}">
+                                        {% if q.valid_until >= today %}Active{% else %}Expired{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="#" class="text-primary me-2 action-icon edit-quotation" title="Edit"
+                                        data-quotation-id="{{ q.id }}">
+                                        <i class="bx bx-edit-alt"></i>
+                                    </a>
+                                    <a href="#" class="text-success action-icon download-quotation"
+                                        title="Download Quotation" data-quotation-id="{{ q.id }}">
+                                        <i class="bx bx-download"></i>
+                                    </a>
+
+
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Records Per Page & Pagination -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+
+                    <!-- Records Per Page Dropdown -->
+                    <div class="d-flex align-items-center">
+                        <form method="GET" id="recordsForm" class="d-flex align-items-center">
+                            <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
+                            <select class="form-select form-select-sm" name="recordsPerPage" id="recordsPerPage"
+                                style="width: auto;">
+                                {% for option in records_options %}
+                                <option value="{{ option }}" {% if records_per_page == option %}selected{% endif %}>
+                                    {{ option }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Page navigation" class="mt-3">
+                        <ul class="pagination justify-content-end mb-0">
+
+                            <!-- Previous Button -->
+                            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                                {% if page_obj.has_previous %}
+                                <a class="page-link"
+                                    href="?page={{ page_obj.previous_page_number }}&recordsPerPage={{ records_per_page }}">
+                                    <i class="bx bx-chevrons-left"></i>
+                                </a>
+                                {% else %}
+                                <span class="page-link disabled">
+                                    <i class="bx bx-chevrons-left"></i>
+                                </span>
+                                {% endif %}
+                            </li>
+
+                            <!-- Always show first page -->
+                            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                                <a class="page-link" href="?page=1&recordsPerPage={{ records_per_page }}">1</a>
+                            </li>
+
+                            <!-- Show second page if exists -->
+                            {% if page_obj.paginator.num_pages >= 2 %}
+                            <li class="page-item {% if page_obj.number == 2 %}active{% endif %}">
+                                <a class="page-link" href="?page=2&recordsPerPage={{ records_per_page }}">2</a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Ellipsis -->
+                            {% if page_obj.paginator.num_pages > 4 %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                            {% endif %}
+
+                            <!-- Second last page (if not duplicate of 2) -->
+                            {% if page_obj.paginator.num_pages > 2 and page_obj.paginator.num_pages|add:'-1' != 2 %}
+                            <li
+                                class="page-item {% if page_obj.number == page_obj.paginator.num_pages|add:'-1' %}active{% endif %}">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.paginator.num_pages|add:'-1' }}&recordsPerPage={{ records_per_page }}">
+                                    {{ page_obj.paginator.num_pages|add:'-1' }}
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Last page (if not duplicate of 2) -->
+                            {% if page_obj.paginator.num_pages > 1 and page_obj.paginator.num_pages != 2 %}
+                            <li
+                                class="page-item {% if page_obj.number == page_obj.paginator.num_pages %}active{% endif %}">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.paginator.num_pages }}&recordsPerPage={{ records_per_page }}">
+                                    {{ page_obj.paginator.num_pages }}
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Next Button -->
+                            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                                {% if page_obj.has_next %}
+                                <a class="page-link"
+                                    href="?page={{ page_obj.next_page_number }}&recordsPerPage={{ records_per_page }}">
+                                    <i class="bx bx-chevrons-right"></i>
+                                </a>
+                                {% else %}
+                                <span class="page-link disabled">
+                                    <i class="bx bx-chevrons-right"></i>
+                                </span>
+                                {% endif %}
+                            </li>
+
+                        </ul>
+                    </nav>
+                </div>
+
+                <script>
+
+                    document.getElementById('recordsPerPage').addEventListener('change', function () {
+                        const form = document.getElementById('recordsForm');
+                        const hiddenPage = document.createElement('input');
+                        hiddenPage.type = 'hidden';
+                        hiddenPage.name = 'page';
+                        hiddenPage.value = 1;
+                        form.appendChild(hiddenPage);
+                        form.submit();
+                    });
+                </script>
+            </div>
+
+        </div>
+
+
+
+
+        <!-- add quotation modal -->
+        <div class="modal fade" id="addQuotationModal" tabindex="-1" aria-labelledby="addQuotationModalLabel"
+            aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header table-primary text-white">
+                        <h5 class="modal-title" id="addQuotationModalLabel">
+                            <i class="bx bx-file-plus me-2"></i> Add New Quotation
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+
+                    <form id="addQuotationForm" method="POST" enctype="multipart/form-data"
+                        action="{% url 'add_quotation' %}">
+                        {% csrf_token %}
+                        <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle">
+                                    <tbody>
+                                        <!-- Company & Client Info -->
+                                        <tr class="table-light">
+                                            <th colspan="4">Company Details</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Company Name</th>
+                                            <td colspan="3"><input type="text" class="form-control" name="company_name"
+                                                    required></td>
+
+                                        </tr>
+                                        <tr>
+
+                                            <th>Company Address</th>
+                                            <td colspan="3">
+                                                <textarea class="form-control" name="company_address"
+                                                    rows="2"></textarea>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                            <th>Company Phone</th>
+                                            <td><input type="text" class="form-control" name="company_phone"></td>
+                                            <th>Company Email</th>
+                                            <td><input type="email" class="form-control" name="company_email"></td>
+                                        </tr>
+                                        <tr class="table-light">
+                                            <th colspan="4">Client Information</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Quotation No</th>
+                                            <td><input type="text" class="form-control" name="quotation_no"
+                                                    placeholder="Auto-generated" readonly></td>
+                                            <th>Date</th>
+                                            <td><input type="date" class="form-control" name="date" required></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Valid Until</th>
+                                            <td><input type="date" class="form-control" name="valid_until" required>
+                                            </td>
+                                            <th>Prepared By</th>
+                                            <td>
+                                                <select class="form-select" name="prepared_by" required>
+                                                    <option value="">-- Select User --</option>
+                                                    {% for u in users %}
+                                                    <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                            <th>Client Name</th>
+                                            <td colspan="3"><input type="text" class="form-control" name="client_name"
+                                                    required>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Client Contact</th>
+                                            <td><input type="text" class="form-control" name="client_contact"></td>
+                                            <th>Client Address</th>
+                                            <td>
+                                                <textarea class="form-control" name="client_address"
+                                                    rows="2"></textarea>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Service Charges -->
+                                        <tr class="table-light">
+                                            <th colspan="4">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span>Service Charges</span>
+                                                    <button type="button" class="btn btn-sm btn-success"
+                                                        id="addServiceRow">
+                                                        <i class="bx bx-plus"></i> Add item
+                                                    </button>
+                                                </div>
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th>Description</th>
+                                            <th>Quantity</th>
+                                            <th>Unit Price (₹)</th>
+                                        </tr>
+
+                                        <!-- First service row -->
+                                        <tr class="service-row">
+                                            <td>
+                                                <select class="form-select" name="service[1][category]">
+                                                    <option value="web">Web Development</option>
+                                                    <option value="mobile">Mobile Development</option>
+                                                    <option value="cloud">Cloud Services</option>
+                                                    <option value="ai_ml">AI/ML Algorithms</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control" name="service[1][description]">
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control" name="service[1][quantity]"
+                                                    min="1">
+                                            </td>
+                                            <td class="d-flex align-items-center gap-2">
+                                                <input type="number" class="form-control" name="service[1][unit_price]"
+                                                    min="0">
+                                                <button type="button" class="btn btn-sm btn-danger remove-row">
+                                                    <i class="bx bx-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+
+
+                                        <!-- Server & Domain Charges -->
+                                        <tr class="table-light">
+                                            <th colspan="4">Server & Domain Charges</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Domain Registration</th>
+                                            <td colspan="3">
+                                                <div class="row g-2">
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Included</label>
+                                                        <select class="form-select"
+                                                            name="domain_registration[included]">
+                                                            <option value="false">No</option>
+                                                            <option value="true">Yes</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Duration</label>
+                                                        <input type="text" class="form-control"
+                                                            name="domain_registration[duration]">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Unit Price (₹)</label>
+                                                        <input type="number" class="form-control"
+                                                            name="domain_registration[unit_price]">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Server Hosting</th>
+                                            <td colspan="3">
+                                                <div class="row g-2">
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Included</label>
+                                                        <select class="form-select" name="server_hosting[included]">
+                                                            <option value="false">No</option>
+                                                            <option value="true">Yes</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Duration</label>
+                                                        <input type="text" class="form-control"
+                                                            name="server_hosting[duration]">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Unit Price (₹)</label>
+                                                        <input type="number" class="form-control"
+                                                            name="server_hosting[unit_price]">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>SSL Certificate</th>
+                                            <td colspan="3">
+                                                <div class="row g-2">
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Included</label>
+                                                        <select class="form-select" name="ssl_certificate[included]">
+                                                            <option value="false">No</option>
+                                                            <option value="true">Yes</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Duration</label>
+                                                        <input type="text" class="form-control"
+                                                            name="ssl_certificate[duration]">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Unit Price (₹)</label>
+                                                        <input type="number" class="form-control"
+                                                            name="ssl_certificate[unit_price]">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Email Hosting</th>
+                                            <td colspan="3">
+                                                <div class="row g-2">
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Included</label>
+                                                        <select class="form-select" name="email_hosting[included]">
+                                                            <option value="false">No</option>
+                                                            <option value="true">Yes</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Duration</label>
+                                                        <input type="text" class="form-control"
+                                                            name="email_hosting[duration]">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">Unit Price (₹)</label>
+                                                        <input type="number" class="form-control"
+                                                            name="email_hosting[unit_price]">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+
+                                        <!-- Summary -->
+                                        <tr class="table-light">
+                                            <th colspan="4">Summary</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Discount Type</th>
+                                            <td>
+                                                <select name="discount_type" class="form-select">
+                                                    <option value="flat">Flat</option>
+                                                    <option value="percent">Percent</option>
+                                                </select>
+                                            </td>
+                                            <th>Discount Value</th>
+                                            <td><input type="number" class="form-control" name="discount_value"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Tax Rate (%)</th>
+                                            <td><input type="number" class="form-control" name="tax_rate" value="18">
+                                            </td>
+                                            <th>Grand Total</th>
+                                            <td><input type="text" class="form-control" name="grand_total" readonly>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Payment Terms</th>
+                                            <td colspan="3"><textarea name="payment_terms"
+                                                    class="form-control"></textarea></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Additional Notes</th>
+                                            <td colspan="3"><textarea name="additional_notes"
+                                                    class="form-control"></textarea>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Signatory -->
+                                        <tr class="table-light">
+                                            <th colspan="4">Authorized Signatory</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Name</th>
+                                            <td><input type="text" class="form-control" name="signatory_name"></td>
+                                            <th>Designation</th>
+                                            <td><input type="text" class="form-control" name="signatory_designation">
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Signature</th>
+                                            <td colspan="3"><input type="file" class="form-control" name="signature">
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save Quotation</button>
+                        </div>
+                    </form>
+                    <script>
+                        function showToast(message, type = "info") {
+                            const container = document.getElementById("toast-container") || (() => {
+                                const div = document.createElement("div");
+                                div.id = "toast-container";
+                                div.style.position = "fixed";
+                                div.style.top = "20px";
+                                div.style.right = "20px";
+                                div.style.zIndex = "3000";
+                                div.style.display = "flex";
+                                div.style.flexDirection = "column";
+                                div.style.gap = "10px";
+                                document.body.appendChild(div);
+                                return div;
+                            })();
+
+                            const toast = document.createElement("div");
+                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+                            toast.style.minWidth = "250px";
+                            toast.innerHTML = `
+                                                        <div class="d-flex">
+                                                            <div class="toast-body">${message}</div>
+                                                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                                                        </div>
+                                                        `;
+                            container.appendChild(toast);
+
+                            setTimeout(() => {
+                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                                toast.style.opacity = "0";
+                                toast.style.transform = "translateX(100%)";
+                                setTimeout(() => toast.remove(), 500);
+                            }, 3000);
+                        }
+
+                        document.addEventListener("DOMContentLoaded", function () {
+                            const addBtn = document.getElementById("addServiceRow");
+                            const tableBody = addBtn.closest("tbody"); // tbody containing rows
+
+                            // Function to update name and id indexes
+                            function updateRowNames() {
+                                tableBody.querySelectorAll(".service-row").forEach((row, index) => {
+                                    const newIndex = index + 1; // start from 1
+                                    row.querySelectorAll("select, input").forEach((input) => {
+                                        // Update name
+                                        if (input.name) {
+                                            input.name = input.name.replace(/\[\d+\]/, `[${newIndex}]`);
+                                        }
+                                        // Update id (if exists)
+                                        if (input.id) {
+                                            input.id = input.id.replace(/\d+/, newIndex);
+                                        }
+                                    });
+                                });
+                            }
+
+                            // Add new row
+                            addBtn.addEventListener("click", function () {
+                                const firstRow = tableBody.querySelector(".service-row");
+                                const newRow = firstRow.cloneNode(true);
+
+                                // Reset values
+                                newRow.querySelectorAll("input").forEach((input) => {
+                                    input.value = input.type === "number" ? "0" : "";
+                                    if (input.name.includes("quantity")) input.value = "1";
+                                });
+
+                                // Insert after last service row
+                                const lastServiceRow = tableBody.querySelectorAll(".service-row");
+                                lastServiceRow[lastServiceRow.length - 1].after(newRow);
+
+                                updateRowNames();
+                            });
+
+                            // Remove row (event delegation)
+                            tableBody.addEventListener("click", function (e) {
+                                if (e.target.closest(".remove-row")) {
+                                    const rows = tableBody.querySelectorAll(".service-row");
+                                    if (rows.length > 1) {
+                                        e.target.closest(".service-row").remove();
+                                        updateRowNames();
+                                    } else {
+                                        showToast("At least one row is required.");
+                                    }
+                                }
+                            });
+
+                            // Initial update so first row starts from 1
+                            updateRowNames();
+                        });
+                    </script>
+
+
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- update quotation modal -->
+        <div class="modal fade" id="updateQuotationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+            data-bs-keyboard="false">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header table-warning text-dark">
+                        <h5 class="modal-title"><i class="bx bx-edit me-2"></i> Update Quotation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <form id="updateQuotationForm" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y:auto;">
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle">
+                                    <tbody>
+                                        <!-- Company & Client Info -->
+                                        <tr class="table-light">
+                                            <th colspan="4">Company Details</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Company Name</th>
+                                            <td colspan="3"><input type="text" class="form-control" id="company_name"
+                                                    name="company_name" required></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Company Address</th>
+                                            <td colspan="3"><textarea class="form-control" id="company_address"
+                                                    name="company_address" rows="2"></textarea></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Company Phone</th>
+                                            <td><input type="text" class="form-control" id="company_phone"
+                                                    name="company_phone"></td>
+                                            <th>Company Email</th>
+                                            <td><input type="email" class="form-control" id="company_email"
+                                                    name="company_email"></td>
+                                        </tr>
+
+                                        <tr class="table-light">
+                                            <th colspan="4">Client Information</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Quotation No</th>
+                                            <td><input type="text" class="form-control" id="quotation_no"
+                                                    name="quotation_no" readonly></td>
+                                            <th>Date</th>
+                                            <td><input type="date" class="form-control" id="date" name="date" required>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Valid Until</th>
+                                            <td><input type="date" class="form-control" id="valid_until"
+                                                    name="valid_until" required></td>
+                                            <th>Prepared By</th>
+                                            <td>
+                                                <select class="form-select" id="prepared_by" name="prepared_by"
+                                                    required>
+                                                    <option value="">-- Select User --</option>
+                                                    {% for u in users %}
+                                                    <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Client Name</th>
+                                            <td colspan="3"><input type="text" class="form-control" id="client_name"
+                                                    name="client_name" required></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Client Contact</th>
+                                            <td><input type="text" class="form-control" id="client_contact"
+                                                    name="client_contact"></td>
+                                            <th>Client Email</th>
+                                            <td><input type="email" class="form-control" id="client_email"
+                                                    name="client_email"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Client Address</th>
+                                            <td colspan="3"><textarea class="form-control" id="client_address"
+                                                    name="client_address" rows="2"></textarea></td>
+                                        </tr>
+
+                                        <!-- Services -->
+                                        <tr class="table-light">
+                                            <th colspan="4">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span>Service Charges</span>
+                                                    <button type="button" class="btn btn-sm btn-success"
+                                                        id="updateServiceRow">
+                                                        <i class="bx bx-plus"></i> Add item
+                                                    </button>
+                                                </div>
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th>Description</th>
+                                            <th>Quantity</th>
+                                            <th>Unit Price (₹)</th>
+                                        </tr>
+                                    <tbody id="update_services_container"></tbody>
+
+                                    <!-- Server & Domain (static like Add) -->
+                                    <tr class="table-light">
+                                        <th colspan="4">Server & Domain Charges</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Domain Registration</th>
+                                        <td colspan="3">
+                                            <div class="row g-2">
+                                                <div class="col-md-4">
+                                                    <label>Included</label>
+                                                    <select class="form-select" name="domain_registration[included]"
+                                                        id="update_domain_included">
+                                                        <option value="false">No</option>
+                                                        <option value="true">Yes</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Duration</label>
+                                                    <input type="text" class="form-control"
+                                                        name="domain_registration[duration]"
+                                                        id="update_domain_duration">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Unit Price (₹)</label>
+                                                    <input type="number" class="form-control"
+                                                        name="domain_registration[unit_price]" id="update_domain_price">
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Server Hosting</th>
+                                        <td colspan="3">
+                                            <div class="row g-2">
+                                                <div class="col-md-4">
+                                                    <label>Included</label>
+                                                    <select class="form-select" name="server_hosting[included]"
+                                                        id="update_server_included">
+                                                        <option value="false">No</option>
+                                                        <option value="true">Yes</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Duration</label>
+                                                    <input type="text" class="form-control"
+                                                        name="server_hosting[duration]" id="update_server_duration">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Unit Price (₹)</label>
+                                                    <input type="number" class="form-control"
+                                                        name="server_hosting[unit_price]" id="update_server_price">
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>SSL Certificate</th>
+                                        <td colspan="3">
+                                            <div class="row g-2">
+                                                <div class="col-md-4">
+                                                    <label>Included</label>
+                                                    <select class="form-select" name="ssl_certificate[included]"
+                                                        id="update_ssl_included">
+                                                        <option value="false">No</option>
+                                                        <option value="true">Yes</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Duration</label>
+                                                    <input type="text" class="form-control"
+                                                        name="ssl_certificate[duration]" id="update_ssl_duration">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Unit Price (₹)</label>
+                                                    <input type="number" class="form-control"
+                                                        name="ssl_certificate[unit_price]" id="update_ssl_price">
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email Hosting</th>
+                                        <td colspan="3">
+                                            <div class="row g-2">
+                                                <div class="col-md-4">
+                                                    <label>Included</label>
+                                                    <select class="form-select" name="email_hosting[included]"
+                                                        id="update_email_included">
+                                                        <option value="false">No</option>
+                                                        <option value="true">Yes</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Duration</label>
+                                                    <input type="text" class="form-control"
+                                                        name="email_hosting[duration]" id="update_email_duration">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Unit Price (₹)</label>
+                                                    <input type="number" class="form-control"
+                                                        name="email_hosting[unit_price]" id="update_email_price">
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Summary -->
+                                    <tr class="table-light">
+                                        <th colspan="4">Summary</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Discount Type</th>
+                                        <td>
+                                            <select id="discount_type" name="discount_type" class="form-select">
+                                                <option value="flat">Flat</option>
+                                                <option value="percent">Percent</option>
+                                            </select>
+                                        </td>
+                                        <th>Discount Value</th>
+                                        <td><input type="number" class="form-control" id="discount_value"
+                                                name="discount_value"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Tax Rate (%)</th>
+                                        <td><input type="number" class="form-control" id="tax_rate" name="tax_rate">
+                                        </td>
+                                        <th>Grand Total</th>
+                                        <td><input type="text" class="form-control" id="grand_total" name="grand_total"
+                                                readonly></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Payment Terms</th>
+                                        <td colspan="3"><textarea id="payment_terms" name="payment_terms"
+                                                class="form-control"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Additional Notes</th>
+                                        <td colspan="3"><textarea id="additional_notes" name="additional_notes"
+                                                class="form-control"></textarea></td>
+                                    </tr>
+
+                                    <!-- Signatory -->
+                                    <tr class="table-light">
+                                        <th colspan="4">Authorized Signatory</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <td><input type="text" class="form-control" id="signatory_name"
+                                                name="signatory_name"></td>
+                                        <th>Designation</th>
+                                        <td><input type="text" class="form-control" id="signatory_designation"
+                                                name="signatory_designation"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Signature</th>
+                                        <td colspan="3">
+                                            <img id="signature_preview" src="" style="max-height:50px; display:none;"
+                                                class="mb-2">
+                                            <input type="file" class="form-control" id="signature" name="signature">
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Update Quotation</button>
+                        </div>
+                    </form>
+
+                    <script>
+                        function showToast(message, type = "info") {
+                            const container = document.getElementById("toast-container") || (() => {
+                                const div = document.createElement("div");
+                                div.id = "toast-container";
+                                div.style.position = "fixed";
+                                div.style.top = "20px";
+                                div.style.right = "20px";
+                                div.style.zIndex = "3000";
+                                div.style.display = "flex";
+                                div.style.flexDirection = "column";
+                                div.style.gap = "10px";
+                                document.body.appendChild(div);
+                                return div;
+                            })();
+
+                            const toast = document.createElement("div");
+                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+                            toast.style.minWidth = "250px";
+                            toast.innerHTML = `
+                                                        <div class="d-flex">
+                                                            <div class="toast-body">${message}</div>
+                                                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                                                        </div>
+                                                        `;
+                            container.appendChild(toast);
+
+                            setTimeout(() => {
+                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                                toast.style.opacity = "0";
+                                toast.style.transform = "translateX(100%)";
+                                setTimeout(() => toast.remove(), 500);
+                            }, 3000);
+                        }
+
+                        document.addEventListener("DOMContentLoaded", function () {
+                            const updateForm = document.getElementById("updateQuotationForm");
+                            const updateTableBody = document.getElementById("update_services_container");
+                            const updateBtn = document.getElementById("updateServiceRow");
+
+                            // --- Reindex service rows ---
+                            function updateRowNames() {
+                                updateTableBody.querySelectorAll(".service-row").forEach((row, index) => {
+                                    const newIndex = index + 1;
+                                    row.querySelectorAll("select, input").forEach((input) => {
+                                        if (input.name) {
+                                            input.name = input.name.replace(/\[\d+\]/, `[${newIndex}]`);
+                                        }
+                                    });
+                                });
+                            }
+
+                            // --- Add new service row ---
+                            updateBtn.addEventListener("click", function () {
+                                const firstRow = updateTableBody.querySelector(".service-row");
+                                if (!firstRow) {
+                                    updateTableBody.innerHTML = `
+        <tr class="service-row">
+          <td>
+            <select name="service[1][category]" class="form-select">
+              <option value="web">Web Development</option>
+              <option value="mobile">Mobile Development</option>
+              <option value="cloud">Cloud Services</option>
+              <option value="ai_ml">AI/ML Algorithms</option>
+            </select>
+          </td>
+          <td><input type="text" name="service[1][description]" class="form-control"></td>
+          <td><input type="number" name="service[1][quantity]" value="1" class="form-control"></td>
+          <td>
+            <div class="input-group">
+              <input type="number" name="service[1][unit_price]" value="0" class="form-control">
+              <button type="button" class="btn btn-danger remove-row">&times;</button>
+            </div>
+          </td>
+        </tr>`;
+                                    return;
+                                }
+
+                                const newRow = firstRow.cloneNode(true);
+                                newRow.querySelectorAll("input, select").forEach((input) => {
+                                    if (input.tagName === "SELECT") {
+                                        input.selectedIndex = 0;
+                                    } else if (input.type === "number") {
+                                        input.value = input.name.includes("quantity") ? "1" : "0";
+                                    } else {
+                                        input.value = "";
+                                    }
+                                });
+
+                                updateTableBody.appendChild(newRow);
+                                updateRowNames();
+                            });
+
+                            // --- Remove service row ---
+                            updateTableBody.addEventListener("click", function (e) {
+                                if (e.target.closest(".remove-row")) {
+                                    const rows = updateTableBody.querySelectorAll(".service-row");
+                                    if (rows.length > 1) {
+                                        e.target.closest(".service-row").remove();
+                                        updateRowNames();
+                                    } else {
+                                        alert("At least one row is required.");
+                                    }
+                                }
+                            });
+
+                            // --- When edit button is clicked ---
+                            document.querySelectorAll(".edit-quotation").forEach(btn => {
+                                btn.addEventListener("click", async function (e) {
+                                    e.preventDefault();
+                                    const qtnId = this.dataset.quotationId;
+                                    updateForm.action = `/update_quotation/${qtnId}/`;
+
+                                    const response = await fetch(`/get_quotation/?id=${qtnId}`);
+                                    const data = await response.json();
+
+                                    // Fill basic fields
+                                    document.getElementById("quotation_no").value = data.quotation_no;
+                                    document.getElementById("date").value = data.date;
+                                    document.getElementById("valid_until").value = data.valid_until;
+                                    document.getElementById("company_name").value = data.company_name;
+                                    document.getElementById("company_phone").value = data.company_phone;
+                                    document.getElementById("company_email").value = data.company_email;
+                                    document.getElementById("company_address").value = data.company_address;
+                                    document.getElementById("client_name").value = data.client_name;
+                                    document.getElementById("client_contact").value = data.client_contact;
+                                    document.getElementById("client_email").value = data.client_email;
+                                    document.getElementById("client_address").value = data.client_address;
+                                    document.getElementById("discount_type").value = data.discount_type;
+                                    document.getElementById("discount_value").value = data.discount_value;
+                                    document.getElementById("tax_rate").value = data.tax_rate;
+                                    document.getElementById("grand_total").value = data.grand_total;
+                                    document.getElementById("payment_terms").value = data.payment_terms;
+                                    document.getElementById("additional_notes").value = data.additional_notes;
+                                    document.getElementById("signatory_name").value = data.sign_name;
+                                    document.getElementById("signatory_designation").value = data.sign_designation;
+
+                                    if (data.signature_url) {
+                                        document.getElementById("signature_preview").src = data.signature_url;
+                                        document.getElementById("signature_preview").style.display = "block";
+                                    } else {
+                                        document.getElementById("signature_preview").style.display = "none";
+                                    }
+
+                                    // Fill services
+                                    updateTableBody.innerHTML = "";
+                                    data.services.forEach((s, idx) => {
+                                        updateTableBody.innerHTML += `
+          <tr class="service-row">
+            <td>
+              <select name="service[${idx + 1}][category]" class="form-select">
+                <option value="web" ${s.category === "Web Development" ? "selected" : ""}>Web Development</option>
+                <option value="mobile" ${s.category === "Mobile Development" ? "selected" : ""}>Mobile Development</option>
+                <option value="cloud" ${s.category === "Cloud Services" ? "selected" : ""}>Cloud Services</option>
+                <option value="ai_ml" ${s.category === "AI/ML Algorithms" ? "selected" : ""}>AI/ML Algorithms</option>
+              </select>
+            </td>
+            <td><input type="text" name="service[${idx + 1}][description]" value="${s.description}" class="form-control"></td>
+            <td><input type="number" name="service[${idx + 1}][quantity]" value="${s.quantity}" class="form-control"></td>
+            <td>
+              <div class="input-group">
+                <input type="number" name="service[${idx + 1}][unit_price]" value="${s.unit_price}" class="form-control">
+                <button type="button" class="btn btn-danger remove-row">&times;</button>
+              </div>
+            </td>
+          </tr>`;
+                                    });
+
+                                    // Fill infra (domain/server/ssl/email)
+                                    if (data.infra.domain_registration.length > 0) {
+                                        const d = data.infra.domain_registration[0];
+                                        document.getElementById("update_domain_included").value = d.included ? "true" : "false";
+                                        document.getElementById("update_domain_duration").value = d.duration;
+                                        document.getElementById("update_domain_price").value = d.unit_price;
+                                    }
+                                    if (data.infra.server_hosting.length > 0) {
+                                        const s = data.infra.server_hosting[0];
+                                        document.getElementById("update_server_included").value = s.included ? "true" : "false";
+                                        document.getElementById("update_server_duration").value = s.duration;
+                                        document.getElementById("update_server_price").value = s.unit_price;
+                                    }
+                                    if (data.infra.ssl_certificate.length > 0) {
+                                        const ssl = data.infra.ssl_certificate[0];
+                                        document.getElementById("update_ssl_included").value = ssl.included ? "true" : "false";
+                                        document.getElementById("update_ssl_duration").value = ssl.duration;
+                                        document.getElementById("update_ssl_price").value = ssl.unit_price;
+                                    }
+                                    if (data.infra.email_hosting.length > 0) {
+                                        const e = data.infra.email_hosting[0];
+                                        document.getElementById("update_email_included").value = e.included ? "true" : "false";
+                                        document.getElementById("update_email_duration").value = e.duration;
+                                        document.getElementById("update_email_price").value = e.unit_price;
+                                    }
+
+                                    // Show modal
+                                    const modal = new bootstrap.Modal(document.getElementById("updateQuotationModal"));
+                                    modal.show();
+                                });
+                            });
+                        });
+                    </script>
+
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <!-- View Quotation Modal -->
+        <div class="modal fade" id="viewQuotationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header table-info text-white">
+                        <h5 class="modal-title">Quotation Details</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+
+                        <!-- 1. Company / Client / Quotation Info -->
+                        <div class="card mb-3">
+                            <div class="card-header fw-bold">Company & Client Info</div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Company:</strong> <span id="view-company-name"></span></p>
+                                        <p><strong>Address:</strong> <span id="view-company-address"></span></p>
+                                        <p><strong>Phone:</strong> <span id="view-company-phone"></span></p>
+                                        <p><strong>Email:</strong> <span id="view-company-email"></span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Quotation No:</strong> <span id="view-quotation-no"></span></p>
+                                        <p><strong>Date:</strong> <span id="view-date"></span></p>
+                                        <p><strong>Valid Until:</strong> <span id="view-valid-until"></span></p>
+                                        <p><strong>Prepared By:</strong> <span id="view-prepared-by"></span></p>
+                                        <p><strong>Client Name:</strong> <span id="view-client-name"></span></p>
+                                        <p><strong>Client Contact:</strong> <span id="view-client-contact"></span></p>
+                                        <p><strong>Client Email:</strong> <span id="view-client-email"></span></p>
+                                        <p><strong>Client Address:</strong> <span id="view-client-address"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Service Charges -->
+                        <div class="card mb-3">
+                            <div class="card-header fw-bold">1. Service Charges</div>
+                            <div class="card-body table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Sr.</th>
+                                            <th>Category</th>
+                                            <th>Description</th>
+                                            <th>Qty / Duration</th>
+                                            <th>Unit Price (₹)</th>
+                                            <th>Total (₹)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="view-service-charges">
+                                        <!-- rows filled dynamically -->
+                                    </tbody>
+                                </table>
+                                <p class="mt-2"><strong>Total Service Charge:</strong> <span
+                                        id="view-total-service-charge"></span></p>
+                            </div>
+                        </div>
+
+                        <!-- 3. Server & Domain Charges -->
+                        <div class="card mb-3">
+                            <div class="card-header fw-bold">2. Server & Domain Charges</div>
+                            <div class="card-body table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Charge Type</th>
+                                            <th>Included</th>
+                                            <th>Duration</th>
+                                            <th>Unit Price (₹)</th>
+                                            <th>Total (₹)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="view-infra-charges">
+                                        <!-- rows will be filled dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+
+                        <!-- 4. Summary -->
+                        <div class="card mb-3">
+                            <div class="card-header fw-bold">3. Total Summary</div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-7">
+                                        <table class="table">
+                                            <tbody>
+                                                <tr>
+                                                    <td>Subtotal (Services)</td>
+                                                    <td class="text-end"><span id="view-sub-services"></span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Subtotal (Server & Domain)</td>
+                                                    <td class="text-end"><span id="view-sub-infra"></span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Discount</td>
+                                                    <td class="text-end">
+                                                        <span id="view-discount-type"></span> :
+                                                        <span id="view-discount-value"></span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Tax Amount</td>
+                                                    <td class="text-end"><span id="view-tax-amount"></span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Grand Total</strong></td>
+                                                    <td class="text-end"><strong id="view-grand-total"></strong></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <p><strong>Payment Terms:</strong><br><span id="view-payment-terms"></span></p>
+                                        <p><strong>Additional Notes:</strong><br><span
+                                                id="view-additional-notes"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Authorized Signatory -->
+                        <div class="card">
+                            <div class="card-header fw-bold">Authorized Signatory</div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label>Signature</label>
+                                        <div id="view-signature"></div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Name</label>
+                                        <div><span id="view-sign-name"></span></div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Designation</label>
+                                        <div><span id="view-sign-designation"></span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function () {
+                            const modalEl = document.getElementById("viewQuotationModal");
+                            const viewQuotationModal = new bootstrap.Modal(modalEl);
+
+                            modalEl.addEventListener('show.bs.modal', function (event) {
+                                const trigger = event.relatedTarget; // clicked link
+                                const quotationId = trigger.dataset.quotationId;
+
+                                // Fetch quotation via query param
+                                fetch(`/get_quotation/?id=${quotationId}`, {
+                                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                                })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        // Helper function
+                                        const setText = (id, value) => {
+                                            const el = document.getElementById(id);
+                                            if (el) el.textContent = value || "-";
+                                        };
+
+                                        // --- 1. Company & Client / Quotation Info ---
+                                        setText("view-company-name", data.company_name);
+                                        setText("view-company-address", data.company_address);
+                                        setText("view-company-phone", data.company_phone);
+                                        setText("view-company-email", data.company_email);
+                                        setText("view-quotation-no", data.quotation_no);
+                                        setText("view-date", data.date);
+                                        setText("view-valid-until", data.valid_until);
+                                        setText("view-prepared-by", data.prepared_by);
+                                        setText("view-client-name", data.client_name);
+                                        setText("view-client-contact", data.client_contact);
+                                        setText("view-client-email", data.client_email);
+                                        setText("view-client-address", data.client_address);
+
+                                        // --- 2. Service Charges ---
+                                        const tbody = document.getElementById("view-service-charges");
+                                        tbody.innerHTML = ""; // clear previous
+                                        if (Array.isArray(data.services) && data.services.length > 0) {
+                                            data.services.forEach((s, idx) => {
+                                                const row = `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>${s.category || ""}</td>
+                            <td>${s.description || ""}</td>
+                            <td>${s.quantity || 0}</td>
+                            <td class="text-end">${s.unit_price || 0}</td>
+                            <td class="text-end">${s.total || 0}</td>
+                        </tr>
+                    `;
+                                                tbody.insertAdjacentHTML("beforeend", row);
+                                            });
+                                        } else {
+                                            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No services</td></tr>`;
+                                        }
+                                        setText("view-total-service-charge", data.total_service_charge);
+
+                                        // --- 3. Server & Domain Charges ---
+                                        const infraBody = document.querySelector("#view-infra-charges");
+                                        infraBody.innerHTML = "";
+
+                                        const infraTypes = {
+                                            "Domain Registration": data.infra?.domain_registration,
+                                            "Server Hosting": data.infra?.server_hosting,
+                                            "SSL Certificate": data.infra?.ssl_certificate,
+                                            "Email Hosting": data.infra?.email_hosting
+                                        };
+
+                                        Object.entries(infraTypes).forEach(([label, rows]) => {
+                                            if (Array.isArray(rows) && rows.length > 0) {
+                                                rows.forEach(r => {
+                                                    infraBody.insertAdjacentHTML("beforeend", `
+                <tr>
+                    <td>${label}</td>
+                    <td>Yes</td>
+                    <td>${r.duration || "-"}</td>
+                    <td class="text-end">${r.unit_price || 0}</td>
+                    <td class="text-end">${r.total || 0}</td>
+                </tr>
+            `);
+                                                });
+                                            }
+                                        });
+
+                                        // if nothing included
+                                        if (infraBody.innerHTML.trim() === "") {
+                                            infraBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No Server/Domain Charges</td></tr>`;
+                                        }
+                                        setText("view-sub-services", data.subtotal_services);
+                                        setText("view-sub-infra", data.total_server_domain_charge);
+                                        setText("view-discount-type", data.discount_type);
+                                        setText("view-discount-value", data.discount_value);
+                                        setText("view-tax-amount", data.tax_amount);
+                                        setText("view-grand-total", data.grand_total);
+
+
+                                        // --- 4. Summary ---
+                                        setText("view-sub-services", data.subtotal_services);
+                                        setText("view-sub-infra", data.subtotal_infra);
+                                        setText("view-discount-type", data.discount_type);  // "Flat" or "Percent"
+                                        setText("view-discount-value", data.discount_value);
+                                        setText("view-tax-amount", data.tax_amount);
+                                        setText("view-grand-total", data.grand_total);
+                                        setText("view-payment-terms", data.payment_terms);
+                                        setText("view-additional-notes", data.additional_notes);
+
+                                        // --- 5. Signatory ---
+                                        const sigEl = document.getElementById("view-signature");
+                                        if (sigEl) {
+                                            sigEl.innerHTML = data.signature_url
+                                                ? `<img src="${data.signature_url}" class="img-thumbnail" style="max-height:80px;">`
+                                                : "No signature";
+                                        }
+                                        setText("view-sign-name", data.sign_name);
+                                        setText("view-sign-designation", data.sign_designation);
+                                    })
+                                    .catch(err => {
+                                        console.error("Error loading quotation details:", err);
+                                        alert("Error loading quotation details");
+                                    });
+                            });
+                        });
+                    </script>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Download Confirmation Modal -->
+        <div class="modal fade" id="downloadQuotationModal" tabindex="-1" aria-labelledby="downloadConfirmLabel"
+            aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content text-center">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title w-100" id="downloadConfirmLabel">Confirm Download</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Do you want to download this Quotation?
+                    </div>
+                    <div class="modal-footer justify-content-center border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" id="confirmDownloadQuotationBtn">Download</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let quotationIdToDownload = null;
+
+            // Trigger download modal
+            document.addEventListener("DOMContentLoaded", function () {
+                document.querySelectorAll(".download-quotation").forEach(btn => {
+                    btn.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        quotationIdToDownload = this.dataset.quotationId;
+                        new bootstrap.Modal(document.getElementById("downloadQuotationModal")).show();
+                    });
+                });
+
+                // Confirm Download
+                document.getElementById("confirmDownloadQuotationBtn").addEventListener("click", function () {
+                    if (!quotationIdToDownload) return;
+
+                    // Trigger file download
+                    window.location.href = `/download_quotation/${quotationIdToDownload}/`;
+
+                    // Hide modal
+                    bootstrap.Modal.getInstance(document.getElementById("downloadQuotationModal")).hide();
+                });
+            });
+        </script>
+
+    </div>
+</div>
+
+{% endblock %}

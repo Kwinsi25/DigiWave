@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Project, HostData, Domain, User
-
+from .models import *
 # @admin.register(User)
 # class UserAdmin(admin.ModelAdmin):
 #     list_display = ('first_name','last_name','email','phone','designation')
@@ -27,3 +26,5 @@ admin.site.register(Project)
 admin.site.register(HostData)
 admin.site.register(Domain)
 admin.site.register(User)
+admin.site.register(Quotation)
+admin.site.register(Client)
