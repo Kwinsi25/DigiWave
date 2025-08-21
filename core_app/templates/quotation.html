@@ -130,7 +130,7 @@
                                 <th>Valid Until</th>
                                 <th>Company Name</th>
                                 <th>Client Name</th>
-                                <th>Category</th>
+                                
                                 <th>Grand Total</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -154,7 +154,7 @@
                                     {{ q.client_name }}
 
                                 </td>
-                                <td>{{ q.get_category_display }}</td>
+                                
                                 <td>₹{{ q.grand_total }}</td>
                                 <td>
                                     <span
@@ -610,11 +610,12 @@
                             toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
                             toast.style.minWidth = "250px";
                             toast.innerHTML = `
-                                                        <div class="d-flex">
-                                                            <div class="toast-body">${message}</div>
-                                                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                                                        </div>
-                                                        `;
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
+
                             container.appendChild(toast);
 
                             setTimeout(() => {
@@ -624,6 +625,18 @@
                                 setTimeout(() => toast.remove(), 500);
                             }, 3000);
                         }
+
+                        document.addEventListener("DOMContentLoaded", function () {
+                            const toasts = document.querySelectorAll('#toast-container .toast');
+                            toasts.forEach(function (toast) {
+                                setTimeout(() => {
+                                    toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                                    toast.style.opacity = "0";
+                                    toast.style.transform = "translateX(100%)";
+                                    setTimeout(() => toast.remove(), 500);
+                                }, 3000); // Auto-hide after 3 seconds
+                            });
+                        });
 
                         document.addEventListener("DOMContentLoaded", function () {
                             const addBtn = document.getElementById("addServiceRow");
@@ -673,6 +686,7 @@
                                         updateRowNames();
                                     } else {
                                         showToast("At least one row is required.");
+                                        setTimeout(() => window.location.reload(), 1000);
                                     }
                                 }
                             });
@@ -985,11 +999,12 @@
                             toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
                             toast.style.minWidth = "250px";
                             toast.innerHTML = `
-                                                        <div class="d-flex">
-                                                            <div class="toast-body">${message}</div>
-                                                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                                                        </div>
-                                                        `;
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
+
                             container.appendChild(toast);
 
                             setTimeout(() => {
@@ -999,6 +1014,18 @@
                                 setTimeout(() => toast.remove(), 500);
                             }, 3000);
                         }
+
+                        document.addEventListener("DOMContentLoaded", function () {
+                            const toasts = document.querySelectorAll('#toast-container .toast');
+                            toasts.forEach(function (toast) {
+                                setTimeout(() => {
+                                    toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                                    toast.style.opacity = "0";
+                                    toast.style.transform = "translateX(100%)";
+                                    setTimeout(() => toast.remove(), 500);
+                                }, 3000); // Auto-hide after 3 seconds
+                            });
+                        });
 
                         document.addEventListener("DOMContentLoaded", function () {
                             const updateForm = document.getElementById("updateQuotationForm");
@@ -1036,7 +1063,10 @@
           <td>
             <div class="input-group">
               <input type="number" name="service[1][unit_price]" value="0" class="form-control">
-              <button type="button" class="btn btn-danger remove-row">&times;</button>
+              
+             <button type="button" class="btn btn-sm btn-danger remove-row">
+                                                     <i class="bx bx-trash"></i>
+                                                 </button>
             </div>
           </td>
         </tr>`;
@@ -1066,7 +1096,8 @@
                                         e.target.closest(".service-row").remove();
                                         updateRowNames();
                                     } else {
-                                        alert("At least one row is required.");
+                                        showToast("At least one row is required.");
+                                        setTimeout(() => window.location.reload(), 1000);
                                     }
                                 }
                             });
@@ -1089,6 +1120,8 @@
                                     document.getElementById("company_phone").value = data.company_phone;
                                     document.getElementById("company_email").value = data.company_email;
                                     document.getElementById("company_address").value = data.company_address;
+                                    // Set Prepared By dropdown
+                                    document.getElementById("prepared_by").value = data.prepared_by;
                                     document.getElementById("client_name").value = data.client_name;
                                     document.getElementById("client_contact").value = data.client_contact;
                                     document.getElementById("client_email").value = data.client_email;
@@ -1127,7 +1160,9 @@
             <td>
               <div class="input-group">
                 <input type="number" name="service[${idx + 1}][unit_price]" value="${s.unit_price}" class="form-control">
-                <button type="button" class="btn btn-danger remove-row">&times;</button>
+                <button type="button" class="btn btn-sm btn-danger remove-row">
+                                                    <i class="bx bx-trash"></i>
+                                                </button>
               </div>
             </td>
           </tr>`;
@@ -1438,7 +1473,8 @@
                                     })
                                     .catch(err => {
                                         console.error("Error loading quotation details:", err);
-                                        alert("Error loading quotation details");
+                                        showToast("Error loading quotation details");
+                                        setTimeout(() => window.location.reload(), 1000);
                                     });
                             });
                         });

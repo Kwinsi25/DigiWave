@@ -3,7 +3,17 @@ from django.urls import path
 from .views import *
 urlpatterns = [
   
-    path('', dashboard, name='dashboard'),
+    path('', login_view, name='login'),
+    #login
+    path('login/', login_view, name='login'),
+    path('user_login/', user_login, name='user_login'),
+
+    # Dashboards
+    path('admin_dashboard/', admin_dashboard, name='admin_dashboard'),
+    path('dashboard/', dashboard, name='dashboard'),
+
+    #logout
+    path('logout/', user_logout, name='logout'),
 
     #projects
     path('projects/', project_list, name='project_list'),
@@ -45,4 +55,12 @@ urlpatterns = [
     path('client/', client_list, name='client_list'),
     path('add_client/', add_client, name='add_client'),
     path('get_client/', get_client, name='get_client'),
+    path('update_client/', update_client, name='update_client'),
+    path('delete_client/<int:id>/', delete_client, name='delete_client'),
+
+    #file_docs
+    path('file_docs/', file_docs, name='file_docs'),
+    path('create_folder/', create_folder, name='create_folder'),
+    path('add_file/', add_file, name='add_file'),
+    path('get_files/', get_files, name='get_files'),
 ]

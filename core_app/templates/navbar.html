@@ -38,8 +38,17 @@
                   </div>
                 </div>
                 <div class="flex-grow-1">
-                  <span class="fw-semibold d-block">Naman Doshi</span>
-                  <small class="text-muted">Admin</small>
+                  <span class="fw-semibold d-block">{{ request.user.get_full_name|default:request.user.username }}</span>
+                        <small class="text-muted">
+                            {% if request.user.is_superuser %}
+                                Super Admin
+                            {% elif request.user.is_staff %}
+                                Staff
+                            {% else %}
+                                User
+                            {% endif %}
+                        </small>
+
                 </div>
               </div>
             </a>
@@ -72,11 +81,12 @@
             <div class="dropdown-divider"></div>
           </li>
           <li>
-            <a class="dropdown-item" href="auth-login-basic.html">
-              <i class="bx bx-power-off me-2"></i>
-              <span class="align-middle">Log Out</span>
+            <a class="dropdown-item" href="{% url 'logout' %}">
+                <i class="bx bx-power-off me-2"></i>
+                <span class="align-middle">Log Out</span>
             </a>
-          </li>
+        </li>
+
         </ul>
       </li>
       <!--/ User -->

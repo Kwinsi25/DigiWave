@@ -274,6 +274,18 @@
                             }, 3000);
                         }
 
+                        document.addEventListener("DOMContentLoaded", function () {
+                            const toasts = document.querySelectorAll('#toast-container .toast');
+                            toasts.forEach(function (toast) {
+                                setTimeout(() => {
+                                    toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                                    toast.style.opacity = "0";
+                                    toast.style.transform = "translateX(100%)";
+                                    setTimeout(() => toast.remove(), 500);
+                                }, 3000); // Auto-hide after 3 seconds
+                            });
+                        });
+
                         $(document).ready(function () {
                             const hostDetailsUrl = "{% url 'get_host_details' %}";
 

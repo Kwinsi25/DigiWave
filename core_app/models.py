@@ -549,3 +549,37 @@ class Client(models.Model):
 
     def __str__(self):
         return self.company_name if self.company_name else self.name
+
+# -----------------------------
+# FileDocs model    
+# -----------------------------
+class Folder(models.Model):
+    name = models.CharField(max_length=255)
+    project = models.ForeignKey(
+        "Project",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="folders"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        project_name = self.project.project_name if self.project else "No Project"
+        return f"{self.name} ({project_name})"
+
+
+class FileDoc(models.Model):
+    name = models.CharField(max_length=255)
+    folder = models.ForeignKey(
+        Folder,
+        on_delete=models.CASCADE,
+        related_name="files"
+    )
+    file = models.FileField(upload_to="files/", blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name

@@ -18,10 +18,82 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from django.http import HttpResponse
 from django.http import JsonResponse, Http404
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout as django_logout
+from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Count, Subquery, OuterRef
+
+
+# -----------------------------
+# Login View
+# -----------------------------
+def login_view(request):
+    """
+    Render the login page.
+    """
+    return render(request, 'login.html')
+
+def user_login(request):
+    """
+    Handle login for admin and staff.
+    Superusers go to admin dashboard.
+    Staff users go to staff dashboard.
+    Other users are denied access.
+    """
+    if request.method == "POST":
+        username = request.POST.get("email-username")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            if user.is_active:
+                if user.is_superuser or user.is_staff:
+                    login(request, user)
+                    if user.is_superuser:
+                        return redirect("admin_dashboard")
+                    else:
+                        return redirect("dashboard")
+                else:
+                    messages.error(request, "You are not authorized to access this portal.")
+                    return redirect('login')
+            else:
+                messages.error(request, "Your account is inactive.")
+        else:
+            messages.error(request, "Invalid username or password.")
+
+        return redirect("login")
+
+    return render(request, "login.html")
+
+# -----------------------------
+# logout
+# -----------------------------
+
+@login_required
+def user_logout(request):
+    """
+    Log out the user and redirect to login page.
+    """
+    django_logout(request)
+    return redirect('login')
+
 # -----------------------------
 # Dashboard
 # -----------------------------
+@login_required
+def admin_dashboard(request):
+    """
+    Admin dashboard view.
+    """
+    if not request.user.is_superuser:
+        return redirect('login')  # redirect if not superuser
+    return render(request, 'admin_dashboard.html')
+
+@login_required
 def dashboard(request):
+    if not request.user.is_staff:
+        return redirect('login')  # redirect if not staff
     return render(request, 'dashboard.html')
 
 # -----------------------------
@@ -1059,6 +1131,7 @@ def get_quotation(request):
     quotation_id = request.GET.get("id")
     quotation = Quotation.objects.get(id=quotation_id)
 
+
     # Merge services into single list with category
     def add_category(services, category_label):
         items = []
@@ -1127,6 +1200,7 @@ def get_quotation(request):
         "client_contact": quotation.client_contact,
         "client_email": quotation.client_email,
         "client_address": quotation.client_address,
+        "prepared_by": quotation.prepared_by.id if quotation.prepared_by else None,
 
         # --- Services ---
         "services": services,
@@ -1179,7 +1253,7 @@ def update_quotation(request, id):
                     prepared_by_user = User.objects.get(id=prepared_by_value)
                 except User.DoesNotExist:
                     prepared_by_user = None
-
+            print(f"Updating quotation prepared by: {prepared_by_user}")
             # Helper: parse dynamic service rows (category-aware)
             def parse_services():
                 services = {"web": [], "mobile": [], "cloud": [], "ai_ml": []}
@@ -1501,4 +1575,213 @@ def get_client(request):
         "website": client.website,
         "created_at": client.created_at.strftime("%Y-%m-%d %H:%M"),
         "updated_at": client.updated_at.strftime("%Y-%m-%d %H:%M"),
+    })
+
+def update_client(request):
+    if request.method == "POST":
+        client_id = request.POST.get("id")
+        print(f"Updating client with ID: {client_id}")
+        try:
+            client = Client.objects.get(id=client_id)
+            data = request.POST
+
+            client.name = data.get("name")
+            client.email = data.get("email")
+            client.phone = data.get("phone")
+            client.address = data.get("address")
+            client.city = data.get("city")
+            client.state = data.get("state")
+            client.country = data.get("country")
+            client.pincode = data.get("pincode")
+            client.company_name = data.get("company_name")
+            client.gst_number = data.get("gst_number")
+            client.website = data.get("website")
+
+            client.full_clean()
+            client.save()
+
+            messages.success(request, "Client updated successfully!")
+            return redirect("client_list")
+
+        except Client.DoesNotExist:
+            messages.error(request, "Client not found.")
+            return redirect("client_list")
+        except ValidationError as e:
+            for field, errors in e.message_dict.items():
+                for err in errors:
+                    messages.error(request, f"{field}: {err}")
+            return redirect("client_list")
+        except Exception as e:
+            messages.error(request, f"Error updating client: {str(e)}")
+            return redirect("client_list")
+    return redirect("client_list")
+
+def delete_client(request, id):
+
+    if request.method == "POST":
+        try:
+            client = Client.objects.get(id=id)
+            client.delete()
+            return JsonResponse({"success": True, "message": "Client deleted successfully!"})
+        except Client.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Client not found."})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+    return JsonResponse({"success": False, "error": "Invalid request."})
+
+
+# -----------------------------
+# File & Docs View
+# -----------------------------
+def file_docs(request):
+    records_per_page = int(request.GET.get('recordsPerPage', 20))
+    page_number = int(request.GET.get('page', 1) or 1)
+
+    projects = Project.objects.all()
+
+    latest_file_name = FileDoc.objects.filter(
+        folder=OuterRef("pk")
+    ).order_by("-created_at").values("name")[:1]
+
+    latest_file_time = FileDoc.objects.filter(
+        folder=OuterRef("pk")
+    ).order_by("-created_at").values("created_at")[:1]
+    
+    folders = Folder.objects.select_related("project").annotate(
+        file_count=Count("files"),
+        last_file_name=Subquery(latest_file_name),
+        last_file_time=Subquery(latest_file_time),
+    )
+    
+    paginator = Paginator(projects, records_per_page)
+    page_obj = paginator.get_page(page_number)
+
+    total_projects = projects.count()
+    total_folders = folders.count()
+    total_files = FileDoc.objects.count()
+    recent_file = FileDoc.objects.order_by('-created_at').first()
+    recent_file_name = recent_file.name if recent_file else "No files uploaded"
+
+    # Prepare folder data for template
+    folder_data = []
+    for folder in folders:
+        folder_data.append({
+            "id": folder.id,
+            "name": folder.name,
+            "project_id": folder.project.project_id if folder.project else None,
+            "project_id_for_option": folder.project.id if folder.project else None,
+            "project_name": folder.project.project_name if folder.project else None,
+            "file_count":folder.file_count,
+            "last_file_name": folder.last_file_name if folder.last_file_name else "No files",
+
+        })
+
+    context = {
+        "page_obj": page_obj,
+        "folders": folder_data,
+        "records_per_page": records_per_page,
+        "records_options": [20, 50, 100, 200, 300],
+        "total_projects": total_projects,
+        "total_folders": total_folders,
+        "total_files": total_files,
+        "recent_file_name": recent_file_name,
+    }
+    return render(request, 'file_docs.html', context)
+
+def create_folder(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            name = data.get("name")
+            project_id = data.get("project_id")
+
+            if not name:
+                return JsonResponse({"success": False, "error": "Folder name is required."})
+
+            project = Project.objects.filter(id=project_id).first() if project_id else None
+
+            folder = Folder.objects.create(
+                name=name,
+                project=project
+            )
+
+            return JsonResponse({
+                "success": True,
+                "folder_id": folder.id,
+                "folder_name": folder.name,
+                "project_name": project.project_name if project else ""
+            })
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    return JsonResponse({"success": False, "error": "Invalid request method."}, status=405)
+
+def add_file(request):
+    if request.method == "POST":
+        try:
+            folder_id = request.POST.get("folder")
+            project_id = request.POST.get("project")
+            files = request.FILES.getlist("files")
+
+            if not folder_id:
+                return JsonResponse({"success": False, "error": "Folder is required"})
+
+            folder = Folder.objects.filter(id=folder_id).first()
+            if not folder:
+                return JsonResponse({"success": False, "error": "Invalid folder"})
+
+            # project comes indirectly from folder, but we can still accept project_id
+            project = Project.objects.filter(id=project_id).first() if project_id else folder.project
+
+            if not files:
+                return JsonResponse({"success": False, "error": "No files provided"})
+
+            for f in files:
+                FileDoc.objects.create(
+                    name=f.name,
+                    folder=folder,
+                    file=f
+                )
+
+            return JsonResponse({"success": True, "folder_id": folder.id})
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    return JsonResponse({"success": False, "error": "Invalid request method"})
+
+def get_files(request):
+    project_id = request.GET.get("id")
+    try:
+        project = Project.objects.get(id=project_id)
+    except Project.DoesNotExist:
+        raise Http404("Project not found")
+
+    folders_data = []
+    for folder in project.folders.all():
+        folders_data.append({
+            "id": folder.id,
+            "name": folder.name,
+            "created_at": folder.created_at.strftime("%Y-%m-%d %H:%M"),
+            "updated_at": folder.updated_at.strftime("%Y-%m-%d %H:%M"),
+            "files": [
+                {
+                    "id": f.id,
+                    "name": f.name,
+                    "file_url": f.file.url if f.file else None,
+                    "created_at": f.created_at.strftime("%Y-%m-%d %H:%M"),
+                }
+                for f in folder.files.all()
+            ]
+        })
+
+    return JsonResponse({
+        "id": project.id,
+        "project_id": getattr(project, "project_id", None),
+        "name": getattr(project, "project_name", ""),
+        "description": getattr(project, "description", ""),
+        "created_at": project.created_at.strftime("%Y-%m-%d %H:%M"),
+        "updated_at": project.updated_at.strftime("%Y-%m-%d %H:%M"),
+        "folders": folders_data,
     })

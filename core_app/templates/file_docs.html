@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+{% block title %}Files & Docs{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scrollable-table-body {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .scrollable-table-body table {
+        margin-bottom: 0;
+    }
+
+    .scrollable-table-body thead th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="container-xxl flex-grow-1 container-p-y">
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6>Total Projects</h6>
+                            <h4 class="fw-bold text-primary">{{ total_projects }}</h4>
+                        </div>
+                        <div class="avatar bg-primary text-white rounded-circle p-2"><i class="bx bx-folder fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6>Total Folders</h6>
+                            <h4 class="fw-bold text-success">{{ total_folders }}</h4>
+                        </div>
+                        <div class="avatar bg-success text-white rounded-circle p-2"><i class="bx bx-archive fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6>Total Files</h6>
+                            <h4 class="fw-bold text-warning">{{ total_files }}</h4>
+                        </div>
+                        <div class="avatar bg-warning text-white rounded-circle p-2"><i class="bx bx-file fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6>Recent Upload</h6>
+                            <h6 class="fw-bold text-danger">{{ recent_file_name }}</h6>
+                        </div>
+                        <div class="avatar bg-danger text-white rounded-circle p-2"><i class="bx bx-upload fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Folder Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>All Folders</h4>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFileModal">
+                        <i class="bx bx-plus"></i> Add Files
+                    </button>
+                </div>
+
+                <div class="table-responsive text-nowrap scrollable-table-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sr No.</th>
+                                <th>Project Id</th>
+                                <th>Project Name</th>
+                                <th>Folder Name</th>
+                                <th>File Count</th>
+                                <th>Recent File</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for folder in folders %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{% if folder.project_id %}{{ folder.project_id}}{% else %}-{% endif %}</td>
+                                <td>
+  {% if folder.project_id %}
+    <a href="javascript:void(0);" class="text-primary view-project"
+       data-project-id="{{ folder.project_id_for_option }}">
+       {{ folder.project_name }}
+    </a>
+  {% else %}
+    No Project
+  {% endif %}
+</td>
+
+
+                                <td>{{ folder.name }}</td>
+                                <td>{{ folder.file_count }}</td>
+                                <td>
+                                    {% if folder.last_file_name %}
+                                    {{ folder.last_file_name }}
+                                    {% else %}
+                                    No Files
+                                    {% endif %}
+                                </td>
+
+
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Add File Modal -->
+        <div class="modal fade" id="addFileModal" tabindex="-1" aria-labelledby="addFileModalLabel" aria-hidden="true"
+            data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header table-primary text-white">
+                        <h5 class="modal-title" id="addFileModalLabel"><i class="bx bx-plus me-2"></i> Add New File</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <form id="addFileForm" method="POST" enctype="multipart/form-data" action="{% url 'add_file' %}">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="projectSelect" class="form-label">Select Project (Optional)</label>
+                                <select class="form-select" id="projectSelect" name="project">
+                                    <option value="">-- No Project --</option>
+                                    {% for project in page_obj %}
+                                    <option value="{{ project.id }}">{{ project.project_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="folderSelect" class="form-label">Select Folder</label>
+                                <select class="form-select" id="folderSelect" name="folder" required>
+                                    <option value="">-- Select Folder --</option>
+                                    {% for folder in folders %}
+                                    <option value="{{ folder.id }}"
+                                        data-project="{{ folder.project_id_for_option|default:'' }}">
+                                        {{ folder.name }}
+                                        {% if folder.project_name %}
+                                        ({{ folder.project_name }} - {{ folder.project_id }})
+                                        {% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+
+
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-2"
+                                    onclick="new bootstrap.Modal(document.getElementById('addFolderModal')).show()">➕
+                                    Create New Folder</button>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="fileInput" class="form-label">Select File(s)</label>
+                                <input type="file" class="form-control" id="fileInput" name="files" multiple required>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Upload Files</button>
+                        </div>
+                    </form>
+                    <script>
+                        function showToast(message, type = "info") {
+                            const container = document.getElementById("toast-container") || (() => {
+                                const div = document.createElement("div");
+                                div.id = "toast-container";
+                                div.style.position = "fixed";
+                                div.style.top = "20px";
+                                div.style.right = "20px";
+                                div.style.zIndex = 3000;
+                                div.style.display = "flex";
+                                div.style.flexDirection = "column";
+                                div.style.gap = "10px";
+                                document.body.appendChild(div);
+                                return div;
+                            })();
+
+                            const toast = document.createElement("div");
+                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+                            toast.style.minWidth = "250px";
+                            toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+                            container.appendChild(toast);
+                            setTimeout(() => { toast.remove(); }, 3000);
+                        }
+
+                        function filterFolders() {
+                            const projectSelect = document.getElementById("projectSelect");
+                            const folderSelect = document.getElementById("folderSelect");
+
+                            if (!projectSelect || !folderSelect) return;
+
+                            const selectedProjectId = projectSelect.value;
+
+                            Array.from(folderSelect.options).forEach(option => {
+                                if (!option.value) return; // skip placeholder
+                                const folderProjectId = option.getAttribute("data-project") || "";
+
+                                if (!selectedProjectId && !folderProjectId) {
+                                    option.style.display = "";
+                                } else if (selectedProjectId && folderProjectId === selectedProjectId) {
+                                    option.style.display = "";
+                                } else {
+                                    option.style.display = "none";
+                                }
+                            });
+
+                            folderSelect.value = "";
+                        }
+
+                        // -----------------------------
+                        // 🔹 Bind Events
+                        // -----------------------------
+                        document.addEventListener("DOMContentLoaded", filterFolders);
+                        document.getElementById("projectSelect")?.addEventListener("change", filterFolders);
+
+                        // Also when modal is opened
+                        document.getElementById("addFileModal")?.addEventListener("show.bs.modal", filterFolders);
+
+
+                        // Filter folders by project
+                        document.getElementById("projectSelect").addEventListener("change", function () {
+                            const selectedProjectId = this.value; // string
+                            const folderSelect = document.getElementById("folderSelect");
+
+                            Array.from(folderSelect.options).forEach(option => {
+                                if (!option.value) return; // skip placeholder
+                                const folderProjectId = option.getAttribute("data-project") || "";
+
+                                // Case 1: No project selected -> show only folders with no project
+                                if (!selectedProjectId && !folderProjectId) {
+                                    option.style.display = "";
+                                }
+                                // Case 2: Project selected -> show only folders with same project_id
+                                else if (selectedProjectId && folderProjectId === selectedProjectId) {
+                                    option.style.display = "";
+                                }
+                                else {
+                                    option.style.display = "none";
+                                }
+                            });
+
+                            folderSelect.value = "";
+                        });
+
+
+                        // Upload files
+                        document.getElementById("addFileForm").addEventListener("submit", function (e) {
+                            e.preventDefault();
+                            const form = new FormData(this);
+
+                            fetch("{% url 'add_file' %}", { method: "POST", body: form })
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        showToast("Files uploaded successfully!", "success");
+                                        bootstrap.Modal.getInstance(document.getElementById("addFileModal")).hide();
+                                        location.reload();
+                                    } else { showToast(data.error || "Upload failed!", "danger"); }
+                                }).catch(() => showToast("Error uploading files", "danger"));
+                        });
+                    </script>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Folder Modal -->
+        <div class="modal fade" id="addFolderModal" tabindex="-1" aria-labelledby="addFolderModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content text-center">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title w-100" id="addFolderModalLabel">Create New Folder</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+                        <input type="text" id="newFolderName" class="form-control" placeholder="Enter folder name">
+                    </div>
+                    <div class="modal-footer justify-content-center border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirmAddFolderBtn">Create Folder</button>
+                    </div>
+                    <script>
+                        function showToast(message, type = "info") {
+                            const container = document.getElementById("toast-container") || (() => {
+                                const div = document.createElement("div");
+                                div.id = "toast-container";
+                                div.style.position = "fixed";
+                                div.style.top = "20px";
+                                div.style.right = "20px";
+                                div.style.zIndex = 3000;
+                                div.style.display = "flex";
+                                div.style.flexDirection = "column";
+                                div.style.gap = "10px";
+                                document.body.appendChild(div);
+                                return div;
+                            })();
+
+                            const toast = document.createElement("div");
+                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+                            toast.style.minWidth = "250px";
+                            toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+                            container.appendChild(toast);
+                            setTimeout(() => { toast.remove(); }, 3000);
+                        }
+
+                        function filterFolders() {
+                            const projectSelect = document.getElementById("projectSelect");
+                            const folderSelect = document.getElementById("folderSelect");
+
+                            if (!projectSelect || !folderSelect) return;
+
+                            const selectedProjectId = projectSelect.value;
+
+                            Array.from(folderSelect.options).forEach(option => {
+                                if (!option.value) return; // skip placeholder
+                                const folderProjectId = option.getAttribute("data-project") || "";
+
+                                if (!selectedProjectId && !folderProjectId) {
+                                    option.style.display = "";
+                                } else if (selectedProjectId && folderProjectId === selectedProjectId) {
+                                    option.style.display = "";
+                                } else {
+                                    option.style.display = "none";
+                                }
+                            });
+
+                            folderSelect.value = "";
+                        }
+
+                        // -----------------------------
+                        // 🔹 Bind Events
+                        // -----------------------------
+                        document.addEventListener("DOMContentLoaded", filterFolders);
+                        document.getElementById("projectSelect")?.addEventListener("change", filterFolders);
+
+                        // Also when modal is opened
+                        document.getElementById("addFileModal")?.addEventListener("show.bs.modal", filterFolders);
+
+                        // Filter folders by project
+                        document.getElementById("projectSelect").addEventListener("change", function () {
+                            const selectedProjectId = this.value; // string
+                            const folderSelect = document.getElementById("folderSelect");
+
+                            Array.from(folderSelect.options).forEach(option => {
+                                if (!option.value) return; // skip placeholder
+                                const folderProjectId = option.getAttribute("data-project") || "";
+
+                                // Case 1: No project selected -> show only folders with no project
+                                if (!selectedProjectId && !folderProjectId) {
+                                    option.style.display = "";
+                                }
+                                // Case 2: Project selected -> show only folders with same project_id
+                                else if (selectedProjectId && folderProjectId === selectedProjectId) {
+                                    option.style.display = "";
+                                }
+                                else {
+                                    option.style.display = "none";
+                                }
+                            });
+
+                            folderSelect.value = "";
+                        });
+
+
+                        // Create folder
+                        document.getElementById("confirmAddFolderBtn").addEventListener("click", function () {
+                            const folderName = document.getElementById("newFolderName").value.trim();
+                            const projectId = document.getElementById("projectSelect").value || null;
+
+                            if (!folderName) { showToast("Folder name is required!", "warning"); return; }
+
+                            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                            fetch("{% url 'create_folder' %}", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "X-CSRFToken": csrftoken
+                                },
+                                body: JSON.stringify({ name: folderName, project_id: projectId })
+                            })
+                                .then(res => res.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        const folderSelect = document.getElementById("folderSelect");
+                                        const option = document.createElement("option");
+                                        option.value = data.folder_id;
+                                        option.setAttribute("data-project", projectId || "");
+                                        option.text = data.folder_name + (data.project_name ? ` (${data.project_name})` : '');
+                                        folderSelect.add(option);
+                                        folderSelect.value = data.folder_id;
+
+                                        showToast("Folder created successfully!", "success");
+
+                                        bootstrap.Modal.getInstance(document.getElementById("addFolderModal")).hide();
+
+                                        document.getElementById("newFolderName").value = "";
+                                    } else {
+                                        showToast(data.error, "danger");
+                                    }
+                                })
+                                .catch(() => showToast("Error creating folder", "danger"));
+                        });
+
+                    </script>
+                </div>
+            </div>
+        </div>
+
+        <!-- detail view -->
+        <div class="modal fade" id="viewProjectModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title"><i class="bx bx-folder"></i> Project Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <h5 id="projectTitle"></h5>
+        <p><b>ID:</b> <span id="projectId"></span></p>
+        <p><b>Description:</b> <span id="projectDesc"></span></p>
+
+        <hr>
+        <h6>Folders & Files</h6>
+        <div id="projectFolders"></div>
+      </div>
+      <script>
+        document.addEventListener("click", function(e){
+    if(e.target.classList.contains("view-project")){
+        const projectId = e.target.getAttribute("data-project-id");
+
+        fetch(`/get_files/?id=${projectId}`)
+        .then(res => res.json())
+        .then(data => {
+            // Fill modal
+            document.getElementById("projectTitle").innerText = data.name;
+            document.getElementById("projectId").innerText = data.project_id || data.id;
+            document.getElementById("projectDesc").innerText = data.description || "No description";
+
+            // Build folders
+            const container = document.getElementById("projectFolders");
+            container.innerHTML = "";
+            if(data.folders.length){
+                data.folders.forEach(folder => {
+                    let filesHtml = "";
+                    if(folder.files.length){
+                        filesHtml = "<ul class='list-group mt-2'>" +
+                            folder.files.map(f =>
+                                `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>${f.name}</span>
+                                    ${f.file_url ? `<a href="${f.file_url}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>` : ""}
+                                </li>`
+                            ).join("") +
+                        "</ul>";
+                    } else {
+                        filesHtml = "<p class='text-muted'>No files</p>";
+                    }
+
+                    container.innerHTML += `
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <h6>${folder.name}</h6>
+                                ${filesHtml}
+                            </div>
+                        </div>`;
+                });
+            } else {
+                container.innerHTML = "<p class='text-muted'>No folders</p>";
+            }
+
+            // Show modal
+            new bootstrap.Modal(document.getElementById("viewProjectModal")).show();
+        })
+        .catch(()=>alert("Error loading project details"));
+    }
+});
+
+      </script>
+    </div>
+  </div>
+</div>
+
+
+    </div>
+</div>
+{% endblock %}
