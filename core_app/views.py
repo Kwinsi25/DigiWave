@@ -17,11 +17,13 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, 
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from django.http import HttpResponse
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404,FileResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout as django_logout
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count, Subquery, OuterRef
+import os
+from django.conf import settings
 
 
 # -----------------------------
@@ -1633,60 +1635,50 @@ def delete_client(request, id):
 # -----------------------------
 # File & Docs View
 # -----------------------------
+
 def file_docs(request):
     records_per_page = int(request.GET.get('recordsPerPage', 20))
     page_number = int(request.GET.get('page', 1) or 1)
 
-    projects = Project.objects.all()
+    all_projects = Project.objects.all()
+    all_folders = Folder.objects.select_related("project").all()
 
-    latest_file_name = FileDoc.objects.filter(
-        folder=OuterRef("pk")
-    ).order_by("-created_at").values("name")[:1]
+    # Flatten to folders directly
+    folder_rows = []
+    for f in all_folders:
+        file_count = FileDoc.objects.filter(folder=f).count()
+        last_file = FileDoc.objects.filter(folder=f).order_by("-created_at").first()
 
-    latest_file_time = FileDoc.objects.filter(
-        folder=OuterRef("pk")
-    ).order_by("-created_at").values("created_at")[:1]
-    
-    folders = Folder.objects.select_related("project").annotate(
-        file_count=Count("files"),
-        last_file_name=Subquery(latest_file_name),
-        last_file_time=Subquery(latest_file_time),
-    )
-    
-    paginator = Paginator(projects, records_per_page)
-    page_obj = paginator.get_page(page_number)
-
-    total_projects = projects.count()
-    total_folders = folders.count()
-    total_files = FileDoc.objects.count()
-    recent_file = FileDoc.objects.order_by('-created_at').first()
-    recent_file_name = recent_file.name if recent_file else "No files uploaded"
-
-    # Prepare folder data for template
-    folder_data = []
-    for folder in folders:
-        folder_data.append({
-            "id": folder.id,
-            "name": folder.name,
-            "project_id": folder.project.project_id if folder.project else None,
-            "project_id_for_option": folder.project.id if folder.project else None,
-            "project_name": folder.project.project_name if folder.project else None,
-            "file_count":folder.file_count,
-            "last_file_name": folder.last_file_name if folder.last_file_name else "No files",
-
+        folder_rows.append({
+            "id": f.id,
+            "name": f.name,
+            "created_at": f.created_at,
+            "project_id": f.project.project_id if f.project else "-",
+            "project_name": f.project.project_name if f.project else "No Project",
+            "file_count": file_count,
+            "last_file_name": last_file.name if last_file else "No Files",
         })
 
+    paginator = Paginator(folder_rows, records_per_page)
+    page_obj = paginator.get_page(page_number)
+
+    global_last_file = FileDoc.objects.order_by("-created_at").first()
+    global_last_file_name = global_last_file.name if global_last_file else "No Files"
+
     context = {
+        "all_projects": all_projects,
+        "all_folders": all_folders,
         "page_obj": page_obj,
-        "folders": folder_data,
         "records_per_page": records_per_page,
         "records_options": [20, 50, 100, 200, 300],
-        "total_projects": total_projects,
-        "total_folders": total_folders,
-        "total_files": total_files,
-        "recent_file_name": recent_file_name,
+        "total_projects": all_projects.count(),
+        "total_folders": all_folders.count(),
+        "total_files": FileDoc.objects.count(),
+        "recent_file_name": global_last_file_name,
     }
     return render(request, 'file_docs.html', context)
+
+
 
 def create_folder(request):
     if request.method == "POST":
@@ -1752,36 +1744,64 @@ def add_file(request):
     return JsonResponse({"success": False, "error": "Invalid request method"})
 
 def get_files(request):
-    project_id = request.GET.get("id")
+    folder_id = request.GET.get("id")
     try:
-        project = Project.objects.get(id=project_id)
-    except Project.DoesNotExist:
-        raise Http404("Project not found")
+        folder = Folder.objects.get(id=folder_id)
+    except Folder.DoesNotExist:
+        raise Http404("Folder not found")
 
-    folders_data = []
-    for folder in project.folders.all():
-        folders_data.append({
-            "id": folder.id,
-            "name": folder.name,
-            "created_at": folder.created_at.strftime("%Y-%m-%d %H:%M"),
-            "updated_at": folder.updated_at.strftime("%Y-%m-%d %H:%M"),
-            "files": [
-                {
-                    "id": f.id,
-                    "name": f.name,
-                    "file_url": f.file.url if f.file else None,
-                    "created_at": f.created_at.strftime("%Y-%m-%d %H:%M"),
-                }
-                for f in folder.files.all()
-            ]
-        })
-
+    files_data = [
+        {
+            "id": f.id,
+            "name": f.name,
+            "file_url": f.file.url if f.file else None,
+            "created_at": f.created_at.strftime("%Y-%m-%d %H:%M"),
+        }
+        for f in folder.files.all()
+    ]
+    print(files_data)
     return JsonResponse({
-        "id": project.id,
-        "project_id": getattr(project, "project_id", None),
-        "name": getattr(project, "project_name", ""),
-        "description": getattr(project, "description", ""),
-        "created_at": project.created_at.strftime("%Y-%m-%d %H:%M"),
-        "updated_at": project.updated_at.strftime("%Y-%m-%d %H:%M"),
-        "folders": folders_data,
+        "id": folder.id,
+        "name": folder.name,
+        "project": folder.project.project_name if folder.project else "No Project",
+        "created_at": folder.created_at.strftime("%Y-%m-%d %H:%M"),
+        "updated_at": folder.updated_at.strftime("%Y-%m-%d %H:%M"),
+        "files": files_data,
     })
+
+def delete_file(request, file_id):
+    """
+    Deletes a FileDoc instance along with its physical file from storage.
+    """
+    if request.method == "POST":
+        file_obj = get_object_or_404(FileDoc, id=file_id)
+        try:
+            # Delete the actual file from storage
+            if file_obj.file:
+                file_obj.file.delete(save=False)
+
+            # Delete the database record
+            file_obj.delete()
+            return JsonResponse({"success": True, "message": "File deleted successfully."})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+    else:
+        return JsonResponse({"success": False, "error": "Invalid request method."})
+    
+def delete_files(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            ids = data.get("ids", [])
+
+            if not ids:
+                return JsonResponse({"success": False, "message": "No file IDs provided"}, status=400)
+
+            # Delete files
+            FileDoc.objects.filter(id__in=ids).delete()
+
+            return JsonResponse({"success": True, "deleted_ids": ids})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+    return JsonResponse({"success": False, "message": "Invalid request method"}, status=405)

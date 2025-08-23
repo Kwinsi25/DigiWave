@@ -4,6 +4,7 @@ from .views import *
 urlpatterns = [
   
     path('', login_view, name='login'),
+    
     #login
     path('login/', login_view, name='login'),
     path('user_login/', user_login, name='user_login'),
@@ -63,4 +64,6 @@ urlpatterns = [
     path('create_folder/', create_folder, name='create_folder'),
     path('add_file/', add_file, name='add_file'),
     path('get_files/', get_files, name='get_files'),
+    path('delete_file/<int:file_id>/', delete_file, name='delete_file'),
+    path("delete_files/", delete_files, name="delete_files"),
 ]
