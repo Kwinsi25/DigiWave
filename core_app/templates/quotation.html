@@ -130,7 +130,7 @@
                                 <th>Valid Until</th>
                                 <th>Company Name</th>
                                 <th>Client Name</th>
-                                
+
                                 <th>Grand Total</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -154,7 +154,7 @@
                                     {{ q.client_name }}
 
                                 </td>
-                                
+
                                 <td>₹{{ q.grand_total }}</td>
                                 <td>
                                     <span
@@ -182,8 +182,6 @@
 
                 <!-- Records Per Page & Pagination -->
                 <div class="d-flex justify-content-between align-items-center mt-3">
-
-                    <!-- Records Per Page Dropdown -->
                     <div class="d-flex align-items-center">
                         <form method="GET" id="recordsForm" class="d-flex align-items-center">
                             <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
@@ -272,25 +270,9 @@
                         </ul>
                     </nav>
                 </div>
-
-                <script>
-
-                    document.getElementById('recordsPerPage').addEventListener('change', function () {
-                        const form = document.getElementById('recordsForm');
-                        const hiddenPage = document.createElement('input');
-                        hiddenPage.type = 'hidden';
-                        hiddenPage.name = 'page';
-                        hiddenPage.value = 1;
-                        form.appendChild(hiddenPage);
-                        form.submit();
-                    });
-                </script>
             </div>
 
         </div>
-
-
-
 
         <!-- add quotation modal -->
         <div class="modal fade" id="addQuotationModal" tabindex="-1" aria-labelledby="addQuotationModalLabel"
@@ -590,113 +572,6 @@
                             <button type="submit" class="btn btn-primary">Save Quotation</button>
                         </div>
                     </form>
-                    <script>
-                        function showToast(message, type = "info") {
-                            const container = document.getElementById("toast-container") || (() => {
-                                const div = document.createElement("div");
-                                div.id = "toast-container";
-                                div.style.position = "fixed";
-                                div.style.top = "20px";
-                                div.style.right = "20px";
-                                div.style.zIndex = "3000";
-                                div.style.display = "flex";
-                                div.style.flexDirection = "column";
-                                div.style.gap = "10px";
-                                document.body.appendChild(div);
-                                return div;
-                            })();
-
-                            const toast = document.createElement("div");
-                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-                            toast.style.minWidth = "250px";
-                            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-                            container.appendChild(toast);
-
-                            setTimeout(() => {
-                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                toast.style.opacity = "0";
-                                toast.style.transform = "translateX(100%)";
-                                setTimeout(() => toast.remove(), 500);
-                            }, 3000);
-                        }
-
-                        document.addEventListener("DOMContentLoaded", function () {
-                            const toasts = document.querySelectorAll('#toast-container .toast');
-                            toasts.forEach(function (toast) {
-                                setTimeout(() => {
-                                    toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                    toast.style.opacity = "0";
-                                    toast.style.transform = "translateX(100%)";
-                                    setTimeout(() => toast.remove(), 500);
-                                }, 3000); // Auto-hide after 3 seconds
-                            });
-                        });
-
-                        document.addEventListener("DOMContentLoaded", function () {
-                            const addBtn = document.getElementById("addServiceRow");
-                            const tableBody = addBtn.closest("tbody"); // tbody containing rows
-
-                            // Function to update name and id indexes
-                            function updateRowNames() {
-                                tableBody.querySelectorAll(".service-row").forEach((row, index) => {
-                                    const newIndex = index + 1; // start from 1
-                                    row.querySelectorAll("select, input").forEach((input) => {
-                                        // Update name
-                                        if (input.name) {
-                                            input.name = input.name.replace(/\[\d+\]/, `[${newIndex}]`);
-                                        }
-                                        // Update id (if exists)
-                                        if (input.id) {
-                                            input.id = input.id.replace(/\d+/, newIndex);
-                                        }
-                                    });
-                                });
-                            }
-
-                            // Add new row
-                            addBtn.addEventListener("click", function () {
-                                const firstRow = tableBody.querySelector(".service-row");
-                                const newRow = firstRow.cloneNode(true);
-
-                                // Reset values
-                                newRow.querySelectorAll("input").forEach((input) => {
-                                    input.value = input.type === "number" ? "0" : "";
-                                    if (input.name.includes("quantity")) input.value = "1";
-                                });
-
-                                // Insert after last service row
-                                const lastServiceRow = tableBody.querySelectorAll(".service-row");
-                                lastServiceRow[lastServiceRow.length - 1].after(newRow);
-
-                                updateRowNames();
-                            });
-
-                            // Remove row (event delegation)
-                            tableBody.addEventListener("click", function (e) {
-                                if (e.target.closest(".remove-row")) {
-                                    const rows = tableBody.querySelectorAll(".service-row");
-                                    if (rows.length > 1) {
-                                        e.target.closest(".service-row").remove();
-                                        updateRowNames();
-                                    } else {
-                                        showToast("At least one row is required.");
-                                        setTimeout(() => window.location.reload(), 1000);
-                                    }
-                                }
-                            });
-
-                            // Initial update so first row starts from 1
-                            updateRowNames();
-                        });
-                    </script>
-
-
 
                 </div>
             </div>
@@ -979,229 +854,6 @@
                         </div>
                     </form>
 
-                    <script>
-                        function showToast(message, type = "info") {
-                            const container = document.getElementById("toast-container") || (() => {
-                                const div = document.createElement("div");
-                                div.id = "toast-container";
-                                div.style.position = "fixed";
-                                div.style.top = "20px";
-                                div.style.right = "20px";
-                                div.style.zIndex = "3000";
-                                div.style.display = "flex";
-                                div.style.flexDirection = "column";
-                                div.style.gap = "10px";
-                                document.body.appendChild(div);
-                                return div;
-                            })();
-
-                            const toast = document.createElement("div");
-                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-                            toast.style.minWidth = "250px";
-                            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-                            container.appendChild(toast);
-
-                            setTimeout(() => {
-                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                toast.style.opacity = "0";
-                                toast.style.transform = "translateX(100%)";
-                                setTimeout(() => toast.remove(), 500);
-                            }, 3000);
-                        }
-
-                        document.addEventListener("DOMContentLoaded", function () {
-                            const toasts = document.querySelectorAll('#toast-container .toast');
-                            toasts.forEach(function (toast) {
-                                setTimeout(() => {
-                                    toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                    toast.style.opacity = "0";
-                                    toast.style.transform = "translateX(100%)";
-                                    setTimeout(() => toast.remove(), 500);
-                                }, 3000); // Auto-hide after 3 seconds
-                            });
-                        });
-
-                        document.addEventListener("DOMContentLoaded", function () {
-                            const updateForm = document.getElementById("updateQuotationForm");
-                            const updateTableBody = document.getElementById("update_services_container");
-                            const updateBtn = document.getElementById("updateServiceRow");
-
-                            // --- Reindex service rows ---
-                            function updateRowNames() {
-                                updateTableBody.querySelectorAll(".service-row").forEach((row, index) => {
-                                    const newIndex = index + 1;
-                                    row.querySelectorAll("select, input").forEach((input) => {
-                                        if (input.name) {
-                                            input.name = input.name.replace(/\[\d+\]/, `[${newIndex}]`);
-                                        }
-                                    });
-                                });
-                            }
-
-                            // --- Add new service row ---
-                            updateBtn.addEventListener("click", function () {
-                                const firstRow = updateTableBody.querySelector(".service-row");
-                                if (!firstRow) {
-                                    updateTableBody.innerHTML = `
-        <tr class="service-row">
-          <td>
-            <select name="service[1][category]" class="form-select">
-              <option value="web">Web Development</option>
-              <option value="mobile">Mobile Development</option>
-              <option value="cloud">Cloud Services</option>
-              <option value="ai_ml">AI/ML Algorithms</option>
-            </select>
-          </td>
-          <td><input type="text" name="service[1][description]" class="form-control"></td>
-          <td><input type="number" name="service[1][quantity]" value="1" class="form-control"></td>
-          <td>
-            <div class="input-group">
-              <input type="number" name="service[1][unit_price]" value="0" class="form-control">
-              
-             <button type="button" class="btn btn-sm btn-danger remove-row">
-                                                     <i class="bx bx-trash"></i>
-                                                 </button>
-            </div>
-          </td>
-        </tr>`;
-                                    return;
-                                }
-
-                                const newRow = firstRow.cloneNode(true);
-                                newRow.querySelectorAll("input, select").forEach((input) => {
-                                    if (input.tagName === "SELECT") {
-                                        input.selectedIndex = 0;
-                                    } else if (input.type === "number") {
-                                        input.value = input.name.includes("quantity") ? "1" : "0";
-                                    } else {
-                                        input.value = "";
-                                    }
-                                });
-
-                                updateTableBody.appendChild(newRow);
-                                updateRowNames();
-                            });
-
-                            // --- Remove service row ---
-                            updateTableBody.addEventListener("click", function (e) {
-                                if (e.target.closest(".remove-row")) {
-                                    const rows = updateTableBody.querySelectorAll(".service-row");
-                                    if (rows.length > 1) {
-                                        e.target.closest(".service-row").remove();
-                                        updateRowNames();
-                                    } else {
-                                        showToast("At least one row is required.");
-                                        setTimeout(() => window.location.reload(), 1000);
-                                    }
-                                }
-                            });
-
-                            // --- When edit button is clicked ---
-                            document.querySelectorAll(".edit-quotation").forEach(btn => {
-                                btn.addEventListener("click", async function (e) {
-                                    e.preventDefault();
-                                    const qtnId = this.dataset.quotationId;
-                                    updateForm.action = `/update_quotation/${qtnId}/`;
-
-                                    const response = await fetch(`/get_quotation/?id=${qtnId}`);
-                                    const data = await response.json();
-
-                                    // Fill basic fields
-                                    document.getElementById("quotation_no").value = data.quotation_no;
-                                    document.getElementById("date").value = data.date;
-                                    document.getElementById("valid_until").value = data.valid_until;
-                                    document.getElementById("company_name").value = data.company_name;
-                                    document.getElementById("company_phone").value = data.company_phone;
-                                    document.getElementById("company_email").value = data.company_email;
-                                    document.getElementById("company_address").value = data.company_address;
-                                    // Set Prepared By dropdown
-                                    document.getElementById("prepared_by").value = data.prepared_by;
-                                    document.getElementById("client_name").value = data.client_name;
-                                    document.getElementById("client_contact").value = data.client_contact;
-                                    document.getElementById("client_email").value = data.client_email;
-                                    document.getElementById("client_address").value = data.client_address;
-                                    document.getElementById("discount_type").value = data.discount_type;
-                                    document.getElementById("discount_value").value = data.discount_value;
-                                    document.getElementById("tax_rate").value = data.tax_rate;
-                                    document.getElementById("grand_total").value = data.grand_total;
-                                    document.getElementById("payment_terms").value = data.payment_terms;
-                                    document.getElementById("additional_notes").value = data.additional_notes;
-                                    document.getElementById("signatory_name").value = data.sign_name;
-                                    document.getElementById("signatory_designation").value = data.sign_designation;
-
-                                    if (data.signature_url) {
-                                        document.getElementById("signature_preview").src = data.signature_url;
-                                        document.getElementById("signature_preview").style.display = "block";
-                                    } else {
-                                        document.getElementById("signature_preview").style.display = "none";
-                                    }
-
-                                    // Fill services
-                                    updateTableBody.innerHTML = "";
-                                    data.services.forEach((s, idx) => {
-                                        updateTableBody.innerHTML += `
-          <tr class="service-row">
-            <td>
-              <select name="service[${idx + 1}][category]" class="form-select">
-                <option value="web" ${s.category === "Web Development" ? "selected" : ""}>Web Development</option>
-                <option value="mobile" ${s.category === "Mobile Development" ? "selected" : ""}>Mobile Development</option>
-                <option value="cloud" ${s.category === "Cloud Services" ? "selected" : ""}>Cloud Services</option>
-                <option value="ai_ml" ${s.category === "AI/ML Algorithms" ? "selected" : ""}>AI/ML Algorithms</option>
-              </select>
-            </td>
-            <td><input type="text" name="service[${idx + 1}][description]" value="${s.description}" class="form-control"></td>
-            <td><input type="number" name="service[${idx + 1}][quantity]" value="${s.quantity}" class="form-control"></td>
-            <td>
-              <div class="input-group">
-                <input type="number" name="service[${idx + 1}][unit_price]" value="${s.unit_price}" class="form-control">
-                <button type="button" class="btn btn-sm btn-danger remove-row">
-                                                    <i class="bx bx-trash"></i>
-                                                </button>
-              </div>
-            </td>
-          </tr>`;
-                                    });
-
-                                    // Fill infra (domain/server/ssl/email)
-                                    if (data.infra.domain_registration.length > 0) {
-                                        const d = data.infra.domain_registration[0];
-                                        document.getElementById("update_domain_included").value = d.included ? "true" : "false";
-                                        document.getElementById("update_domain_duration").value = d.duration;
-                                        document.getElementById("update_domain_price").value = d.unit_price;
-                                    }
-                                    if (data.infra.server_hosting.length > 0) {
-                                        const s = data.infra.server_hosting[0];
-                                        document.getElementById("update_server_included").value = s.included ? "true" : "false";
-                                        document.getElementById("update_server_duration").value = s.duration;
-                                        document.getElementById("update_server_price").value = s.unit_price;
-                                    }
-                                    if (data.infra.ssl_certificate.length > 0) {
-                                        const ssl = data.infra.ssl_certificate[0];
-                                        document.getElementById("update_ssl_included").value = ssl.included ? "true" : "false";
-                                        document.getElementById("update_ssl_duration").value = ssl.duration;
-                                        document.getElementById("update_ssl_price").value = ssl.unit_price;
-                                    }
-                                    if (data.infra.email_hosting.length > 0) {
-                                        const e = data.infra.email_hosting[0];
-                                        document.getElementById("update_email_included").value = e.included ? "true" : "false";
-                                        document.getElementById("update_email_duration").value = e.duration;
-                                        document.getElementById("update_email_price").value = e.unit_price;
-                                    }
-
-                                    // Show modal
-                                    const modal = new bootstrap.Modal(document.getElementById("updateQuotationModal"));
-                                    modal.show();
-                                });
-                            });
-                        });
-                    </script>
-
                 </div>
             </div>
         </div>
@@ -1355,130 +1007,7 @@
                         </div>
 
                     </div>
-                    <script>
-                        document.addEventListener("DOMContentLoaded", function () {
-                            const modalEl = document.getElementById("viewQuotationModal");
-                            const viewQuotationModal = new bootstrap.Modal(modalEl);
 
-                            modalEl.addEventListener('show.bs.modal', function (event) {
-                                const trigger = event.relatedTarget; // clicked link
-                                const quotationId = trigger.dataset.quotationId;
-
-                                // Fetch quotation via query param
-                                fetch(`/get_quotation/?id=${quotationId}`, {
-                                    headers: { "X-Requested-With": "XMLHttpRequest" }
-                                })
-                                    .then(res => res.json())
-                                    .then(data => {
-                                        // Helper function
-                                        const setText = (id, value) => {
-                                            const el = document.getElementById(id);
-                                            if (el) el.textContent = value || "-";
-                                        };
-
-                                        // --- 1. Company & Client / Quotation Info ---
-                                        setText("view-company-name", data.company_name);
-                                        setText("view-company-address", data.company_address);
-                                        setText("view-company-phone", data.company_phone);
-                                        setText("view-company-email", data.company_email);
-                                        setText("view-quotation-no", data.quotation_no);
-                                        setText("view-date", data.date);
-                                        setText("view-valid-until", data.valid_until);
-                                        setText("view-prepared-by", data.prepared_by);
-                                        setText("view-client-name", data.client_name);
-                                        setText("view-client-contact", data.client_contact);
-                                        setText("view-client-email", data.client_email);
-                                        setText("view-client-address", data.client_address);
-
-                                        // --- 2. Service Charges ---
-                                        const tbody = document.getElementById("view-service-charges");
-                                        tbody.innerHTML = ""; // clear previous
-                                        if (Array.isArray(data.services) && data.services.length > 0) {
-                                            data.services.forEach((s, idx) => {
-                                                const row = `
-                        <tr>
-                            <td>${idx + 1}</td>
-                            <td>${s.category || ""}</td>
-                            <td>${s.description || ""}</td>
-                            <td>${s.quantity || 0}</td>
-                            <td class="text-end">${s.unit_price || 0}</td>
-                            <td class="text-end">${s.total || 0}</td>
-                        </tr>
-                    `;
-                                                tbody.insertAdjacentHTML("beforeend", row);
-                                            });
-                                        } else {
-                                            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No services</td></tr>`;
-                                        }
-                                        setText("view-total-service-charge", data.total_service_charge);
-
-                                        // --- 3. Server & Domain Charges ---
-                                        const infraBody = document.querySelector("#view-infra-charges");
-                                        infraBody.innerHTML = "";
-
-                                        const infraTypes = {
-                                            "Domain Registration": data.infra?.domain_registration,
-                                            "Server Hosting": data.infra?.server_hosting,
-                                            "SSL Certificate": data.infra?.ssl_certificate,
-                                            "Email Hosting": data.infra?.email_hosting
-                                        };
-
-                                        Object.entries(infraTypes).forEach(([label, rows]) => {
-                                            if (Array.isArray(rows) && rows.length > 0) {
-                                                rows.forEach(r => {
-                                                    infraBody.insertAdjacentHTML("beforeend", `
-                <tr>
-                    <td>${label}</td>
-                    <td>Yes</td>
-                    <td>${r.duration || "-"}</td>
-                    <td class="text-end">${r.unit_price || 0}</td>
-                    <td class="text-end">${r.total || 0}</td>
-                </tr>
-            `);
-                                                });
-                                            }
-                                        });
-
-                                        // if nothing included
-                                        if (infraBody.innerHTML.trim() === "") {
-                                            infraBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No Server/Domain Charges</td></tr>`;
-                                        }
-                                        setText("view-sub-services", data.subtotal_services);
-                                        setText("view-sub-infra", data.total_server_domain_charge);
-                                        setText("view-discount-type", data.discount_type);
-                                        setText("view-discount-value", data.discount_value);
-                                        setText("view-tax-amount", data.tax_amount);
-                                        setText("view-grand-total", data.grand_total);
-
-
-                                        // --- 4. Summary ---
-                                        setText("view-sub-services", data.subtotal_services);
-                                        setText("view-sub-infra", data.subtotal_infra);
-                                        setText("view-discount-type", data.discount_type);  // "Flat" or "Percent"
-                                        setText("view-discount-value", data.discount_value);
-                                        setText("view-tax-amount", data.tax_amount);
-                                        setText("view-grand-total", data.grand_total);
-                                        setText("view-payment-terms", data.payment_terms);
-                                        setText("view-additional-notes", data.additional_notes);
-
-                                        // --- 5. Signatory ---
-                                        const sigEl = document.getElementById("view-signature");
-                                        if (sigEl) {
-                                            sigEl.innerHTML = data.signature_url
-                                                ? `<img src="${data.signature_url}" class="img-thumbnail" style="max-height:80px;">`
-                                                : "No signature";
-                                        }
-                                        setText("view-sign-name", data.sign_name);
-                                        setText("view-sign-designation", data.sign_designation);
-                                    })
-                                    .catch(err => {
-                                        console.error("Error loading quotation details:", err);
-                                        showToast("Error loading quotation details");
-                                        setTimeout(() => window.location.reload(), 1000);
-                                    });
-                            });
-                        });
-                    </script>
 
                 </div>
             </div>
@@ -1505,33 +1034,453 @@
             </div>
         </div>
 
-        <script>
-            let quotationIdToDownload = null;
 
-            // Trigger download modal
-            document.addEventListener("DOMContentLoaded", function () {
-                document.querySelectorAll(".download-quotation").forEach(btn => {
-                    btn.addEventListener("click", function (e) {
-                        e.preventDefault();
-                        quotationIdToDownload = this.dataset.quotationId;
-                        new bootstrap.Modal(document.getElementById("downloadQuotationModal")).show();
-                    });
-                });
-
-                // Confirm Download
-                document.getElementById("confirmDownloadQuotationBtn").addEventListener("click", function () {
-                    if (!quotationIdToDownload) return;
-
-                    // Trigger file download
-                    window.location.href = `/download_quotation/${quotationIdToDownload}/`;
-
-                    // Hide modal
-                    bootstrap.Modal.getInstance(document.getElementById("downloadQuotationModal")).hide();
-                });
-            });
-        </script>
 
     </div>
 </div>
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Handle Records Per Page change
+        document.getElementById('recordsPerPage').addEventListener('change', function () {
+            const form = document.getElementById('recordsForm');
+            const hiddenPage = document.createElement('input');
+            hiddenPage.type = 'hidden';
+            hiddenPage.name = 'page';
+            hiddenPage.value = 1;
+            form.appendChild(hiddenPage);
+            form.submit();
+        });
 
+        // Toast Notification
+        function showToast(message, type = "info") {
+            const container = document.getElementById("toast-container") || (() => {
+                const div = document.createElement("div");
+                div.id = "toast-container";
+                div.style.position = "fixed";
+                div.style.top = "20px";
+                div.style.right = "20px";
+                div.style.zIndex = "3000";
+                div.style.display = "flex";
+                div.style.flexDirection = "column";
+                div.style.gap = "10px";
+                document.body.appendChild(div);
+                return div;
+            })();
+
+            const toast = document.createElement("div");
+            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+            toast.style.minWidth = "250px";
+            toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                toast.style.opacity = "0";
+                toast.style.transform = "translateX(100%)";
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
+        const toasts = document.querySelectorAll('#toast-container .toast');
+        toasts.forEach(function (toast) {
+            setTimeout(() => {
+                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                toast.style.opacity = "0";
+                toast.style.transform = "translateX(100%)";
+                setTimeout(() => toast.remove(), 500);
+            }, 3000); // Auto-hide after 3 seconds
+
+        });
+
+        // --- Dynamic Service Rows in Create Quotation ---
+        const addBtn = document.getElementById("addServiceRow");
+        const tableBody = addBtn.closest("tbody"); // tbody containing rows
+
+        // Function to update name and id indexes
+        function updateRowNames() {
+            tableBody.querySelectorAll(".service-row").forEach((row, index) => {
+                const newIndex = index + 1; // start from 1
+                row.querySelectorAll("select, input").forEach((input) => {
+                    // Update name
+                    if (input.name) {
+                        input.name = input.name.replace(/\[\d+\]/, `[${newIndex}]`);
+                    }
+                    // Update id (if exists)
+                    if (input.id) {
+                        input.id = input.id.replace(/\d+/, newIndex);
+                    }
+                });
+            });
+        }
+
+        // Add new row
+        addBtn.addEventListener("click", function () {
+            const firstRow = tableBody.querySelector(".service-row");
+            const newRow = firstRow.cloneNode(true);
+
+            // Reset values
+            newRow.querySelectorAll("input").forEach((input) => {
+                input.value = input.type === "number" ? "0" : "";
+                if (input.name.includes("quantity")) input.value = "1";
+            });
+
+            // Insert after last service row
+            const lastServiceRow = tableBody.querySelectorAll(".service-row");
+            lastServiceRow[lastServiceRow.length - 1].after(newRow);
+
+            updateRowNames();
+        });
+
+        // Remove row (event delegation)
+        tableBody.addEventListener("click", function (e) {
+            if (e.target.closest(".remove-row")) {
+                const rows = tableBody.querySelectorAll(".service-row");
+                if (rows.length > 1) {
+                    e.target.closest(".service-row").remove();
+                    updateRowNames();
+                } else {
+                    showToast("At least one row is required.", 'danger');
+
+                }
+            }
+        });
+
+        // Initial update so first row starts from 1
+        updateRowNames();
+
+
+        // --- Dynamic Service Rows in Update Quotation ---
+
+        const updateForm = document.getElementById("updateQuotationForm");
+        const updateTableBody = document.getElementById("update_services_container");
+        const updateBtn = document.getElementById("updateServiceRow");
+
+        // --- Reindex service rows ---
+        function updateTimeRowNames() {
+            updateTableBody.querySelectorAll(".service-row").forEach((row, index) => {
+                const newIndex = index + 1;
+                row.querySelectorAll("select, input").forEach((input) => {
+                    if (input.name) {
+                        input.name = input.name.replace(/\[\d+\]/, `[${newIndex}]`);
+                    }
+                });
+            });
+        }
+
+        // --- Add new service row ---
+        updateBtn.addEventListener("click", function () {
+            const firstRow = updateTableBody.querySelector(".service-row");
+            if (!firstRow) {
+                updateTableBody.innerHTML = `
+        <tr class="service-row">
+          <td>
+            <select name="service[1][category]" class="form-select">
+              <option value="web">Web Development</option>
+              <option value="mobile">Mobile Development</option>
+              <option value="cloud">Cloud Services</option>
+              <option value="ai_ml">AI/ML Algorithms</option>
+            </select>
+          </td>
+          <td><input type="text" name="service[1][description]" class="form-control"></td>
+          <td><input type="number" name="service[1][quantity]" value="1" class="form-control"></td>
+          <td>
+            <div class="input-group">
+              <input type="number" name="service[1][unit_price]" value="0" class="form-control">
+              
+             <button type="button" class="btn btn-sm btn-danger remove-row">
+                                                     <i class="bx bx-trash"></i>
+                                                 </button>
+            </div>
+          </td>
+        </tr>`;
+                return;
+            }
+
+            const newRow = firstRow.cloneNode(true);
+            newRow.querySelectorAll("input, select").forEach((input) => {
+                if (input.tagName === "SELECT") {
+                    input.selectedIndex = 0;
+                } else if (input.type === "number") {
+                    input.value = input.name.includes("quantity") ? "1" : "0";
+                } else {
+                    input.value = "";
+                }
+            });
+
+            updateTableBody.appendChild(newRow);
+            updateTimeRowNames();
+        });
+
+        // --- Remove service row ---
+        updateTableBody.addEventListener("click", function (e) {
+            if (e.target.closest(".remove-row")) {
+                const rows = updateTableBody.querySelectorAll(".service-row");
+                if (rows.length > 1) {
+                    e.target.closest(".service-row").remove();
+                    updateTimeRowNames();
+                } else {
+                    showToast("At least one row is required.", 'danger');
+
+                }
+            }
+        });
+
+        // --- When edit button is clicked ---
+        document.querySelectorAll(".edit-quotation").forEach(btn => {
+            btn.addEventListener("click", async function (e) {
+                e.preventDefault();
+                const qtnId = this.dataset.quotationId;
+                updateForm.action = `/update_quotation/${qtnId}/`;
+
+                const response = await fetch(`/get_quotation/?id=${qtnId}`);
+                const data = await response.json();
+
+                // Fill basic fields
+                document.getElementById("quotation_no").value = data.quotation_no;
+                document.getElementById("date").value = data.date;
+                document.getElementById("valid_until").value = data.valid_until;
+                document.getElementById("company_name").value = data.company_name;
+                document.getElementById("company_phone").value = data.company_phone;
+                document.getElementById("company_email").value = data.company_email;
+                document.getElementById("company_address").value = data.company_address;
+                // Set Prepared By dropdown
+                document.getElementById("prepared_by").value = data.prepared_by;
+                document.getElementById("client_name").value = data.client_name;
+                document.getElementById("client_contact").value = data.client_contact;
+                document.getElementById("client_email").value = data.client_email;
+                document.getElementById("client_address").value = data.client_address;
+                document.getElementById("discount_type").value = data.discount_type;
+                document.getElementById("discount_value").value = data.discount_value;
+                document.getElementById("tax_rate").value = data.tax_rate;
+                document.getElementById("grand_total").value = data.grand_total;
+                document.getElementById("payment_terms").value = data.payment_terms;
+                document.getElementById("additional_notes").value = data.additional_notes;
+                document.getElementById("signatory_name").value = data.sign_name;
+                document.getElementById("signatory_designation").value = data.sign_designation;
+
+                if (data.signature_url) {
+                    document.getElementById("signature_preview").src = data.signature_url;
+                    document.getElementById("signature_preview").style.display = "block";
+                } else {
+                    document.getElementById("signature_preview").style.display = "none";
+                }
+
+                // Fill services
+                updateTableBody.innerHTML = "";
+                data.services.forEach((s, idx) => {
+                    updateTableBody.innerHTML += `
+          <tr class="service-row">
+            <td>
+              <select name="service[${idx + 1}][category]" class="form-select">
+                <option value="web" ${s.category === "Web Development" ? "selected" : ""}>Web Development</option>
+                <option value="mobile" ${s.category === "Mobile Development" ? "selected" : ""}>Mobile Development</option>
+                <option value="cloud" ${s.category === "Cloud Services" ? "selected" : ""}>Cloud Services</option>
+                <option value="ai_ml" ${s.category === "AI/ML Algorithms" ? "selected" : ""}>AI/ML Algorithms</option>
+              </select>
+            </td>
+            <td><input type="text" name="service[${idx + 1}][description]" value="${s.description}" class="form-control"></td>
+            <td><input type="number" name="service[${idx + 1}][quantity]" value="${s.quantity}" class="form-control"></td>
+            <td>
+              <div class="input-group">
+                <input type="number" name="service[${idx + 1}][unit_price]" value="${s.unit_price}" class="form-control">
+                <button type="button" class="btn btn-sm btn-danger remove-row">
+                                                    <i class="bx bx-trash"></i>
+                                                </button>
+              </div>
+            </td>
+          </tr>`;
+                });
+
+                // Fill infra (domain/server/ssl/email)
+                if (data.infra.domain_registration.length > 0) {
+                    const d = data.infra.domain_registration[0];
+                    document.getElementById("update_domain_included").value = d.included ? "true" : "false";
+                    document.getElementById("update_domain_duration").value = d.duration;
+                    document.getElementById("update_domain_price").value = d.unit_price;
+                }
+                if (data.infra.server_hosting.length > 0) {
+                    const s = data.infra.server_hosting[0];
+                    document.getElementById("update_server_included").value = s.included ? "true" : "false";
+                    document.getElementById("update_server_duration").value = s.duration;
+                    document.getElementById("update_server_price").value = s.unit_price;
+                }
+                if (data.infra.ssl_certificate.length > 0) {
+                    const ssl = data.infra.ssl_certificate[0];
+                    document.getElementById("update_ssl_included").value = ssl.included ? "true" : "false";
+                    document.getElementById("update_ssl_duration").value = ssl.duration;
+                    document.getElementById("update_ssl_price").value = ssl.unit_price;
+                }
+                if (data.infra.email_hosting.length > 0) {
+                    const e = data.infra.email_hosting[0];
+                    document.getElementById("update_email_included").value = e.included ? "true" : "false";
+                    document.getElementById("update_email_duration").value = e.duration;
+                    document.getElementById("update_email_price").value = e.unit_price;
+                }
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById("updateQuotationModal"));
+                modal.show();
+            });
+        });
+
+        // --- View Quotation Details ---
+
+        const modalEl = document.getElementById("viewQuotationModal");
+        const viewQuotationModal = new bootstrap.Modal(modalEl);
+
+        modalEl.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget; // clicked link
+            const quotationId = trigger.dataset.quotationId;
+
+            // Fetch quotation via query param
+            fetch(`/get_quotation/?id=${quotationId}`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    // Helper function
+                    const setText = (id, value) => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = value || "-";
+                    };
+
+                    // --- 1. Company & Client / Quotation Info ---
+                    setText("view-company-name", data.company_name);
+                    setText("view-company-address", data.company_address);
+                    setText("view-company-phone", data.company_phone);
+                    setText("view-company-email", data.company_email);
+                    setText("view-quotation-no", data.quotation_no);
+                    setText("view-date", data.date);
+                    setText("view-valid-until", data.valid_until);
+                    setText("view-prepared-by", data.prepared_by);
+                    setText("view-client-name", data.client_name);
+                    setText("view-client-contact", data.client_contact);
+                    setText("view-client-email", data.client_email);
+                    setText("view-client-address", data.client_address);
+
+                    // --- 2. Service Charges ---
+                    const tbody = document.getElementById("view-service-charges");
+                    tbody.innerHTML = ""; // clear previous
+                    if (Array.isArray(data.services) && data.services.length > 0) {
+                        data.services.forEach((s, idx) => {
+                            const row = `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>${s.category || ""}</td>
+                            <td>${s.description || ""}</td>
+                            <td>${s.quantity || 0}</td>
+                            <td class="text-end">${s.unit_price || 0}</td>
+                            <td class="text-end">${s.total || 0}</td>
+                        </tr>
+                    `;
+                            tbody.insertAdjacentHTML("beforeend", row);
+                        });
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No services</td></tr>`;
+                    }
+                    setText("view-total-service-charge", data.total_service_charge);
+
+                    // --- 3. Server & Domain Charges ---
+                    const infraBody = document.querySelector("#view-infra-charges");
+                    infraBody.innerHTML = "";
+
+                    const infraTypes = {
+                        "Domain Registration": data.infra?.domain_registration,
+                        "Server Hosting": data.infra?.server_hosting,
+                        "SSL Certificate": data.infra?.ssl_certificate,
+                        "Email Hosting": data.infra?.email_hosting
+                    };
+
+                    Object.entries(infraTypes).forEach(([label, rows]) => {
+                        if (Array.isArray(rows) && rows.length > 0) {
+                            rows.forEach(r => {
+                                infraBody.insertAdjacentHTML("beforeend", `
+                <tr>
+                    <td>${label}</td>
+                    <td>Yes</td>
+                    <td>${r.duration || "-"}</td>
+                    <td class="text-end">${r.unit_price || 0}</td>
+                    <td class="text-end">${r.total || 0}</td>
+                </tr>
+            `);
+                            });
+                        }
+                    });
+
+                    // if nothing included
+                    if (infraBody.innerHTML.trim() === "") {
+                        infraBody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No Server/Domain Charges</td></tr>`;
+                    }
+                    setText("view-sub-services", data.subtotal_services);
+                    setText("view-sub-infra", data.total_server_domain_charge);
+                    setText("view-discount-type", data.discount_type);
+                    setText("view-discount-value", data.discount_value);
+                    setText("view-tax-amount", data.tax_amount);
+                    setText("view-grand-total", data.grand_total);
+
+
+                    // --- 4. Summary ---
+                    setText("view-sub-services", data.subtotal_services);
+                    setText("view-sub-infra", data.subtotal_infra);
+                    setText("view-discount-type", data.discount_type);  // "Flat" or "Percent"
+                    setText("view-discount-value", data.discount_value);
+                    setText("view-tax-amount", data.tax_amount);
+                    setText("view-grand-total", data.grand_total);
+                    setText("view-payment-terms", data.payment_terms);
+                    setText("view-additional-notes", data.additional_notes);
+
+                    // --- 5. Signatory ---
+                    const sigEl = document.getElementById("view-signature");
+                    if (sigEl) {
+                        sigEl.innerHTML = data.signature_url
+                            ? `<img src="${data.signature_url}" class="img-thumbnail" style="max-height:80px;">`
+                            : "No signature";
+                    }
+                    setText("view-sign-name", data.sign_name);
+                    setText("view-sign-designation", data.sign_designation);
+                })
+                .catch(err => {
+                    console.error("Error loading quotation details:", err);
+                    showToast("Error loading quotation details", 'danger');
+                    setTimeout(() => window.location.reload(), 3000);
+                });
+        });
+        // --- Download Quotation ---
+
+        let quotationIdToDownload = null;
+
+        // Trigger download modal
+
+        document.querySelectorAll(".download-quotation").forEach(btn => {
+            btn.addEventListener("click", function (e) {
+                e.preventDefault();
+                quotationIdToDownload = this.dataset.quotationId;
+                new bootstrap.Modal(document.getElementById("downloadQuotationModal")).show();
+            });
+        });
+
+        // Confirm Download
+        document.getElementById("confirmDownloadQuotationBtn").addEventListener("click", function () {
+            if (!quotationIdToDownload) return;
+
+            // Trigger file download
+            window.location.href = `/download_quotation/${quotationIdToDownload}/`;
+
+            // Hide modal
+            bootstrap.Modal.getInstance(document.getElementById("downloadQuotationModal")).hide();
+        });
+
+    });
+
+</script>
+
+{% endblock %}
 {% endblock %}

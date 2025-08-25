@@ -4,7 +4,7 @@ from django.core.validators import EmailValidator,URLValidator
 from django.utils import timezone
 import os,re
 from django.core.validators import RegexValidator, MinLengthValidator, EmailValidator
-from django.db.models import Max
+from django.db.models import *
 from decimal import Decimal
 
 # -----------------------------
@@ -182,10 +182,81 @@ class Project(models.Model):
                 if match:
                     last_number = int(match.group())
             self.project_id = f"#P{last_number + 1:04d}"
+        # ===== Update income with total_paid =====
+        self.income = self.total_paid
+
         super().save(*args, **kwargs)
+    
+    # ==== Payment Helpers ====
+    @property
+    def total_paid(self):
+        return self.payments.aggregate(total=Sum('amount'))['total'] or 0
+
+    @property
+    def remaining_payment(self):
+        if self.approval_amount:
+            return self.approval_amount - self.total_paid
+        return None
 
     def __str__(self):
         return f"{self.project_id} - {self.project_name}"
+
+
+# -----------------------------
+# Payment model
+# -----------------------------
+class ProjectPayment(models.Model):
+    PAYMENT_METHOD_CHOICES = [
+        ('Bank Transfer', 'Bank Transfer'),
+        ('UPI', 'UPI'),
+        ('Cash', 'Cash'),
+        ('Cheque', 'Cheque'),
+        ('Other', 'Other'),
+    ]
+
+    project = models.ForeignKey("Project", on_delete=models.CASCADE, related_name="payments")
+    milestone_name = models.CharField(max_length=255, blank=True, null=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    payment_date = models.DateField(auto_now_add=True)
+    payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True)
+
+    # Dynamic details
+    payment_details = models.JSONField(blank=True, null=True)
+
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        # Validate amount
+        if self.amount <= 0:
+            raise ValidationError("Payment amount must be greater than zero.")
+
+        # Validate method-specific details
+        details = self.payment_details or {}
+
+        if self.payment_method == "Bank Transfer":
+            required_fields = ["bank_name", "account_no", "ifsc_code"]
+        elif self.payment_method == "UPI":
+            required_fields = ["upi_id"]
+        elif self.payment_method == "Cheque":
+            required_fields = ["cheque_no", "cheque_name"]
+        else:
+            required_fields = []
+
+        for field in required_fields:
+            if field not in details or not details[field]:
+                raise ValidationError({ "payment_details": f"'{field}' is required for {self.payment_method}." })
+
+        # Prevent overpayment
+        if self.project.approval_amount:
+            total_other_payments = self.project.payments.exclude(pk=self.pk).aggregate(total=models.Sum('amount'))['total'] or 0
+            if total_other_payments + self.amount > self.project.approval_amount:
+                raise ValidationError("Payment exceeds project approval amount.")
+
+    def __str__(self):
+        return f"{self.project.project_name} - {self.payment_method} - {self.amount}"
+    
 
 # -----------------------------
 # HostData model

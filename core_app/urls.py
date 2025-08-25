@@ -66,4 +66,9 @@ urlpatterns = [
     path('get_files/', get_files, name='get_files'),
     path('delete_file/<int:file_id>/', delete_file, name='delete_file'),
     path("delete_files/", delete_files, name="delete_files"),
+
+    #payment
+    path('payment/', payment_list, name='payment_list'),
+    path('add_payment/', add_payment, name='add_payment'),
+    path('get_payment/', get_payment, name='get_payment'),
 ]

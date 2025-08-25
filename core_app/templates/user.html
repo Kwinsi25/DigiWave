@@ -276,18 +276,6 @@
                     </nav>
                 </div>
 
-                <script>
-                    document.getElementById('recordsPerPage').addEventListener('change', function () {
-                        const form = document.getElementById('recordsForm');
-                        const hiddenPage = document.createElement('input');
-                        hiddenPage.type = 'hidden';
-                        hiddenPage.name = 'page';
-                        hiddenPage.value = 1;
-                        form.appendChild(hiddenPage);
-                        form.submit();
-                    });
-                </script>
-
                 <!-- display user data -->
                 <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel"
                     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -402,7 +390,7 @@
                                 </div>
                             </div>
 
-                            
+
                         </div>
                     </div>
                 </div>
@@ -480,84 +468,10 @@
                                     <button type="submit" class="btn btn-primary">Save Employee</button>
                                 </div>
                             </form>
-                            <script>
 
-                                function showToast(message, type = "info") {
-                            const container = document.getElementById("toast-container") || (() => {
-                                const div = document.createElement("div");
-                                div.id = "toast-container";
-                                div.style.position = "fixed";
-                                div.style.top = "20px";
-                                div.style.right = "20px";
-                                div.style.zIndex = "3000";
-                                div.style.display = "flex";
-                                div.style.flexDirection = "column";
-                                div.style.gap = "10px";
-                                document.body.appendChild(div);
-                                return div;
-                            })();
-
-                            const toast = document.createElement("div");
-                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-                            toast.style.minWidth = "250px";
-                            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-                            container.appendChild(toast);
-
-                            setTimeout(() => {
-                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                toast.style.opacity = "0";
-                                toast.style.transform = "translateX(100%)";
-                                setTimeout(() => toast.remove(), 500);
-                            }, 3000);
-                        }
-
-                        document.addEventListener("DOMContentLoaded", function () {
-                            const toasts = document.querySelectorAll('#toast-container .toast');
-                            toasts.forEach(function (toast) {
-                                setTimeout(() => {
-                                    toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                    toast.style.opacity = "0";
-                                    toast.style.transform = "translateX(100%)";
-                                    setTimeout(() => toast.remove(), 500);
-                                }, 3000); // Auto-hide after 3 seconds
-                            });
-                        });
-                                document.getElementById("addUserForm").addEventListener("submit", function (e) {
-                                    e.preventDefault();
-                                    let form = this;
-                                    let formData = new FormData(form);
-
-                                    fetch("/add_user/", {
-                                        method: "POST",
-                                        body: formData,
-                                        headers: { "X-Requested-With": "XMLHttpRequest" }
-                                    })
-                                        .then(res => res.json())
-                                        .then(data => {
-                                            if (data.success) {
-                                                bootstrap.Modal.getInstance(document.getElementById("addUserModal")).hide();
-                                                showToast(data.message, "success");
-                                                setTimeout(() => window.location.reload(), 1000);
-                                            } else {
-                                                showToast((JSON.stringify(data.errors)), "danger");
-                                                setTimeout(() => window.location.reload(), 1000);
-                                            }
-                                        })
-                                        .catch(() => showToast("Unexpected error while adding user", "danger"));
-                                        setTimeout(() => window.location.reload(), 1000);
-                                });
-
-                            </script>
                         </div>
                     </div>
                 </div>
-
 
                 <!-- update user modal -->
                 <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel"
@@ -647,122 +561,10 @@
                                     <button type="submit" class="btn btn-primary">Update Employee</button>
                                 </div>
                             </form>
-                            <script>
-                                function showToast(message, type = "info") {
-                            const container = document.getElementById("toast-container") || (() => {
-                                const div = document.createElement("div");
-                                div.id = "toast-container";
-                                div.style.position = "fixed";
-                                div.style.top = "20px";
-                                div.style.right = "20px";
-                                div.style.zIndex = "3000";
-                                div.style.display = "flex";
-                                div.style.flexDirection = "column";
-                                div.style.gap = "10px";
-                                document.body.appendChild(div);
-                                return div;
-                            })();
 
-                            const toast = document.createElement("div");
-                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-                            toast.style.minWidth = "250px";
-                            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-                            container.appendChild(toast);
-
-                            setTimeout(() => {
-                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                toast.style.opacity = "0";
-                                toast.style.transform = "translateX(100%)";
-                                setTimeout(() => toast.remove(), 500);
-                            }, 3000);
-                        }
-
-                        document.addEventListener("DOMContentLoaded", function () {
-                            const toasts = document.querySelectorAll('#toast-container .toast');
-                            toasts.forEach(function (toast) {
-                                setTimeout(() => {
-                                    toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                    toast.style.opacity = "0";
-                                    toast.style.transform = "translateX(100%)";
-                                    setTimeout(() => toast.remove(), 500);
-                                }, 3000); // Auto-hide after 3 seconds
-                            });
-                        });
-
-                                $(document).on("submit", "#editUserForm", function (e) {
-                                    e.preventDefault();
-
-                                    const userId = $("#edit-user-id").val();
-                                    let formData = new FormData(this);
-
-                                    $.ajax({
-                                        url: `/update_user/${userId}/`,   // <-- passes user ID
-                                        type: "POST",
-                                        data: formData,
-                                        processData: false,
-                                        contentType: false,
-                                        success: function (res) {
-                                            if (res.success) {
-                                                showToast(res.message, "success");
-                                                $("#editUserModal").modal("hide");
-                                                setTimeout(() => window.location.reload(), 1000);
-
-                                            } else {
-                                                let errorMsg = Object.values(res.errors).flat().join("<br>");
-                                                showToast(errorMsg, "danger");
-                                                setTimeout(() => window.location.reload(), 1000);
-                                            }
-                                        },
-                                        error: function () {
-                                            showToast("Server error while updating user.", "danger");
-                                            setTimeout(() => window.location.reload(), 1000);
-                                        }
-                                    });
-                                });
-
-                                $(document).on("click", ".edit-user", function (e) {
-                                    e.preventDefault();
-
-                                    const userId = $(this).data("user-id");
-
-                                    $.ajax({
-                                        url: `/get_user/${userId}/`,
-                                        type: "GET",
-                                        success: function (res) {
-                                            $("#edit-user-id").val(res.id);
-                                            $("#edit-first-name").val(res.first_name);
-                                            $("#edit-last-name").val(res.last_name);
-                                            $("#edit-username").val(res.username);
-                                            $("#edit-email").val(res.email);
-                                            $("#edit-phone").val(res.phone);
-                                            $("#edit-designation").val(res.designation);
-                                            $("#edit-password").val(""); // keep empty unless changing
-                                            $("#edit-is-active").prop("checked", res.is_active);
-
-                                            // Open modal
-                                            let modal = new bootstrap.Modal(document.getElementById("editUserModal"));
-
-                                            modal.show();
-                                        },
-                                        error: function () {
-                                            showToast("Failed to fetch user details.", "danger");
-                                            setTimeout(() => window.location.reload(), 1000);
-                                        }
-                                    });
-                                });
-
-                            </script>
                         </div>
                     </div>
                 </div>
-
-
 
                 <!-- delete usere modal -->
                 <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteConfirmLabel"
@@ -783,99 +585,197 @@
                             </div>
                         </div>
 
-                        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-                        <script>
-                           function showToast(message, type = "info") {
-                            const container = document.getElementById("toast-container") || (() => {
-                                const div = document.createElement("div");
-                                div.id = "toast-container";
-                                div.style.position = "fixed";
-                                div.style.top = "20px";
-                                div.style.right = "20px";
-                                div.style.zIndex = "3000";
-                                div.style.display = "flex";
-                                div.style.flexDirection = "column";
-                                div.style.gap = "10px";
-                                document.body.appendChild(div);
-                                return div;
-                            })();
-
-                            const toast = document.createElement("div");
-                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-                            toast.style.minWidth = "250px";
-                            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-                            container.appendChild(toast);
-
-                            setTimeout(() => {
-                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                toast.style.opacity = "0";
-                                toast.style.transform = "translateX(100%)";
-                                setTimeout(() => toast.remove(), 500);
-                            }, 3000);
-                        }
-
-                        document.addEventListener("DOMContentLoaded", function () {
-                            const toasts = document.querySelectorAll('#toast-container .toast');
-                            toasts.forEach(function (toast) {
-                                setTimeout(() => {
-                                    toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                    toast.style.opacity = "0";
-                                    toast.style.transform = "translateX(100%)";
-                                    setTimeout(() => toast.remove(), 500);
-                                }, 3000); // Auto-hide after 3 seconds
-                            });
-                        });
-                            let userIdToDelete = null;
-
-                            $(document).on("click", ".delete-user", function (e) {
-                                e.preventDefault();
-                                userIdToDelete = $(this).data("user-id");
-                                new bootstrap.Modal(document.getElementById("deleteUserModal")).show();
-                            });
-
-                            $(document).on("click", "#confirmDeleteUserBtn", function () {
-                                if (!userIdToDelete) return;
-
-                                $.ajax({
-                                    url: `/delete_user/${userIdToDelete}/`,
-                                    type: "POST",
-                                    data: { csrfmiddlewaretoken: "{{ csrf_token }}" },
-                                    success: function (res) {
-                                        if (res.success) {
-                                            showToast(res.message, "success");
-                                            setTimeout(() => window.location.reload(), 1000);
-                                        } else {
-                                            showToast("❌ " + res.error, "danger");
-                                        }
-                                    },
-                                    error: function () {
-                                        showToast("Unexpected error deleting user", "danger");
-                                    }
-                                });
-
-                                bootstrap.Modal.getInstance(document.getElementById("deleteUserModal")).hide();
-                            });
-
-                        </script>
                     </div>
                 </div>
-
-
-
-
-
 
 
             </div>
         </div>
     </div>
 </div>
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById('recordsPerPage').addEventListener('change', function () {
+            const form = document.getElementById('recordsForm');
+            const hiddenPage = document.createElement('input');
+            hiddenPage.type = 'hidden';
+            hiddenPage.name = 'page';
+            hiddenPage.value = 1;
+            form.appendChild(hiddenPage);
+            form.submit();
+        });
 
+        function showToast(message, type = "info") {
+            const container = document.getElementById("toast-container") || (() => {
+                const div = document.createElement("div");
+                div.id = "toast-container";
+                div.style.position = "fixed";
+                div.style.top = "20px";
+                div.style.right = "20px";
+                div.style.zIndex = "3000";
+                div.style.display = "flex";
+                div.style.flexDirection = "column";
+                div.style.gap = "10px";
+                document.body.appendChild(div);
+                return div;
+            })();
+
+            const toast = document.createElement("div");
+            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+            toast.style.minWidth = "250px";
+            toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                toast.style.opacity = "0";
+                toast.style.transform = "translateX(100%)";
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
+
+        const toasts = document.querySelectorAll('#toast-container .toast');
+        toasts.forEach(function (toast) {
+            setTimeout(() => {
+                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                toast.style.opacity = "0";
+                toast.style.transform = "translateX(100%)";
+                setTimeout(() => toast.remove(), 500);
+            }, 3000); // Auto-hide after 3 seconds
+        });
+
+        document.getElementById("addUserForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            let form = this;
+            let formData = new FormData(form);
+
+            fetch("/add_user/", {
+                method: "POST",
+                body: formData,
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        bootstrap.Modal.getInstance(document.getElementById("addUserModal")).hide();
+                        showToast(data.message, "success");
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        showToast((JSON.stringify(data.errors)), "danger");
+                        
+                    }
+                })
+                .catch(() => showToast("Unexpected error while adding user", "danger"));
+            
+        });
+
+
+
+        $(document).on("submit", "#editUserForm", function (e) {
+            e.preventDefault();
+
+            const userId = $("#edit-user-id").val();
+            let formData = new FormData(this);
+
+            $.ajax({
+                url: `/update_user/${userId}/`,   // <-- passes user ID
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    if (res.success) {
+                        showToast(res.message, "success");
+                        $("#editUserModal").modal("hide");
+                        setTimeout(() => window.location.reload(), 1000);
+
+                    } else {
+                        let errorMsg = Object.values(res.errors).flat().join("<br>");
+                        showToast(errorMsg, "danger");
+                        
+                    }
+                },
+                error: function () {
+                    showToast("Server error while updating user.", "danger");
+                    
+                }
+            });
+        });
+
+        $(document).on("click", ".edit-user", function (e) {
+            e.preventDefault();
+
+            const userId = $(this).data("user-id");
+
+            $.ajax({
+                url: `/get_user/${userId}/`,
+                type: "GET",
+                success: function (res) {
+                    $("#edit-user-id").val(res.id);
+                    $("#edit-first-name").val(res.first_name);
+                    $("#edit-last-name").val(res.last_name);
+                    $("#edit-username").val(res.username);
+                    $("#edit-email").val(res.email);
+                    $("#edit-phone").val(res.phone);
+                    $("#edit-designation").val(res.designation);
+                    $("#edit-password").val(""); // keep empty unless changing
+                    $("#edit-is-active").prop("checked", res.is_active);
+
+                    // Open modal
+                    let modal = new bootstrap.Modal(document.getElementById("editUserModal"));
+
+                    modal.show();
+                },
+                error: function () {
+                    showToast("Failed to fetch user details.", "danger");
+                    
+                }
+            });
+        });
+
+
+
+        let userIdToDelete = null;
+
+        $(document).on("click", ".delete-user", function (e) {
+            e.preventDefault();
+            userIdToDelete = $(this).data("user-id");
+            new bootstrap.Modal(document.getElementById("deleteUserModal")).show();
+        });
+
+        $(document).on("click", "#confirmDeleteUserBtn", function () {
+            if (!userIdToDelete) return;
+
+            $.ajax({
+                url: `/delete_user/${userIdToDelete}/`,
+                type: "POST",
+                data: { csrfmiddlewaretoken: "{{ csrf_token }}" },
+                success: function (res) {
+                    if (res.success) {
+                        showToast(res.message, "success");
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        showToast(res.error, "danger");
+                    }
+                },
+                error: function () {
+                    showToast("Unexpected error deleting user", "danger");
+                }
+            });
+
+            bootstrap.Modal.getInstance(document.getElementById("deleteUserModal")).hide();
+        });
+    });
+</script>
+{% endblock %}
 {% endblock %}

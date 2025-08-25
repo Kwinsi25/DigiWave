@@ -13,8 +13,10 @@ from django.utils.dateparse import parse_date
 from collections import defaultdict
 import json
 from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image
+from django.shortcuts import get_object_or_404
+from reportlab.lib.units import mm
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from django.http import HttpResponse
 from django.http import JsonResponse, Http404,FileResponse
@@ -1353,136 +1355,379 @@ def update_quotation(request, id):
     # Non-POST: just go back to list (same pattern used elsewhere)
     return redirect("quotation_list")
 
+# def download_quotation(request, id):
+#     quotation = get_object_or_404(Quotation, pk=id)
+
+#     # Prepare HTTP response as PDF
+#     response = HttpResponse(content_type="application/pdf")
+#     response['Content-Disposition'] = f'attachment; filename="quotation_{quotation.quotation_no}.pdf"'
+
+#     doc = SimpleDocTemplate(response, pagesize=A4)
+#     styles = getSampleStyleSheet()
+#     elements = []
+
+#     # --- Title ---
+#     elements.append(Paragraph(f"Quotation #{quotation.quotation_no}", styles['Title']))
+#     elements.append(Spacer(1, 12))
+
+#     # --- Company & Client Info ---
+#     company_client_table = [
+#         ["Company", quotation.company_name or "-"],
+#         ["Address", quotation.company_address or "-"],
+#         ["Phone", quotation.company_phone or "-"],
+#         ["Email", quotation.company_email or "-"],
+#         ["Quotation Date", quotation.date.strftime("%Y-%m-%d")],
+#         ["Valid Until", quotation.valid_until.strftime("%Y-%m-%d")],
+#         ["Prepared By", str(quotation.prepared_by) if quotation.prepared_by else "-"],
+#         ["Client Name", quotation.client_name],
+#         ["Client Contact", quotation.client_contact or "-"],
+#         ["Client Email", quotation.client_email or "-"],
+#         ["Client Address", quotation.client_address or "-"],
+#     ]
+#     t = Table(company_client_table, colWidths=[120, 350])
+#     t.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), colors.lightblue),
+#                            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
+#     elements.append(t)
+#     elements.append(Spacer(1, 12))
+
+#     # --- Service Charges ---
+#     elements.append(Paragraph("1. Service Charges", styles['Heading2']))
+#     service_data = [["Category", "Description", "Qty", "Unit Price", "Total"]]
+
+#     def add_services(services, label):
+#         if services:
+#             for s in services:
+#                 total = float(s.get("quantity", 0)) * float(s.get("unit_price", 0))
+#                 service_data.append([
+#                     label,
+#                     s.get("description", ""),
+#                     str(s.get("quantity", 0)),
+#                     f"₹ {s.get('unit_price', 0)}",
+#                     f"₹ {total}"
+#                 ])
+
+#     add_services(quotation.web_services, "Web Development")
+#     add_services(quotation.mobile_services, "Mobile Development")
+#     add_services(quotation.cloud_services, "Cloud Services")
+#     add_services(quotation.ai_ml_services, "AI/ML Algorithms")
+
+#     if len(service_data) == 1:
+#         service_data.append(["-", "No services", "-", "-", "-"])
+
+#     t = Table(service_data, colWidths=[100, 150, 60, 80, 80])
+#     t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
+#     elements.append(t)
+#     elements.append(Paragraph(f"Total Service Charge: ₹ {quotation.total_service_charge}", styles['Normal']))
+#     elements.append(Spacer(1, 12))
+
+#     # --- Server & Domain Charges ---
+#     elements.append(Paragraph("2. Server & Domain Charges", styles['Heading2']))
+#     infra_data = [["Type", "Duration", "Unit Price", "Total"]]
+
+#     def add_infra(items, label):
+#         if items:
+#             for i in items:
+#                 if i.get("included"):
+#                     infra_data.append([
+#                         label,
+#                         i.get("duration", "-"),
+#                         f"₹ {i.get('unit_price', 0)}",
+#                         f"₹ {i.get('total', 0)}"
+#                     ])
+
+#     add_infra(quotation.domain_registration, "Domain Registration")
+#     add_infra(quotation.server_hosting, "Server Hosting")
+#     add_infra(quotation.ssl_certificate, "SSL Certificate")
+#     add_infra(quotation.email_hosting, "Email Hosting")
+
+#     if len(infra_data) == 1:
+#         infra_data.append(["-", "-", "-", "-"])
+
+#     t = Table(infra_data, colWidths=[150, 100, 100, 100])
+#     t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
+#     elements.append(t)
+#     elements.append(Paragraph(f"Total Infra Charge: ₹ {quotation.total_server_domain_charge}", styles['Normal']))
+#     elements.append(Spacer(1, 12))
+
+#     # --- Summary ---
+#     elements.append(Paragraph("3. Summary", styles['Heading2']))
+#     summary_table = [
+#         ["Subtotal (Services)", f"₹ {quotation.total_service_charge}"],
+#         ["Subtotal (Infra)", f"₹ {quotation.total_server_domain_charge}"],
+#         [f"Discount ({quotation.discount_type})", str(quotation.discount_value)],
+#         ["Tax Rate", f"{quotation.tax_rate}%"],
+#         ["Tax Amount", f"₹ {quotation.tax_amount}"],
+#         ["Grand Total", f"₹ {quotation.grand_total}"],
+#     ]
+#     t = Table(summary_table, colWidths=[200, 200])
+#     t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
+#     elements.append(t)
+#     elements.append(Spacer(1, 12))
+
+#     # --- Notes ---
+#     elements.append(Paragraph("Payment Terms:", styles['Heading3']))
+#     elements.append(Paragraph(quotation.payment_terms or "-", styles['Normal']))
+#     elements.append(Paragraph("Additional Notes:", styles['Heading3']))
+#     elements.append(Paragraph(quotation.additional_notes or "-", styles['Normal']))
+#     elements.append(Spacer(1, 12))
+
+#     # --- Signatory ---
+#     elements.append(Paragraph("Authorized Signatory", styles['Heading2']))
+#     sign_table = [
+#         ["Name", quotation.signatory_name or "-"],
+#         ["Designation", quotation.signatory_designation or "-"]
+#     ]
+#     t = Table(sign_table, colWidths=[150, 250])
+#     t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
+#     elements.append(t)
+
+#     # Build PDF
+#     doc.build(elements)
+#     return response
+
 def download_quotation(request, id):
     quotation = get_object_or_404(Quotation, pk=id)
 
-    # Prepare HTTP response as PDF
+    # PDF Response
     response = HttpResponse(content_type="application/pdf")
-    response['Content-Disposition'] = f'attachment; filename="quotation_{quotation.quotation_no}.pdf"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="{quotation.client_name}_{quotation.quotation_no}.pdf"'
+    )
 
-    doc = SimpleDocTemplate(response, pagesize=A4)
-    styles = getSampleStyleSheet()
+    # Document setup
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=25, leftMargin=25, topMargin=25, bottomMargin=25
+    )
+
     elements = []
+    # --- Styles ---
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(
+        name="Heading", fontSize=18, spaceAfter=12, leading=22,
+        alignment=1, textColor=colors.black, fontName="Helvetica-Bold"
+    ))
+    styles.add(ParagraphStyle(
+        name="NormalBold", fontSize=10, leading=14, spaceAfter=6,
+        textColor=colors.black, fontName="Helvetica-Bold"
+    ))
+    styles.add(ParagraphStyle(
+        name="Small", fontSize=9, leading=12, textColor=colors.black
+    ))
+    desc_style = ParagraphStyle(
+        name="desc", fontSize=9, leading=12, wordWrap="CJK"
+    )
 
-    # --- Title ---
-    elements.append(Paragraph(f"Quotation #{quotation.quotation_no}", styles['Title']))
+
+    # --- Title + Quotation Info + Logo ---
+    logo_path = os.path.join(
+        settings.BASE_DIR, "core_app", "static", "img", "DIGIWAVE LOGO CROP.png"
+    )
+    logo = Image(logo_path, width=80, height=40)
+    # --- Main Header --- 
+    elements.append(Paragraph("QUOTATION", styles["Heading"]))  
     elements.append(Spacer(1, 12))
 
-    # --- Company & Client Info ---
-    company_client_table = [
-        ["Company", quotation.company_name or "-"],
-        ["Address", quotation.company_address or "-"],
-        ["Phone", quotation.company_phone or "-"],
-        ["Email", quotation.company_email or "-"],
-        ["Quotation Date", quotation.date.strftime("%Y-%m-%d")],
-        ["Valid Until", quotation.valid_until.strftime("%Y-%m-%d")],
-        ["Prepared By", str(quotation.prepared_by) if quotation.prepared_by else "-"],
-        ["Client Name", quotation.client_name],
-        ["Client Contact", quotation.client_contact or "-"],
-        ["Client Email", quotation.client_email or "-"],
-        ["Client Address", quotation.client_address or "-"],
+    quotation_info_data = [
+        ["Quotation No", f":   {quotation.quotation_no}"],
+        ["Quotation Date", f":   {quotation.date.strftime('%b %d, %Y')}"],
+        ["Valid Up To", f":   {quotation.valid_until.strftime('%b %d, %Y') if quotation.valid_until else '-'}"],
     ]
-    t = Table(company_client_table, colWidths=[120, 350])
-    t.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, 0), colors.lightblue),
-                           ("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
-    elements.append(t)
-    elements.append(Spacer(1, 12))
+    
+    quotation_info_table = Table(quotation_info_data, colWidths=[100, 180])
+    quotation_info_table.setStyle(TableStyle([
+        ("ALIGN", (0, 0), (0, -1), "LEFT"),
+        ("ALIGN", (1, 0), (1, -1), "LEFT"),
+        ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+        ("FONTSIZE", (0, 0), (-1, -1), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ]))
 
-    # --- Service Charges ---
-    elements.append(Paragraph("1. Service Charges", styles['Heading2']))
-    service_data = [["Category", "Description", "Qty", "Unit Price", "Total"]]
+    top_header = Table([[quotation_info_table, logo]], colWidths=[350, 150])
+    top_header.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+    ]))
+    elements.append(top_header)
+    elements.append(Spacer(1, 18))
 
-    def add_services(services, label):
-        if services:
-            for s in services:
-                total = float(s.get("quantity", 0)) * float(s.get("unit_price", 0))
-                service_data.append([
-                    label,
-                    s.get("description", ""),
-                    str(s.get("quantity", 0)),
-                    f"₹ {s.get('unit_price', 0)}",
-                    f"₹ {total}"
+   # --- Company & Client Info (Bootstrap-like Card Style) ---
+    company_info = [
+        [Paragraph("<b>Quotation By</b>", styles["NormalBold"]), Paragraph(quotation.company_name or "-", styles["Small"])],
+        [Paragraph("<b>Address</b>", styles["NormalBold"]), Paragraph((quotation.company_address or "-").replace("\n", "<br/>"), styles["Small"])],
+        [Paragraph("<b>Phone</b>", styles["NormalBold"]), Paragraph(quotation.company_phone or "-", styles["Small"])],
+    ]
+
+    client_info = [
+        [Paragraph("<b>Quotation To</b>", styles["NormalBold"]), Paragraph(quotation.client_name or "-", styles["Small"])],
+        [Paragraph("<b>Address</b>", styles["NormalBold"]), Paragraph((quotation.client_address or "-").replace("\n", "<br/>"), styles["Small"])],
+        [Paragraph("<b>Phone</b>", styles["NormalBold"]), Paragraph(quotation.client_contact or "-", styles["Small"])],
+    ]
+
+    # Bootstrap-like Card (white background, border, padding, no inner grid)
+    company_card = Table(company_info, colWidths=[90, 210])
+    company_card.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+        ("BOX", (0, 0), (-1, -1), 0.75, colors.HexColor("#dee2e6")),  # Bootstrap border color
+        ("INNERGRID", (0, 0), (-1, -1), 0, colors.white),  # no grid lines
+        ("LEFTPADDING", (0, 0), (-1, -1), 10),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+    ]))
+
+    client_card = Table(client_info, colWidths=[90, 210])
+    client_card.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+        ("BOX", (0, 0), (-1, -1), 0.75, colors.HexColor("#dee2e6")),
+        ("INNERGRID", (0, 0), (-1, -1), 0, colors.white),
+        ("LEFTPADDING", (0, 0), (-1, -1), 10),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+    ]))
+
+    # Place side by side (Bootstrap row with 2 cards)
+    cards_table = Table([[company_card, client_card]], colWidths=[doc.width * 0.5 - 6, doc.width * 0.5 - 6])
+    cards_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+    ]))
+    elements.append(cards_table)
+    elements.append(Spacer(1, 18))
+
+
+    # --- Item Table ---
+    data = [["Sr. No.", "Item Name", "Description", "Qty", "Rate", "Amount"]]
+    counter = 1
+
+    def add_items(service_list, label=None):
+        nonlocal counter
+        if service_list and isinstance(service_list, list):
+            for s in service_list:
+                qty = int(s.get("quantity", 1) or 1)
+                rate = float(s.get("unit_price", 0) or 0)
+                total = qty * rate
+                desc = s.get("description", "-")
+                data.append([
+                    str(counter),
+                    label or "-",
+                    Paragraph(desc, desc_style),
+                    str(qty),
+                    f"Rs. {rate:,.2f}",
+                    f"Rs. {total:,.2f}"
                 ])
-
-    add_services(quotation.web_services, "Web Development")
-    add_services(quotation.mobile_services, "Mobile Development")
-    add_services(quotation.cloud_services, "Cloud Services")
-    add_services(quotation.ai_ml_services, "AI/ML Algorithms")
-
-    if len(service_data) == 1:
-        service_data.append(["-", "No services", "-", "-", "-"])
-
-    t = Table(service_data, colWidths=[100, 150, 60, 80, 80])
-    t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
-    elements.append(t)
-    elements.append(Paragraph(f"Total Service Charge: ₹ {quotation.total_service_charge}", styles['Normal']))
-    elements.append(Spacer(1, 12))
-
-    # --- Server & Domain Charges ---
-    elements.append(Paragraph("2. Server & Domain Charges", styles['Heading2']))
-    infra_data = [["Type", "Duration", "Unit Price", "Total"]]
+                counter += 1
 
     def add_infra(items, label):
-        if items:
+        nonlocal counter
+        if items and isinstance(items, list):
             for i in items:
-                if i.get("included"):
-                    infra_data.append([
+                if i.get("included", False):
+                    qty = int(i.get("quantity", 1) or 1)
+                    rate = float(i.get("unit_price", 0) or 0)
+                    total = qty * rate
+                    desc = i.get("description", "-")
+                    data.append([
+                        str(counter),
                         label,
-                        i.get("duration", "-"),
-                        f"₹ {i.get('unit_price', 0)}",
-                        f"₹ {i.get('total', 0)}"
+                        Paragraph(desc, desc_style),
+                        str(qty),
+                        f"Rs. {rate:,.2f}",
+                        f"Rs. {total:,.2f}"
                     ])
+                    counter += 1
 
+    # Add categories
+    add_items(quotation.web_services, "Web Development")
+    add_items(quotation.mobile_services, "Mobile Development")
+    add_items(quotation.cloud_services, "Cloud Services")
+    add_items(quotation.ai_ml_services, "AI/ML Algorithms")
     add_infra(quotation.domain_registration, "Domain Registration")
     add_infra(quotation.server_hosting, "Server Hosting")
     add_infra(quotation.ssl_certificate, "SSL Certificate")
     add_infra(quotation.email_hosting, "Email Hosting")
 
-    if len(infra_data) == 1:
-        infra_data.append(["-", "-", "-", "-"])
+    if len(data) == 1:
+        data.append(["-", "No services added", "-", "-", "-", "-"])
 
-    t = Table(infra_data, colWidths=[150, 100, 100, 100])
-    t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
-    elements.append(t)
-    elements.append(Paragraph(f"Total Infra Charge: ₹ {quotation.total_server_domain_charge}", styles['Normal']))
-    elements.append(Spacer(1, 12))
+    items_table = Table(data, colWidths=[40, 120, 180, 60, 80, 80])
+    items_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.black),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("ALIGN", (3, 1), (-1, -1), "RIGHT"),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+    elements.append(items_table)
+    elements.append(Spacer(1, 18))
 
-    # --- Summary ---
-    elements.append(Paragraph("3. Summary", styles['Heading2']))
-    summary_table = [
-        ["Subtotal (Services)", f"₹ {quotation.total_service_charge}"],
-        ["Subtotal (Infra)", f"₹ {quotation.total_server_domain_charge}"],
-        [f"Discount ({quotation.discount_type})", str(quotation.discount_value)],
-        ["Tax Rate", f"{quotation.tax_rate}%"],
-        ["Tax Amount", f"₹ {quotation.tax_amount}"],
-        ["Grand Total", f"₹ {quotation.grand_total}"],
-    ]
-    t = Table(summary_table, colWidths=[200, 200])
-    t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
-    elements.append(t)
-    elements.append(Spacer(1, 12))
+    # --- Notes & Totals ---
+    notes = [Paragraph("<b>Terms and Conditions</b>", styles["NormalBold"])]
+    if quotation.payment_terms:
+        for line in quotation.payment_terms.split("\n"):
+            if line.strip():
+                notes.append(Paragraph(line.strip(), styles["Bullet"], bulletText="•"))
+    else:
+        notes.append(Paragraph("-", styles["Small"]))
 
-    # --- Notes ---
-    elements.append(Paragraph("Payment Terms:", styles['Heading3']))
-    elements.append(Paragraph(quotation.payment_terms or "-", styles['Normal']))
-    elements.append(Paragraph("Additional Notes:", styles['Heading3']))
-    elements.append(Paragraph(quotation.additional_notes or "-", styles['Normal']))
-    elements.append(Spacer(1, 12))
+    notes.append(Spacer(1, 8))
+    notes.append(Paragraph("<b>Additional Notes</b>", styles["NormalBold"]))
+    if quotation.additional_notes:
+        for line in quotation.additional_notes.split("\n"):
+            if line.strip():
+                notes.append(Paragraph(line.strip(), styles["Bullet"], bulletText="•"))
+    else:
+        notes.append(Paragraph("-", styles["Small"]))
 
-    # --- Signatory ---
-    elements.append(Paragraph("Authorized Signatory", styles['Heading2']))
-    sign_table = [
-        ["Name", quotation.signatory_name or "-"],
-        ["Designation", quotation.signatory_designation or "-"]
-    ]
-    t = Table(sign_table, colWidths=[150, 250])
-    t.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey)]))
-    elements.append(t)
+    notes_table = Table([[notes]], colWidths=[doc.width * 0.58])
 
-    # Build PDF
+    subtotal = quotation.total_service_charge + quotation.total_server_domain_charge
+    totals = []
+    if subtotal > 0:
+        totals.append(["Sub Total", f"Rs. {subtotal:,.2f}"])
+    # if quotation.discount_value > 0:
+    #     if quotation.discount_type == "percent":
+    #         discount_label = f"Discount ({quotation.discount_value}%)"
+    #     else:
+    #         discount_label = f"Discount (Rs. {quotation.discount_value:,.2f})"
+    #     totals.append([discount_label, f"- Rs. {(subtotal - quotation.after_discount_total):,.2f}"])
+    # if quotation.after_discount_total > 0:
+    #     totals.append(["After Discount", f"Rs. {quotation.after_discount_total:,.2f}"])
+    # if quotation.tax_rate > 0 and quotation.tax_amount > 0:
+    #     totals.append([f"Tax ({quotation.tax_rate}%)", f"Rs. {quotation.tax_amount:,.2f}"])
+    totals.append(["Grand Total", f"Rs. {quotation.grand_total:,.2f}"])
+
+    totals_table = Table(totals, colWidths=[110, 100])
+    totals_table.setStyle(TableStyle([
+        ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+        ("BACKGROUND", (0, -1), (-1, -1), colors.lightgrey),
+        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+        ("FONTSIZE", (0, -1), (-1, -1), 11),
+    ]))
+
+    notes_totals_table = Table([[notes_table, totals_table]], colWidths=[doc.width * 0.6, doc.width * 0.4])
+    notes_totals_table.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
+    elements.append(notes_totals_table)
+    elements.append(Spacer(1, 24))
+
+    # --- Signature ---
+    signature_table = Table([["Authorized Signature"]], colWidths=[doc.width])
+    signature_table.setStyle(TableStyle([
+        ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+        ("TOPPADDING", (0, 0), (-1, -1), 20),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 40),
+        ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 10),
+    ]))
+    elements.append(signature_table)
+
+    # --- Build PDF ---
     doc.build(elements)
     return response
-
 
 # -----------------------------
 # client Management
@@ -1678,8 +1923,6 @@ def file_docs(request):
     }
     return render(request, 'file_docs.html', context)
 
-
-
 def create_folder(request):
     if request.method == "POST":
         try:
@@ -1805,3 +2048,172 @@ def delete_files(request):
             return JsonResponse({"success": False, "error": str(e)}, status=500)
 
     return JsonResponse({"success": False, "message": "Invalid request method"}, status=405)
+
+
+# -----------------------------
+# Payment View  
+# -----------------------------
+
+def payment_list(request):
+    records_per_page = int(request.GET.get('recordsPerPage', 20))
+
+    try:
+        page_number = int(request.GET.get('page', 1))
+    except ValueError:
+        page_number = 1
+    if page_number < 1:
+        page_number = 1
+
+    # All projects for dropdown
+    projects = Project.objects.order_by('id').all()
+
+    # Get distinct projects that have payments
+    project_ids = ProjectPayment.objects.values_list("project_id", flat=True).distinct()
+    
+    grouped_data = []
+    for pid in project_ids:
+        project_payments = ProjectPayment.objects.filter(project_id=pid).select_related("project")
+
+        if not project_payments.exists():
+            continue
+
+        project = project_payments.first().project
+
+        # Collect all methods
+        methods = list(project_payments.values_list("payment_method", flat=True).distinct())
+
+        # Determine payment status (if any paid)
+        is_paid = project_payments.filter(amount__gt=0).exists()
+
+        grouped_data.append({
+            "project": project,
+            "methods": ", ".join(methods),
+            "status": "PAID" if is_paid else "NOT PAID",
+        })
+
+    # Manual pagination
+    paginator = Paginator(grouped_data, records_per_page)
+    page_obj = paginator.get_page(page_number)
+
+
+     # Overall counts
+    total_payments = ProjectPayment.objects.count()
+    bank_transfer_count = ProjectPayment.objects.filter(payment_method="Bank Transfer").count()
+    upi_count = ProjectPayment.objects.filter(payment_method="UPI").count()
+    cash_count = ProjectPayment.objects.filter(payment_method="Cash").count()
+    
+    context = {
+        "page_obj": page_obj,
+        "records_per_page": records_per_page,
+        "projects": projects, 
+        "total_payments": total_payments,
+        "bank_transfer_count": bank_transfer_count,
+        "upi_count": upi_count,
+        "cash_count": cash_count,
+        
+        "records_options": [20, 50, 100, 200, 300],
+    }
+    return render(request, "payment.html", context)
+
+def add_payment(request):
+    if request.method == "POST":
+        try:
+            project_id = request.POST.get("project")
+            amount = request.POST.get("amount")
+            payment_date = request.POST.get("payment_date")
+            payment_method = request.POST.get("payment_method")
+
+            # Validate project
+            project = get_object_or_404(Project, pk=project_id)
+
+            # Prepare dynamic payment details
+            payment_details = {}
+            if payment_method == "Bank Transfer":
+                payment_details = {
+                    "bank_name": request.POST.get("bank_name"),
+                    "account_no": request.POST.get("account_no"),
+                    "ifsc_code": request.POST.get("ifsc_code")
+                }
+            elif payment_method == "UPI":
+                payment_details = {
+                    "upi_id": request.POST.get("upi_id")
+                }
+            elif payment_method == "Cheque":
+                payment_details = {
+                    "cheque_no": request.POST.get("cheque_no"),
+                    "cheque_name": request.POST.get("cheque_name")
+                }
+            elif payment_method == "Other":
+                payment_details = {
+                    "other_details": request.POST.get("other_details")
+                }
+
+            # Create ProjectPayment instance
+            payment = ProjectPayment(
+                project=project,
+                amount=amount,
+                payment_date=payment_date,
+                payment_method=payment_method,
+                payment_details=payment_details
+            )
+
+            # Run model validation
+            payment.full_clean()
+            payment.save()
+
+            # Update project income
+            project.income = project.total_paid
+            project.save(update_fields=["income"])
+
+            messages.success(request, "Payment added successfully!")
+
+        except ValidationError as ve:
+   
+            for field, errs in ve.message_dict.items():
+                for err in errs:
+                    messages.error(request, f"{field}: {err}")
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+
+        return redirect("payment_list")  
+    return redirect("payment_list")
+
+def get_payment(request):
+    project_id = request.GET.get("id")
+    if not project_id:
+        return JsonResponse({"success": False, "error": "Missing project id"}, status=400)
+
+    project = get_object_or_404(Project, id=project_id)
+
+    # Get all payments for this project
+    all_payments = ProjectPayment.objects.filter(project=project).order_by("id")
+
+    payments_data = []
+    total_paid = 0
+    for p in all_payments:
+        total_paid += float(p.amount)
+        payments_data.append({
+            "id": p.id,
+            "milestone": p.milestone_name or "",
+            "amount": str(p.amount),
+            "method": p.payment_method,
+            "details": p.payment_details or {},
+            "notes": p.notes or "",
+            "date": p.payment_date.strftime("%Y-%m-%d") if p.payment_date else "",
+            
+        })
+
+    approval_amount = float(project.approval_amount or 0)
+    remaining_amount = approval_amount - total_paid
+
+    data = {
+        "project_id": project.project_id,
+        "project_name": project.project_name,
+        "approval_amount": approval_amount,
+        "total_paid": total_paid,
+        "remaining_amount": remaining_amount,
+        "payments": payments_data,
+    }
+    return JsonResponse({"success": True, "data": data})
+
+

@@ -9,14 +9,14 @@
 <div id="toast-container" style="
     position: fixed; top:20px; right:20px; z-index:3000;
     display:flex; flex-direction:column; gap:10px;">
-    {% for message in messages %}
-    <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert">
-        <div class="d-flex">
-            <div class="toast-body">{{ message }}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
+  {% for message in messages %}
+  <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert">
+    <div class="d-flex">
+      <div class="toast-body">{{ message }}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
     </div>
-    {% endfor %}
+  </div>
+  {% endfor %}
 </div>
 {% endif %}
 
@@ -81,17 +81,20 @@
               <tr>
                 <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
                 <td>
-                  <a href="#" class="fw-bold view-client" data-client-id="{{ client.id }}" data-bs-toggle="modal" data-bs-target="#viewClientModal">
+                  <a href="#" class="fw-bold view-client" data-client-id="{{ client.id }}" data-bs-toggle="modal"
+                    data-bs-target="#viewClientModal">
                     {{ client.name }}
                   </a>
                 </td>
                 <td>{{ client.email }}</td>
                 <td>{{ client.phone }}</td>
                 <td>{{ client.company_name|default:"-" }}</td>
-              
+
                 <td>
-                  <a href="#" class="text-primary me-2 edit-client" data-client-id="{{ client.id }}"><i class="bx bx-edit-alt"></i></a>
-                  <a href="#" class="text-danger delete-client" data-client-id="{{ client.id }}"><i class="bx bx-trash"></i></a>
+                  <a href="#" class="text-primary me-2 edit-client" data-client-id="{{ client.id }}"><i
+                      class="bx bx-edit-alt"></i></a>
+                  <a href="#" class="text-danger delete-client" data-client-id="{{ client.id }}"><i
+                      class="bx bx-trash"></i></a>
                 </td>
               </tr>
               {% endfor %}
@@ -102,115 +105,100 @@
         <!-- Pagination -->
         <div class="d-flex justify-content-between align-items-center mt-3">
 
-                    <!-- Records Per Page Dropdown -->
-                    <div class="d-flex align-items-center">
-                        <form method="GET" id="recordsForm" class="d-flex align-items-center">
-                            <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
-                            <select class="form-select form-select-sm" name="recordsPerPage" id="recordsPerPage"
-                                style="width: auto;">
-                                {% for option in records_options %}
-                                <option value="{{ option }}" {% if records_per_page == option %}selected{% endif %}>
-                                    {{ option }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </form>
-                    </div>
+          <!-- Records Per Page Dropdown -->
+          <div class="d-flex align-items-center">
+            <form method="GET" id="recordsForm" class="d-flex align-items-center">
+              <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
+              <select class="form-select form-select-sm" name="recordsPerPage" id="recordsPerPage" style="width: auto;">
+                {% for option in records_options %}
+                <option value="{{ option }}" {% if records_per_page == option %}selected{% endif %}>
+                  {{ option }}
+                </option>
+                {% endfor %}
+              </select>
+            </form>
+          </div>
 
-                    <!-- Pagination -->
-                    <nav aria-label="Page navigation" class="mt-3">
-                        <ul class="pagination justify-content-end mb-0">
+          <!-- Pagination -->
+          <nav aria-label="Page navigation" class="mt-3">
+            <ul class="pagination justify-content-end mb-0">
 
-                            <!-- Previous Button -->
-                            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
-                                {% if page_obj.has_previous %}
-                                <a class="page-link"
-                                    href="?page={{ page_obj.previous_page_number }}&recordsPerPage={{ records_per_page }}">
-                                    <i class="bx bx-chevrons-left"></i>
-                                </a>
-                                {% else %}
-                                <span class="page-link disabled">
-                                    <i class="bx bx-chevrons-left"></i>
-                                </span>
-                                {% endif %}
-                            </li>
+              <!-- Previous Button -->
+              <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                {% if page_obj.has_previous %}
+                <a class="page-link"
+                  href="?page={{ page_obj.previous_page_number }}&recordsPerPage={{ records_per_page }}">
+                  <i class="bx bx-chevrons-left"></i>
+                </a>
+                {% else %}
+                <span class="page-link disabled">
+                  <i class="bx bx-chevrons-left"></i>
+                </span>
+                {% endif %}
+              </li>
 
-                            <!-- Always show first page -->
-                            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
-                                <a class="page-link" href="?page=1&recordsPerPage={{ records_per_page }}">1</a>
-                            </li>
+              <!-- Always show first page -->
+              <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                <a class="page-link" href="?page=1&recordsPerPage={{ records_per_page }}">1</a>
+              </li>
 
-                            <!-- Show second page if exists -->
-                            {% if page_obj.paginator.num_pages >= 2 %}
-                            <li class="page-item {% if page_obj.number == 2 %}active{% endif %}">
-                                <a class="page-link" href="?page=2&recordsPerPage={{ records_per_page }}">2</a>
-                            </li>
-                            {% endif %}
+              <!-- Show second page if exists -->
+              {% if page_obj.paginator.num_pages >= 2 %}
+              <li class="page-item {% if page_obj.number == 2 %}active{% endif %}">
+                <a class="page-link" href="?page=2&recordsPerPage={{ records_per_page }}">2</a>
+              </li>
+              {% endif %}
 
-                            <!-- Ellipsis -->
-                            {% if page_obj.paginator.num_pages > 4 %}
-                            <li class="page-item disabled"><span class="page-link">…</span></li>
-                            {% endif %}
+              <!-- Ellipsis -->
+              {% if page_obj.paginator.num_pages > 4 %}
+              <li class="page-item disabled"><span class="page-link">…</span></li>
+              {% endif %}
 
-                            <!-- Second last page (if not duplicate of 2) -->
-                            {% if page_obj.paginator.num_pages > 2 and page_obj.paginator.num_pages|add:'-1' != 2 %}
-                            <li
-                                class="page-item {% if page_obj.number == page_obj.paginator.num_pages|add:'-1' %}active{% endif %}">
-                                <a class="page-link"
-                                    href="?page={{ page_obj.paginator.num_pages|add:'-1' }}&recordsPerPage={{ records_per_page }}">
-                                    {{ page_obj.paginator.num_pages|add:'-1' }}
-                                </a>
-                            </li>
-                            {% endif %}
+              <!-- Second last page (if not duplicate of 2) -->
+              {% if page_obj.paginator.num_pages > 2 and page_obj.paginator.num_pages|add:'-1' != 2 %}
+              <li class="page-item {% if page_obj.number == page_obj.paginator.num_pages|add:'-1' %}active{% endif %}">
+                <a class="page-link"
+                  href="?page={{ page_obj.paginator.num_pages|add:'-1' }}&recordsPerPage={{ records_per_page }}">
+                  {{ page_obj.paginator.num_pages|add:'-1' }}
+                </a>
+              </li>
+              {% endif %}
 
-                            <!-- Last page (if not duplicate of 2) -->
-                            {% if page_obj.paginator.num_pages > 1 and page_obj.paginator.num_pages != 2 %}
-                            <li
-                                class="page-item {% if page_obj.number == page_obj.paginator.num_pages %}active{% endif %}">
-                                <a class="page-link"
-                                    href="?page={{ page_obj.paginator.num_pages }}&recordsPerPage={{ records_per_page }}">
-                                    {{ page_obj.paginator.num_pages }}
-                                </a>
-                            </li>
-                            {% endif %}
+              <!-- Last page (if not duplicate of 2) -->
+              {% if page_obj.paginator.num_pages > 1 and page_obj.paginator.num_pages != 2 %}
+              <li class="page-item {% if page_obj.number == page_obj.paginator.num_pages %}active{% endif %}">
+                <a class="page-link"
+                  href="?page={{ page_obj.paginator.num_pages }}&recordsPerPage={{ records_per_page }}">
+                  {{ page_obj.paginator.num_pages }}
+                </a>
+              </li>
+              {% endif %}
 
-                            <!-- Next Button -->
-                            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
-                                {% if page_obj.has_next %}
-                                <a class="page-link"
-                                    href="?page={{ page_obj.next_page_number }}&recordsPerPage={{ records_per_page }}">
-                                    <i class="bx bx-chevrons-right"></i>
-                                </a>
-                                {% else %}
-                                <span class="page-link disabled">
-                                    <i class="bx bx-chevrons-right"></i>
-                                </span>
-                                {% endif %}
-                            </li>
+              <!-- Next Button -->
+              <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                {% if page_obj.has_next %}
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}&recordsPerPage={{ records_per_page }}">
+                  <i class="bx bx-chevrons-right"></i>
+                </a>
+                {% else %}
+                <span class="page-link disabled">
+                  <i class="bx bx-chevrons-right"></i>
+                </span>
+                {% endif %}
+              </li>
 
-                        </ul>
-                    </nav>
-                </div>
+            </ul>
+          </nav>
+        </div>
 
-                <script>
-                    document.getElementById('recordsPerPage').addEventListener('change', function () {
-                        const form = document.getElementById('recordsForm');
-                        const hiddenPage = document.createElement('input');
-                        hiddenPage.type = 'hidden';
-                        hiddenPage.name = 'page';
-                        hiddenPage.value = 1;
-                        form.appendChild(hiddenPage);
-                        form.submit();
-                    });
-                </script>
+
       </div>
     </div>
   </div>
 </div>
 
 <!-- Add Client Modal -->
-
-<div class="modal fade" id="addClientModal" tabindex="-1">
+<div class="modal fade" id="addClientModal" tabindex="-1"  data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header table-primary text-white">
@@ -225,11 +213,13 @@
               <!-- Basic Info -->
               <tr>
                 <th>Name</span></th>
-                <td><input class="form-control" name="name" maxlength="255" required placeholder="Full name of the client or company"></td>
+                <td><input class="form-control" name="name" maxlength="255" required
+                    placeholder="Full name of the client or company"></td>
               </tr>
               <tr>
                 <th>Email</span></th>
-                <td><input type="email" class="form-control" name="email" required placeholder="client@example.com"></td>
+                <td><input type="email" class="form-control" name="email" required placeholder="client@example.com">
+                </td>
               </tr>
               <tr>
                 <th>Phone</th>
@@ -239,7 +229,8 @@
               <!-- Address -->
               <tr>
                 <th>Address</th>
-                <td><textarea class="form-control" name="address" rows="2" placeholder="Street / Locality"></textarea></td>
+                <td><textarea class="form-control" name="address" rows="2" placeholder="Street / Locality"></textarea>
+                </td>
               </tr>
               <tr>
                 <th>City</th>
@@ -284,7 +275,7 @@
 
 
 <!-- View Client Modal -->
-<div class="modal fade" id="viewClientModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="viewClientModal" tabindex="-1" aria-hidden="true"  data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header table-info text-white">
@@ -295,79 +286,67 @@
         <table class="table table-bordered">
           <tbody>
             <!-- Basic Info -->
-            <tr><th>Name</th><td id="view-name"></td></tr>
-            <tr><th>Email</th><td id="view-email"></td></tr>
-            <tr><th>Phone</th><td id="view-phone"></td></tr>
+            <tr>
+              <th>Name</th>
+              <td id="view-name"></td>
+            </tr>
+            <tr>
+              <th>Email</th>
+              <td id="view-email"></td>
+            </tr>
+            <tr>
+              <th>Phone</th>
+              <td id="view-phone"></td>
+            </tr>
 
             <!-- Address -->
-            <tr><th>Address</th><td id="view-address"></td></tr>
-            <tr><th>City</th><td id="view-city"></td></tr>
-            <tr><th>State</th><td id="view-state"></td></tr>
-            <tr><th>Country</th><td id="view-country"></td></tr>
-            <tr><th>Pincode</th><td id="view-pincode"></td></tr>
+            <tr>
+              <th>Address</th>
+              <td id="view-address"></td>
+            </tr>
+            <tr>
+              <th>City</th>
+              <td id="view-city"></td>
+            </tr>
+            <tr>
+              <th>State</th>
+              <td id="view-state"></td>
+            </tr>
+            <tr>
+              <th>Country</th>
+              <td id="view-country"></td>
+            </tr>
+            <tr>
+              <th>Pincode</th>
+              <td id="view-pincode"></td>
+            </tr>
 
             <!-- Extra Info -->
-            <tr><th>Company Name</th><td id="view-company-name"></td></tr>
-            <tr><th>GST Number</th><td id="view-gst"></td></tr>
-            <tr><th>Website</th><td><a id="view-website" href="#" target="_blank"></a></td></tr>
+            <tr>
+              <th>Company Name</th>
+              <td id="view-company-name"></td>
+            </tr>
+            <tr>
+              <th>GST Number</th>
+              <td id="view-gst"></td>
+            </tr>
+            <tr>
+              <th>Website</th>
+              <td><a id="view-website" href="#" target="_blank"></a></td>
+            </tr>
 
             <!-- System Info -->
-            <tr><th>Created At</th><td id="view-created"></td></tr>
-            <tr><th>Updated At</th><td id="view-updated"></td></tr>
+            <tr>
+              <th>Created At</th>
+              <td id="view-created"></td>
+            </tr>
+            <tr>
+              <th>Updated At</th>
+              <td id="view-updated"></td>
+            </tr>
           </tbody>
         </table>
-        <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const viewModalEl = document.getElementById("viewClientModal");
-  viewModalEl.addEventListener("show.bs.modal", function (event) {
-    const trigger = event.relatedTarget;
-    const clientId = trigger.dataset.clientId;
 
-    fetch(`/get_client/?id=${clientId}`, {
-      headers: { "X-Requested-With": "XMLHttpRequest" }
-    })
-    .then(res => res.json())
-    .then(data => {
-      const setText = (id, value) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = value || "-";
-      };
-
-      setText("view-name", data.name);
-      setText("view-email", data.email);
-      setText("view-phone", data.phone);
-
-      setText("view-address", data.address);
-      setText("view-city", data.city);
-      setText("view-state", data.state);
-      setText("view-country", data.country);
-      setText("view-pincode", data.pincode);
-
-      setText("view-company-name", data.company_name);
-      setText("view-gst", data.gst_number);
-
-      // Website clickable link
-      const websiteEl = document.getElementById("view-website");
-      if (websiteEl) {
-        if (data.website) {
-          websiteEl.href = data.website;
-          websiteEl.textContent = data.website;
-        } else {
-          websiteEl.textContent = "-";
-          websiteEl.removeAttribute("href");
-        }
-      }
-
-      setText("view-created", data.created_at);
-      setText("view-updated", data.updated_at);
-    })
-    .catch(err => {
-      console.error("Error fetching client details:", err);
-      alert("Error loading client details");
-    });
-  });
-});
-</script>
 
       </div>
     </div>
@@ -376,7 +355,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 <!-- Edit Client Modal -->
-<div class="modal fade" id="editClientModal" tabindex="-1">
+<div class="modal fade" id="editClientModal" tabindex="-1"  data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header table-warning text-dark">
@@ -389,60 +368,62 @@ document.addEventListener("DOMContentLoaded", function () {
         <div class="modal-body">
           <table class="table table-bordered">
             <tbody>
-              <tr><th>Name</th><td><input class="form-control" name="name" id="edit-name" required placeholder="Full name of the client or company"></td></tr>
-              <tr><th>Email</th><td><input type="email" class="form-control" name="email" id="edit-email" required placeholder="client@example.com"></td></tr>
-              <tr><th>Phone</th><td><input class="form-control" name="phone" id="edit-phone" placeholder="+91 9876543210"></td></tr>
-              <tr><th>Address</th><td><textarea class="form-control" name="address" id="edit-address" rows="2" placeholder="Street / Locality"></textarea></td></tr>
-              <tr><th>City</th><td><input class="form-control" name="city" id="edit-city"></td></tr>
-              <tr><th>State</th><td><input class="form-control" name="state" id="edit-state"></td></tr>
-              <tr><th>Country</th><td><input class="form-control" name="country" id="edit-country"></td></tr>
-              <tr><th>Pincode</th><td><input class="form-control" name="pincode" id="edit-pincode"></td></tr>
-              <tr><th>Company Name</th><td><input class="form-control" name="company_name" id="edit-company_name"></td></tr>
-              <tr><th>GST Number</th><td><input class="form-control" name="gst_number" id="edit-gst_number"></td></tr>
-              <tr><th>Website</th><td><input type="url" class="form-control" name="website" id="edit-website" placeholder="https://example.com"></td></tr>
+              <tr>
+                <th>Name</th>
+                <td><input class="form-control" name="name" id="edit-name" required
+                    placeholder="Full name of the client or company"></td>
+              </tr>
+              <tr>
+                <th>Email</th>
+                <td><input type="email" class="form-control" name="email" id="edit-email" required
+                    placeholder="client@example.com"></td>
+              </tr>
+              <tr>
+                <th>Phone</th>
+                <td><input class="form-control" name="phone" id="edit-phone" placeholder="+91 9876543210"></td>
+              </tr>
+              <tr>
+                <th>Address</th>
+                <td><textarea class="form-control" name="address" id="edit-address" rows="2"
+                    placeholder="Street / Locality"></textarea></td>
+              </tr>
+              <tr>
+                <th>City</th>
+                <td><input class="form-control" name="city" id="edit-city"></td>
+              </tr>
+              <tr>
+                <th>State</th>
+                <td><input class="form-control" name="state" id="edit-state"></td>
+              </tr>
+              <tr>
+                <th>Country</th>
+                <td><input class="form-control" name="country" id="edit-country"></td>
+              </tr>
+              <tr>
+                <th>Pincode</th>
+                <td><input class="form-control" name="pincode" id="edit-pincode"></td>
+              </tr>
+              <tr>
+                <th>Company Name</th>
+                <td><input class="form-control" name="company_name" id="edit-company_name"></td>
+              </tr>
+              <tr>
+                <th>GST Number</th>
+                <td><input class="form-control" name="gst_number" id="edit-gst_number"></td>
+              </tr>
+              <tr>
+                <th>Website</th>
+                <td><input type="url" class="form-control" name="website" id="edit-website"
+                    placeholder="https://example.com"></td>
+              </tr>
             </tbody>
           </table>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-warning" type="submit">Update Client</button>
+          <button class="btn btn-primary" type="submit">Update Client</button>
         </div>
       </form>
-      <script>
-document.addEventListener("DOMContentLoaded", function() {
-  document.querySelectorAll(".edit-client").forEach(btn => {
-    btn.addEventListener("click", function(e) {
-      e.preventDefault();
-      const clientId = this.dataset.clientId;
 
-      fetch(`/get_client/?id=${clientId}`, {
-        headers: { "X-Requested-With": "XMLHttpRequest" }
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("edit-client-id").value = data.id;
-        document.getElementById("edit-name").value = data.name;
-        document.getElementById("edit-email").value = data.email;
-        document.getElementById("edit-phone").value = data.phone;
-        document.getElementById("edit-address").value = data.address;
-        document.getElementById("edit-city").value = data.city;
-        document.getElementById("edit-state").value = data.state;
-        document.getElementById("edit-country").value = data.country;
-        document.getElementById("edit-pincode").value = data.pincode;
-        document.getElementById("edit-company_name").value = data.company_name;
-        document.getElementById("edit-gst_number").value = data.gst_number;
-        document.getElementById("edit-website").value = data.website;
-
-        const editModal = new bootstrap.Modal(document.getElementById('editClientModal'));
-        editModal.show();
-      })
-      .catch(err => {
-        console.error("Error fetching client details:", err);
-        alert("Unable to fetch client data.");
-      });
-    });
-  });
-});
-</script>
 
     </div>
   </div>
@@ -450,8 +431,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 <!-- Delete Client Modal -->
-<div class="modal fade" id="deleteClientModal" tabindex="-1" aria-labelledby="deleteClientLabel"
-     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+<div class="modal fade" id="deleteClientModal" tabindex="-1" aria-labelledby="deleteClientLabel" aria-hidden="true"
+  data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content text-center">
       <div class="modal-header border-0">
@@ -466,88 +447,177 @@ document.addEventListener("DOMContentLoaded", function() {
         <button type="button" class="btn btn-danger" id="confirmDeleteClientBtn">Delete</button>
       </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-function showToast(message, type = "info") {
-                            const container = document.getElementById("toast-container") || (() => {
-                                const div = document.createElement("div");
-                                div.id = "toast-container";
-                                div.style.position = "fixed";
-                                div.style.top = "20px";
-                                div.style.right = "20px";
-                                div.style.zIndex = "3000";
-                                div.style.display = "flex";
-                                div.style.flexDirection = "column";
-                                div.style.gap = "10px";
-                                document.body.appendChild(div);
-                                return div;
-                            })();
 
-                            const toast = document.createElement("div");
-                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-                            toast.style.minWidth = "250px";
-                            toast.innerHTML = `
+  </div>
+</div>
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById('recordsPerPage').addEventListener('change', function () {
+      const form = document.getElementById('recordsForm');
+      const hiddenPage = document.createElement('input');
+      hiddenPage.type = 'hidden';
+      hiddenPage.name = 'page';
+      hiddenPage.value = 1;
+      form.appendChild(hiddenPage);
+      form.submit();
+    });
+
+    const viewModalEl = document.getElementById("viewClientModal");
+    viewModalEl.addEventListener("show.bs.modal", function (event) {
+      const trigger = event.relatedTarget;
+      const clientId = trigger.dataset.clientId;
+
+      fetch(`/get_client/?id=${clientId}`, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
+        .then(res => res.json())
+        .then(data => {
+          const setText = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value || "-";
+          };
+
+          setText("view-name", data.name);
+          setText("view-email", data.email);
+          setText("view-phone", data.phone);
+
+          setText("view-address", data.address);
+          setText("view-city", data.city);
+          setText("view-state", data.state);
+          setText("view-country", data.country);
+          setText("view-pincode", data.pincode);
+
+          setText("view-company-name", data.company_name);
+          setText("view-gst", data.gst_number);
+
+          // Website clickable link
+          const websiteEl = document.getElementById("view-website");
+          if (websiteEl) {
+            if (data.website) {
+              websiteEl.href = data.website;
+              websiteEl.textContent = data.website;
+            } else {
+              websiteEl.textContent = "-";
+              websiteEl.removeAttribute("href");
+            }
+          }
+
+          setText("view-created", data.created_at);
+          setText("view-updated", data.updated_at);
+        })
+        .catch(err => {
+          console.error("Error fetching client details:", err);
+          alert("Error loading client details");
+        });
+    });
+
+    document.querySelectorAll(".edit-client").forEach(btn => {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        const clientId = this.dataset.clientId;
+
+        fetch(`/get_client/?id=${clientId}`, {
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById("edit-client-id").value = data.id;
+            document.getElementById("edit-name").value = data.name;
+            document.getElementById("edit-email").value = data.email;
+            document.getElementById("edit-phone").value = data.phone;
+            document.getElementById("edit-address").value = data.address;
+            document.getElementById("edit-city").value = data.city;
+            document.getElementById("edit-state").value = data.state;
+            document.getElementById("edit-country").value = data.country;
+            document.getElementById("edit-pincode").value = data.pincode;
+            document.getElementById("edit-company_name").value = data.company_name;
+            document.getElementById("edit-gst_number").value = data.gst_number;
+            document.getElementById("edit-website").value = data.website;
+
+            const editModal = new bootstrap.Modal(document.getElementById('editClientModal'));
+            editModal.show();
+          })
+          .catch(err => {
+            console.error("Error fetching client details:", err);
+            alert("Unable to fetch client data.");
+          });
+      });
+    });
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toast-container") || (() => {
+        const div = document.createElement("div");
+        div.id = "toast-container";
+        div.style.position = "fixed";
+        div.style.top = "20px";
+        div.style.right = "20px";
+        div.style.zIndex = "3000";
+        div.style.display = "flex";
+        div.style.flexDirection = "column";
+        div.style.gap = "10px";
+        document.body.appendChild(div);
+        return div;
+      })();
+
+      const toast = document.createElement("div");
+      toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+      toast.style.minWidth = "250px";
+      toast.innerHTML = `
       <div class="d-flex">
         <div class="toast-body">${message}</div>
         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
       </div>
     `;
 
-                            container.appendChild(toast);
+      container.appendChild(toast);
 
-                            setTimeout(() => {
-                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                toast.style.opacity = "0";
-                                toast.style.transform = "translateX(100%)";
-                                setTimeout(() => toast.remove(), 500);
-                            }, 3000);
-                        }
+      setTimeout(() => {
+        toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(100%)";
+        setTimeout(() => toast.remove(), 500);
+      }, 3000);
+    }
 
-                        document.addEventListener("DOMContentLoaded", function () {
-                            const toasts = document.querySelectorAll('#toast-container .toast');
-                            toasts.forEach(function (toast) {
-                                setTimeout(() => {
-                                    toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                    toast.style.opacity = "0";
-                                    toast.style.transform = "translateX(100%)";
-                                    setTimeout(() => toast.remove(), 500);
-                                }, 3000); // Auto-hide after 3 seconds
-                            });
-                        });
-let clientIdToDelete = null;
 
-// Open Delete Modal
-$(document).on("click", ".delete-client", function(e) {
-    e.preventDefault();
-    clientIdToDelete = $(this).data("client-id");
-    new bootstrap.Modal(document.getElementById("deleteClientModal")).show();
-});
+    
 
-// Confirm Deletion
-$(document).on("click", "#confirmDeleteClientBtn", function() {
-    if (!clientIdToDelete) return;
+    let clientIdToDelete = null;
 
-    $.ajax({
+    // Open Delete Modal
+    $(document).on("click", ".delete-client", function (e) {
+      e.preventDefault();
+      clientIdToDelete = $(this).data("client-id");
+      new bootstrap.Modal(document.getElementById("deleteClientModal")).show();
+    });
+
+    // Confirm Deletion
+    $(document).on("click", "#confirmDeleteClientBtn", function () {
+      if (!clientIdToDelete) return;
+
+      $.ajax({
         url: `/delete_client/${clientIdToDelete}/`, // Django URL to handle deletion
         type: "POST",
         data: { csrfmiddlewaretoken: "{{ csrf_token }}" },
-        success: function(res) {
-            if (res.success) {
-                showToast(res.message, "success");
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                showToast("❌ " + res.error, "danger");
-            }
+        success: function (res) {
+          if (res.success) {
+            showToast(res.message, "success");
+            setTimeout(() => window.location.reload(), 1000);
+          } else {
+            showToast("❌ " + res.error, "danger");
+          }
         },
-        error: function() {
-            showToast("Unexpected error deleting client", "danger");
+        error: function () {
+          showToast("Unexpected error deleting client", "danger");
         }
+      });
+
+      bootstrap.Modal.getInstance(document.getElementById("deleteClientModal")).hide();
     });
-
-    bootstrap.Modal.getInstance(document.getElementById("deleteClientModal")).hide();
-});
+  });
 </script>
-  </div>
-</div>
-
+{% endblock %}
 {% endblock %}

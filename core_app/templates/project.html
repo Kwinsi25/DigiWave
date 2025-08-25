@@ -102,7 +102,6 @@
                 </div>
             </div>
 
-
             <!-- In Progress -->
             <div class="col-md-3 col-sm-6 mb-3">
                 <div class="card h-100 shadow-sm border-0">
@@ -155,12 +154,10 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="mb-0">All Projects</h4>
                     <div class="d-flex gap-2">
-                        <!-- Filter Button -->
+
                         <button type="button" class="btn btn-outline-secondary" title="Filter Projects">
                             <i class="bx bx-filter-alt"></i>
                         </button>
-
-                        <!-- Add Project Button -->
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                             data-bs-target="#addProjectModal">
                             <i class="bx bx-plus"></i> Add Project
@@ -228,34 +225,42 @@
                                 </td>
                                 <td>{{ project.deadline }}</td>
                                 <td>
-    <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center flex-wrap" style="gap: 8px;">
-        {% for member in project.team_members.all %}
-        <li data-bs-toggle="tooltip"
-            title="{{ member.first_name }} {{ member.last_name }}"
-            class="avatar avatar-xs pull-up rounded-circle view-user"
-            data-user-id="{{ member.id }}"
-            style="width: 30px; height: 30px; cursor:pointer;">
-            
-            {% if member.profile_picture %}
-                <img src="{{ member.profile_picture.url }}" alt="{{ member.first_name }}" class="rounded-circle" style="width:100%; height:100%;" />
-            {% else %}
-                <img src="{% static 'img/avatars/default-avatar.png' %}" alt="{{ member.first_name }}" class="rounded-circle" style="width:100%; height:100%;" />
-            {% endif %}
-        </li>
-        {% endfor %}
-    </ul>
-</td>
+                                    <ul class="list-unstyled users-list m-0 avatar-group d-flex align-items-center flex-wrap"
+                                        style="gap: 8px;">
+                                        {% for member in project.team_members.all %}
+                                        <li data-bs-toggle="tooltip"
+                                            title="{{ member.first_name }} {{ member.last_name }}"
+                                            class="avatar avatar-xs pull-up rounded-circle view-user"
+                                            data-user-id="{{ member.id }}"
+                                            style="width: 30px; height: 30px; cursor:pointer;">
+
+                                            {% if member.profile_picture %}
+                                            <img src="{{ member.profile_picture.url }}" alt="{{ member.first_name }}"
+                                                class="rounded-circle" style="width:100%; height:100%;" />
+                                            {% else %}
+                                            <img src="{% static 'img/avatars/default-avatar.png' %}"
+                                                alt="{{ member.first_name }}" class="rounded-circle"
+                                                style="width:100%; height:100%;" />
+                                            {% endif %}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
 
 
                                 <td>
                                     {% if project.payment_status == 'Pending' %}
-                                    <span class="badge bg-label-warning">{{ project.payment_percentage }}% {{project.payment_status }}</span>
+                                    <span class="badge bg-label-warning">{{ project.payment_percentage }}%
+                                        {{project.payment_status }}</span>
                                     {% elif project.payment_status == 'Advanced' %}
-                                    <span class="badge bg-label-info">{{ project.payment_percentage }}% {{project.payment_status }}</span>
+                                    <span class="badge bg-label-info">{{ project.payment_percentage }}%
+                                        {{project.payment_status }}</span>
                                     {% elif project.payment_status == 'Paid' %}
-                                    <span class="badge bg-label-success">{{ project.payment_percentage }}% {{project.payment_status }}</span>
+                                    <span class="badge bg-label-success">{{ project.payment_percentage }}%
+                                        {{project.payment_status }}</span>
                                     {% else %}
-                                    <span class="badge bg-label-secondary">{{ project.payment_percentage }}% {{project.payment_status }}</span>
+                                    <span class="badge bg-label-secondary">{{ project.payment_percentage }}%
+                                        {{project.payment_status }}</span>
                                     {% endif %}
                                 </td>
 
@@ -286,239 +291,14 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    {% block extra_js %}
-                    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                    <script>
-                        function showToast(message, type = "info") {
-                            const container = document.getElementById("toast-container") || (() => {
-                                const div = document.createElement("div");
-                                div.id = "toast-container";
-                                div.style.position = "fixed";
-                                div.style.top = "20px";
-                                div.style.right = "20px";
-                                div.style.zIndex = "3000";
-                                div.style.display = "flex";
-                                div.style.flexDirection = "column";
-                                div.style.gap = "10px";
-                                document.body.appendChild(div);
-                                return div;
-                            })();
-
-                            const toast = document.createElement("div");
-                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-                            toast.style.minWidth = "250px";
-                            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-                            container.appendChild(toast);
-
-                            setTimeout(() => {
-                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                toast.style.opacity = "0";
-                                toast.style.transform = "translateX(100%)";
-                                setTimeout(() => toast.remove(), 500);
-                            }, 3000);
-                        }
-
-                        document.addEventListener("DOMContentLoaded", function () {
-                            const toasts = document.querySelectorAll('#toast-container .toast');
-                            toasts.forEach(function (toast) {
-                                setTimeout(() => {
-                                    toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                    toast.style.opacity = "0";
-                                    toast.style.transform = "translateX(100%)";
-                                    setTimeout(() => toast.remove(), 500);
-                                }, 3000); // Auto-hide after 3 seconds
-                            });
-                        });
-                        // Use Django's URL tag so the path is generated correctly
-                        const projectDetailsUrl = "{% url 'get_project_details' %}";
-
-                        // View modal fill
-                        $(document).on("click", ".project-link", function (e) {
-                            e.preventDefault();
-                            const projectId = $(this).data("project-id");
-
-                            $.get(projectDetailsUrl, { id: projectId, mode: "view" }, function (res) {
-                                if (!res.success) {
-                                    console.error("Failed to fetch project:", res.error);
-                                    return;
-                                }
-                                const p = res.project;
-
-                                $("#pd-project-id").text(p.project_id);               // keep showing the human code e.g. "P0001"
-                                $("#pd-inquiry-date").text(p.inquiry_date);
-                                $("#pd-project-name").text(p.project_name);
-                                $("#pd-technologies").text(p.technologies);
-                                $("#pd-app-mode").text(p.app_mode);
-                                $("#pd-lead-source").text(p.lead_source);
-                                $("#pd-status").html(`<span class="badge bg-warning text-dark">${p.status}</span>`);
-                                $("#pd-quotation-sent").html(`<span class="badge bg-${p.quotation_sent === 'Yes' ? 'success' : 'danger'}">${p.quotation_sent}</span>`);
-                                $("#pd-demo").html(`<span class="badge bg-${p.demo_given === 'Yes' ? 'success' : 'danger'}">${p.demo_given}</span>`);
-                                // Team members list (display)
-                                let tmHtml = "";
-                                (p.team_members_display || []).forEach(m => {
-                                    tmHtml += `<div>${m.name}</div>`;
-                                });
-                                $("#pd-team-members").html(tmHtml);
-                                $("#pd-quotation-amount").text(p.quotation_amount ? `₹${p.quotation_amount}` : "");
-                                $("#pd-approval-amount").text(p.approval_amount ? `₹${p.approval_amount}` : "");
-                                $("#pd-deadline").text(p.deadline);
-                                $("#pd-completed-date").text(p.completed_date);
-                                let statusClass = '';
-                                if (p.payment_status === 'Pending') {
-                                    statusClass = 'bg-warning';
-                                } else if (p.payment_status === 'Advanced') {
-                                    statusClass = 'bg-info';
-                                } else if (p.payment_status === 'Paid') {
-                                    statusClass = 'bg-success';
-                                } else {
-                                    statusClass = 'bg-secondary';
-                                }
-
-                                $("#pd-payment-status").html(`<span class="badge ${statusClass}">${p.payment_percentage}% ${p.payment_status}</span>`);
-                                $("#pd-client-industry").text(p.client_industry);
-                                $("#pd-contract-signed").html(`<span class="badge bg-${p.contract_signed === 'Yes' ? 'success' : 'danger'}">${p.contract_signed}</span>`);
-                                if (p.live_link) {
-                                    $("#pd-live-link").html(`<a href="${p.live_link}" target="_blank">${p.live_link}</a>`);
-                                } else {
-                                    $("#pd-live-link").text("");
-                                }
-                                $("#pd-expense").text(p.expense ? `₹${p.expense}` : "");
-                                $("#pd-developer-charge").text(p.developer_charge ? `₹${p.developer_charge}` : "");
-                                $("#pd-server-charge").text(p.server_charge ? `₹${p.server_charge}` : "");
-                                $("#pd-third-party-charge").text(p.third_party_api_charge ? `₹${p.third_party_api_charge}` : "");
-                                $("#pd-income").text(p.income ? `₹${p.income}` : "");
-                                $("#pd-free-service").text(p.free_service);
-                                if (p.postman_collection) {
-                                    $("#pd-postman-collection").html(`<a href="${p.postman_collection}" target="_blank">Postman JSON</a>`);
-                                } else {
-                                    $("#pd-postman-collection").text("");
-                                }
-                                if (p.data_folder) {
-                                    $("#pd-data-folder").html(`<a href="${p.data_folder}" target="_blank">Data Folder</a>`);
-                                } else {
-                                    $("#pd-data-folder").text("");
-                                }
-
-                                if (p.other_link) {
-                                    $("#pd-other-link").html(`<a href="${p.other_link}" target="_blank">Other Link</a>`);
-                                } else {
-                                    $("#pd-other-link").text("");
-                                }
-                                $("#pd-start-date").text(p.start_date);
 
 
 
-                                $("#projectDetailsModal").modal("show");
-                            });
-                        });
 
-                        // Edit modal fill
-                        $(document).on("click", ".edit-project", function (e) {
-                            e.preventDefault();
-                            const projectId = $(this).data("project-id");
-
-                            $.get(projectDetailsUrl, { id: projectId, mode: "edit" }, function (res) {
-                                if (!res.success) {
-                                    console.error("Failed to fetch project for edit:", res.error);
-                                    return;
-                                }
-                                const p = res.project;
-
-                                // Set form action to numeric id URL (update_project/<int:id>/)
-                                $("#editProjectForm").attr("action", `/update_project/${p.id}/`);
-                                // set hidden ID field
-                                $("#edit-project-id").val(p.id);
-                                // populate fields in edit modal
-                                $("#edit-project-name").val(p.project_name);
-                                $("#edit-start-date").val(p.start_date);
-                                $("#edit-deadline").val(p.deadline);
-                                $("#edit-technologies").val(p.technologies);
-                                $("#edit-app-mode").val(p.app_mode);
-                                $("#edit-status").val(p.status);
-                                $("#edit-payment-percentage").val(p.payment_percentage);
-                                $("#edit-payment-status").val(p.payment_status);
-                                $("#edit-live-link").val(p.live_link);
-                                $("#edit-postman-collection").val(p.postman_collection);
-                                $("#edit-data-folder").val(p.data_folder);
-                                $("#edit-other-link").val(p.other_link);
-                                $("#edit-expense").val(p.expense);
-                                $("#edit-developer-charge").val(p.developer_charge);
-                                $("#edit-server-charge").val(p.server_charge);
-                                $("#edit-third-party-charge").val(p.third_party_api_charge);
-                                $("#edit-income").val(p.income);
-                                $("#edit-free-service").val(p.free_service);
-                                $("#edit-inquiry-date").val(p.inquiry_date);
-                                $("#edit-lead-source").val(p.lead_source);
-                                $("#edit-quotation-sent").val(p.quotation_sent);
-                                $("#edit-demo-given").val(p.demo_given);
-                                $("#edit-quotation-amount").val(p.quotation_amount);
-                                $("#edit-approval-amount").val(p.approval_amount);
-                                $("#edit-completed-date").val(p.completed_date);
-                                $("#edit-client-industry").val(p.client_industry);
-                                $("#edit-contract-signed").val(p.contract_signed);
-
-                                // For multi-select team members use the numeric ids returned
-                                $("#edit-team-members").val(p.team_members_ids || []);
-                                // if using plugins like select2 you might need: $("#edit-team-members").trigger('change');
-
-                                $("#editProjectModal").modal("show");
-                            });
-                        });
-
-                        //delete model
-                        let projectIdToDelete = null;
-
-                        $(document).on("click", ".delete-project", function (e) {
-                            e.preventDefault();
-                            projectIdToDelete = $(this).data("id");
-                            var deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-                            deleteModal.show();
-                        });
-
-                        $(document).on("click", "#confirmDeleteBtn", function () {
-                            if (!projectIdToDelete) return;
-
-                            $.ajax({
-                                url: `/delete_project/${projectIdToDelete}/`,
-                                type: "POST",
-                                data: {
-                                    csrfmiddlewaretoken: "{{ csrf_token }}"
-                                },
-                                success: function (response) {
-                                    if (response.success) {
-                                        showToast(response.message, "success");
-                                        setTimeout(() => window.location.reload(), 1000);
-                                    } else {
-                                        showToast(response.message || "Something went wrong.", "danger");
-                                    }
-                                },
-                                error: function () {
-                                    showToast("Unexpected error while deleting project.", "danger");
-                                }
-                            });
-
-                            // Hide modal after clicking confirm
-                            var deleteModalEl = document.getElementById('deleteConfirmModal');
-                            var deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
-                            deleteModalInstance.hide();
-                        });
-
-
-                    </script>
-
-                    {% endblock %}
 
                 </div>
                 <!-- Records Per Page & Pagination -->
                 <div class="d-flex justify-content-between align-items-center mt-3">
-
-                    <!-- Records Per Page Dropdown -->
                     <div class="d-flex align-items-center">
                         <form method="GET" id="recordsForm" class="d-flex align-items-center">
                             <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
@@ -609,29 +389,12 @@
                     </nav>
                 </div>
 
-                <script>
-                    document.getElementById('recordsPerPage').addEventListener('change', function () {
-                        // Always reset to page 1 when changing limit
-                        const form = document.getElementById('recordsForm');
-                        const hiddenPage = document.createElement('input');
-                        hiddenPage.type = 'hidden';
-                        hiddenPage.name = 'page';
-                        hiddenPage.value = 1;
-                        form.appendChild(hiddenPage);
-                        form.submit();
-                    });
-                </script>
-
-
 
             </div>
 
-            <!--/ All Projects Table -->
-
         </div>
-        <!-- /Content -->
 
-        <div class="content-backdrop fade"></div>
+
     </div>
 
 
@@ -894,63 +657,7 @@
                         <button type="submit" class="btn btn-primary">Save Project</button>
                     </div>
                 </form>
-                <script>
-                    document.getElementById("projectForm").addEventListener("submit", function (e) {
-                        e.preventDefault();
-                        let form = this;
-                        let formData = new FormData(form);
 
-                        fetch(form.action, {
-                            method: "POST",
-                            body: formData,
-                            headers: {
-                                "X-Requested-With": "XMLHttpRequest",
-                                "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
-                            }
-                        })
-                            .then(res => res.json())
-                            .then(data => {
-                                // clear old errors
-                                form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
-                                form.querySelectorAll(".invalid-feedback").forEach(el => el.innerText = "");
-
-                                if (data.success) {
-                                    // Close modal
-                                    let modalEl = document.getElementById("addProjectModal");
-                                    let modal = bootstrap.Modal.getInstance(modalEl);
-                                    modal.hide();
-
-                                    // Show success toast
-                                    showToast(data.message, "success");
-
-                                    // Refresh after short delay so toast is visible
-                                    setTimeout(() => window.location.reload(), 1000);
-
-                                } else {
-                                    if (data.errors) {
-                                        for (let field in data.errors) {
-                                            let input = form.querySelector(`[name="${field}"]`);
-                                            if (input) {
-                                                input.classList.add("is-invalid");
-                                                let feedback = input.closest("td,div").querySelector(".invalid-feedback");
-                                                if (feedback) {
-                                                    feedback.innerText = data.errors[field].join(", ");
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // Show general error toast
-                                    if (data.errors["__all__"]) {
-                                        showToast(data.errors["__all__"].join(", "), "danger");
-                                    }
-                                }
-
-                            })
-                            .catch(err => console.error("Error:", err));
-                    });
-
-                </script>
 
             </div>
         </div>
@@ -1275,69 +982,6 @@
                         <button type="submit" class="btn btn-primary">Update Project</button>
                     </div>
                 </form>
-                <script>
-                    document.getElementById("editProjectForm").addEventListener("submit", function (e) {
-                        e.preventDefault();
-                        let form = this;
-                        let formData = new FormData(form);
-                        let projectId = document.getElementById("edit-project-id").value;
-
-                        if (!projectId) {
-                            showToast("Project ID missing!", "danger");
-                            return;
-                        }
-
-                        fetch(`/update_project/${projectId}/`, {
-                            method: "POST",
-                            body: formData,
-                            headers: {
-                                "X-Requested-With": "XMLHttpRequest",
-                                "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
-                            }
-                        })
-                            .then(res => res.json())
-                            .then(data => {
-                                // Clear old validation errors
-                                form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
-                                form.querySelectorAll(".invalid-feedback").forEach(el => el.innerText = "");
-
-                                if (data.success) {
-                                    // Close modal
-                                    let modalEl = document.getElementById("editProjectModal");
-                                    let modal = bootstrap.Modal.getInstance(modalEl);
-                                    modal.hide();
-
-                                    // Show success toast
-                                    showToast(data.message, "success");
-
-                                    // Refresh after a short delay
-                                    setTimeout(() => window.location.reload(), 1000);
-                                } else {
-                                    if (data.errors) {
-                                        for (let field in data.errors) {
-                                            let input = form.querySelector(`[name="${field}"]`);
-                                            if (input) {
-                                                input.classList.add("is-invalid");
-                                                let feedback = input.closest("td,div").querySelector(".invalid-feedback");
-                                                if (feedback) {
-                                                    feedback.innerText = data.errors[field].join(", ");
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    if (data.errors["__all__"]) {
-                                        showToast(data.errors["__all__"].join(", "), "danger");
-                                    }
-                                }
-                            })
-                            .catch(err => {
-                                console.error("Error:", err);
-                                showToast("Unexpected error while updating project.", "danger");
-                            });
-                    });
-
-                </script>
 
             </div>
         </div>
@@ -1364,121 +1008,479 @@
     </div>
 
     <!-- display user data -->
-                <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel"
-                    aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                        <div class="modal-content">
-                            <div class="modal-header table-info text-white">
-                                <h5 class="modal-title" id="viewUserModalLabel">
-                                    <i class="bx bx-user me-2"></i> User Details
-                                </h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
+    <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header table-info text-white">
+                    <h5 class="modal-title" id="viewUserModalLabel">
+                        <i class="bx bx-user me-2"></i> User Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
 
-                            <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered align-middle">
-                                        <tbody>
-                                            <tr>
-                                                <th>Username</th>
-                                                <td id="view-username" colspan="3"></td>
-                                            </tr>
-                                            <tr>
-                                                <th>First Name</th>
-                                                <td id="view-firstname"></td>
-                                                <th>Last Name</th>
-                                                <td id="view-lastname"></td>
-                                            </tr>
-                                            <tr>
-                                                <th>Email</th>
-                                                <td id="view-email"></td>
-                                                <th>Phone</th>
-                                                <td id="view-phone"></td>
-                                            </tr>
-                                            <tr>
-                                                <th>Designation</th>
-                                                <td id="view-designation"></td>
-                                                <th>Status</th>
-                                                <td id="view-status"></td>
-                                            </tr>
-                                            <tr>
-                                                <th>Projects</th>
-                                                <td colspan="3">
-                                                    <ul id="view-projects" class="mb-0"></ul>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th>Profile Picture</th>
-                                                <td colspan="3" id="view-profile-picture"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <script>
-                                        document.addEventListener("DOMContentLoaded", function () {
-                                            const modalEl = document.getElementById("viewUserModal");
-                                            const viewUserModal = new bootstrap.Modal(modalEl);
-                                            document.querySelectorAll(".view-user").forEach(btn => {
-                                                btn.addEventListener("click", function (e) {
-                                                    e.preventDefault();
-                                                    const userId = this.dataset.userId;
+                <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <tbody>
+                                <tr>
+                                    <th>Username</th>
+                                    <td id="view-username" colspan="3"></td>
+                                </tr>
+                                <tr>
+                                    <th>First Name</th>
+                                    <td id="view-firstname"></td>
+                                    <th>Last Name</th>
+                                    <td id="view-lastname"></td>
+                                </tr>
+                                <tr>
+                                    <th>Email</th>
+                                    <td id="view-email"></td>
+                                    <th>Phone</th>
+                                    <td id="view-phone"></td>
+                                </tr>
+                                <tr>
+                                    <th>Designation</th>
+                                    <td id="view-designation"></td>
+                                    <th>Status</th>
+                                    <td id="view-status"></td>
+                                </tr>
+                                <tr>
+                                    <th>Projects</th>
+                                    <td colspan="3">
+                                        <ul id="view-projects" class="mb-0"></ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Profile Picture</th>
+                                    <td colspan="3" id="view-profile-picture"></td>
+                                </tr>
+                            </tbody>
+                        </table>
 
-                                                    fetch(`/get_user/${userId}/`, {
-                                                        headers: { "X-Requested-With": "XMLHttpRequest" }
-                                                    })
-                                                        .then(res => res.json())
-                                                        .then(data => {
-                                                            // Fill table fields
-                                                            document.getElementById("view-firstname").textContent = data.first_name;
-                                                            document.getElementById("view-lastname").textContent = data.last_name;
-                                                            document.getElementById("view-username").textContent = data.username;
-                                                            document.getElementById("view-email").textContent = data.email;
-                                                            document.getElementById("view-phone").textContent = data.phone || "-";
-                                                            document.getElementById("view-designation").textContent = data.designation || "-";
-                                                            document.getElementById("view-status").innerHTML = data.is_active
-                                                                ? `<span class="badge bg-label-success">Active</span>`
-                                                                : `<span class="badge bg-label-danger">Inactive</span>`;
-
-
-                                                            // Projects list
-                                                            let projectList = document.getElementById("view-projects");
-                                                            projectList.innerHTML = "";
-                                                            if (data.projects && data.projects.length) {
-                                                                data.projects.forEach(p => {
-                                                                    let li = document.createElement("li");
-                                                                    li.textContent = p;
-                                                                    projectList.appendChild(li);
-                                                                });
-                                                            } else {
-                                                                projectList.innerHTML = "<li>No projects assigned</li>";
-                                                            }
-
-                                                            // Profile picture
-                                                            document.getElementById("view-profile-picture").innerHTML = data.profile_picture_url
-                                                                ? `<a href="${data.profile_picture_url}" target="_blank">
-         <img src="${data.profile_picture_url}" class="img-thumbnail rounded" style="max-width:80px; max-height:80px;">
-       </a>`
-                                                                : "No picture";
-
-
-
-
-
-                                                            // Show modal
-                                                            // show with existing instance
-                                                            viewUserModal.show();
-                                                        })
-                                                        .catch(() => showToast("Error loading user details", "danger"));
-                                                });
-                                            });
-                                        });
-                                    </script>
-
-                                </div>
-                            </div>
-
-                            
-                        </div>
                     </div>
                 </div>
+
+
+            </div>
+        </div>
+    </div>
+
+</div>
+    {% block extra_js %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // pagination links
+            document.getElementById('recordsPerPage').addEventListener('change', function () {
+                // Always reset to page 1 when changing limit
+                const form = document.getElementById('recordsForm');
+                const hiddenPage = document.createElement('input');
+                hiddenPage.type = 'hidden';
+                hiddenPage.name = 'page';
+                hiddenPage.value = 1;
+                form.appendChild(hiddenPage);
+                form.submit();
+            });
+            // Toast function
+            function showToast(message, type = "info") {
+                const container = document.getElementById("toast-container") || (() => {
+                    const div = document.createElement("div");
+                    div.id = "toast-container";
+                    div.style.position = "fixed";
+                    div.style.top = "20px";
+                    div.style.right = "20px";
+                    div.style.zIndex = "3000";
+                    div.style.display = "flex";
+                    div.style.flexDirection = "column";
+                    div.style.gap = "10px";
+                    document.body.appendChild(div);
+                    return div;
+                })();
+
+                const toast = document.createElement("div");
+                toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+                toast.style.minWidth = "250px";
+                toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
+
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                    toast.style.opacity = "0";
+                    toast.style.transform = "translateX(100%)";
+                    setTimeout(() => toast.remove(), 500);
+                }, 3000);
+            }
+
+
+            const toasts = document.querySelectorAll('#toast-container .toast');
+            toasts.forEach(function (toast) {
+                setTimeout(() => {
+                    toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                    toast.style.opacity = "0";
+                    toast.style.transform = "translateX(100%)";
+                    setTimeout(() => toast.remove(), 500);
+                }, 3000); // Auto-hide after 3 seconds
+            });
+
+            // add modal 
+            document.getElementById("projectForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                let form = this;
+                let formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        // clear old errors
+                        form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+                        form.querySelectorAll(".invalid-feedback").forEach(el => el.innerText = "");
+
+                        if (data.success) {
+                            // Close modal
+                            let modalEl = document.getElementById("addProjectModal");
+                            let modal = bootstrap.Modal.getInstance(modalEl);
+                            modal.hide();
+
+                            // Show success toast
+                            showToast(data.message, "success");
+
+                            // Refresh after short delay so toast is visible
+                            setTimeout(() => window.location.reload(), 3000);
+
+                        } else {
+                            if (data.errors) {
+                                for (let field in data.errors) {
+                                    let input = form.querySelector(`[name="${field}"]`);
+                                    if (input) {
+                                        input.classList.add("is-invalid");
+                                        let feedback = input.closest("td,div").querySelector(".invalid-feedback");
+                                        if (feedback) {
+                                            feedback.innerText = data.errors[field].join(", ");
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Show general error toast
+                            if (data.errors["__all__"]) {
+                                showToast(data.errors["__all__"].join(", "), "danger");
+                            }
+                        }
+
+                    })
+                    .catch(err => console.error("Error:", err));
+            });
+
+            // View modal fill
+            // Use Django's URL tag so the path is generated correctly
+            const projectDetailsUrl = "{% url 'get_project_details' %}";
+            $(document).on("click", ".project-link", function (e) {
+                e.preventDefault();
+                const projectId = $(this).data("project-id");
+
+                $.get(projectDetailsUrl, { id: projectId, mode: "view" }, function (res) {
+                    if (!res.success) {
+                        console.error("Failed to fetch project:", res.error);
+                        return;
+                    }
+                    const p = res.project;
+
+                    $("#pd-project-id").text(p.project_id);
+                    $("#pd-inquiry-date").text(p.inquiry_date);
+                    $("#pd-project-name").text(p.project_name);
+                    $("#pd-technologies").text(p.technologies);
+                    $("#pd-app-mode").text(p.app_mode);
+                    $("#pd-lead-source").text(p.lead_source);
+                    $("#pd-status").html(`<span class="badge bg-warning text-dark">${p.status}</span>`);
+                    $("#pd-quotation-sent").html(`<span class="badge bg-${p.quotation_sent === 'Yes' ? 'success' : 'danger'}">${p.quotation_sent}</span>`);
+                    $("#pd-demo").html(`<span class="badge bg-${p.demo_given === 'Yes' ? 'success' : 'danger'}">${p.demo_given}</span>`);
+                    // Team members list (display)
+                    let tmHtml = "";
+                    (p.team_members_display || []).forEach(m => {
+                        tmHtml += `<div>${m.name}</div>`;
+                    });
+                    $("#pd-team-members").html(tmHtml);
+                    $("#pd-quotation-amount").text(p.quotation_amount ? `₹${p.quotation_amount}` : "");
+                    $("#pd-approval-amount").text(p.approval_amount ? `₹${p.approval_amount}` : "");
+                    $("#pd-deadline").text(p.deadline);
+                    $("#pd-completed-date").text(p.completed_date);
+                    let statusClass = '';
+                    if (p.payment_status === 'Pending') {
+                        statusClass = 'bg-warning';
+                    } else if (p.payment_status === 'Advanced') {
+                        statusClass = 'bg-info';
+                    } else if (p.payment_status === 'Paid') {
+                        statusClass = 'bg-success';
+                    } else {
+                        statusClass = 'bg-secondary';
+                    }
+
+                    $("#pd-payment-status").html(`<span class="badge ${statusClass}">${p.payment_percentage}% ${p.payment_status}</span>`);
+                    $("#pd-client-industry").text(p.client_industry);
+                    $("#pd-contract-signed").html(`<span class="badge bg-${p.contract_signed === 'Yes' ? 'success' : 'danger'}">${p.contract_signed}</span>`);
+                    if (p.live_link) {
+                        $("#pd-live-link").html(`<a href="${p.live_link}" target="_blank">${p.live_link}</a>`);
+                    } else {
+                        $("#pd-live-link").text("");
+                    }
+                    $("#pd-expense").text(p.expense ? `₹${p.expense}` : "");
+                    $("#pd-developer-charge").text(p.developer_charge ? `₹${p.developer_charge}` : "");
+                    $("#pd-server-charge").text(p.server_charge ? `₹${p.server_charge}` : "");
+                    $("#pd-third-party-charge").text(p.third_party_api_charge ? `₹${p.third_party_api_charge}` : "");
+                    $("#pd-income").text(p.income ? `₹${p.income}` : "");
+                    $("#pd-free-service").text(p.free_service);
+                    if (p.postman_collection) {
+                        $("#pd-postman-collection").html(`<a href="${p.postman_collection}" target="_blank">Postman JSON</a>`);
+                    } else {
+                        $("#pd-postman-collection").text("");
+                    }
+                    if (p.data_folder) {
+                        $("#pd-data-folder").html(`<a href="${p.data_folder}" target="_blank">Data Folder</a>`);
+                    } else {
+                        $("#pd-data-folder").text("");
+                    }
+
+                    if (p.other_link) {
+                        $("#pd-other-link").html(`<a href="${p.other_link}" target="_blank">Other Link</a>`);
+                    } else {
+                        $("#pd-other-link").text("");
+                    }
+                    $("#pd-start-date").text(p.start_date);
+
+
+
+                    $("#projectDetailsModal").modal("show");
+                });
+            });
+
+
+
+            const modalEl = document.getElementById("viewUserModal");
+            const viewUserModal = new bootstrap.Modal(modalEl);
+            document.querySelectorAll(".view-user").forEach(btn => {
+                btn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const userId = this.dataset.userId;
+
+                    fetch(`/get_user/${userId}/`, {
+                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            // Fill table fields
+                            document.getElementById("view-firstname").textContent = data.first_name;
+                            document.getElementById("view-lastname").textContent = data.last_name;
+                            document.getElementById("view-username").textContent = data.username;
+                            document.getElementById("view-email").textContent = data.email;
+                            document.getElementById("view-phone").textContent = data.phone || "-";
+                            document.getElementById("view-designation").textContent = data.designation || "-";
+                            document.getElementById("view-status").innerHTML = data.is_active
+                                ? `<span class="badge bg-label-success">Active</span>`
+                                : `<span class="badge bg-label-danger">Inactive</span>`;
+
+
+                            // Projects list
+                            let projectList = document.getElementById("view-projects");
+                            projectList.innerHTML = "";
+                            if (data.projects && data.projects.length) {
+                                data.projects.forEach(p => {
+                                    let li = document.createElement("li");
+                                    li.textContent = p;
+                                    projectList.appendChild(li);
+                                });
+                            } else {
+                                projectList.innerHTML = "<li>No projects assigned</li>";
+                            }
+
+                            // Profile picture
+                            document.getElementById("view-profile-picture").innerHTML = data.profile_picture_url
+                                ? `<a href="${data.profile_picture_url}" target="_blank">
+         <img src="${data.profile_picture_url}" class="img-thumbnail rounded" style="max-width:80px; max-height:80px;">
+       </a>`
+                                : "No picture";
+
+
+
+
+
+                            // Show modal
+                            // show with existing instance
+                            viewUserModal.show();
+                        })
+                        .catch(() => showToast("Error loading user details", "danger"));
+                });
+            });
+
+
+
+            // Edit modal fill
+            $(document).on("click", ".edit-project", function (e) {
+                e.preventDefault();
+                const projectId = $(this).data("project-id");
+
+                $.get(projectDetailsUrl, { id: projectId, mode: "edit" }, function (res) {
+                    if (!res.success) {
+                        console.error("Failed to fetch project for edit:", res.error);
+                        return;
+                    }
+                    const p = res.project;
+
+                    // Set form action to numeric id URL (update_project/<int:id>/)
+                    $("#editProjectForm").attr("action", `/update_project/${p.id}/`);
+                    // set hidden ID field
+                    $("#edit-project-id").val(p.id);
+                    // populate fields in edit modal
+                    $("#edit-project-name").val(p.project_name);
+                    $("#edit-start-date").val(p.start_date);
+                    $("#edit-deadline").val(p.deadline);
+                    $("#edit-technologies").val(p.technologies);
+                    $("#edit-app-mode").val(p.app_mode);
+                    $("#edit-status").val(p.status);
+                    $("#edit-payment-percentage").val(p.payment_percentage);
+                    $("#edit-payment-status").val(p.payment_status);
+                    $("#edit-live-link").val(p.live_link);
+                    $("#edit-postman-collection").val(p.postman_collection);
+                    $("#edit-data-folder").val(p.data_folder);
+                    $("#edit-other-link").val(p.other_link);
+                    $("#edit-expense").val(p.expense);
+                    $("#edit-developer-charge").val(p.developer_charge);
+                    $("#edit-server-charge").val(p.server_charge);
+                    $("#edit-third-party-charge").val(p.third_party_api_charge);
+                    $("#edit-income").val(p.income);
+                    $("#edit-free-service").val(p.free_service);
+                    $("#edit-inquiry-date").val(p.inquiry_date);
+                    $("#edit-lead-source").val(p.lead_source);
+                    $("#edit-quotation-sent").val(p.quotation_sent);
+                    $("#edit-demo-given").val(p.demo_given);
+                    $("#edit-quotation-amount").val(p.quotation_amount);
+                    $("#edit-approval-amount").val(p.approval_amount);
+                    $("#edit-completed-date").val(p.completed_date);
+                    $("#edit-client-industry").val(p.client_industry);
+                    $("#edit-contract-signed").val(p.contract_signed);
+
+                    // For multi-select team members use the numeric ids returned
+                    $("#edit-team-members").val(p.team_members_ids || []);
+                    // if using plugins like select2 you might need: $("#edit-team-members").trigger('change');
+
+                    $("#editProjectModal").modal("show");
+                });
+            });
+
+            document.getElementById("editProjectForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                let form = this;
+                let formData = new FormData(form);
+                let projectId = document.getElementById("edit-project-id").value;
+
+                if (!projectId) {
+                    showToast("Project ID missing!", "danger");
+                    return;
+                }
+
+                fetch(`/update_project/${projectId}/`, {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        // Clear old validation errors
+                        form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+                        form.querySelectorAll(".invalid-feedback").forEach(el => el.innerText = "");
+
+                        if (data.success) {
+                            // Close modal
+                            let modalEl = document.getElementById("editProjectModal");
+                            let modal = bootstrap.Modal.getInstance(modalEl);
+                            modal.hide();
+
+                            // Show success toast
+                            showToast(data.message, "success");
+
+                            // Refresh after a short delay
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            if (data.errors) {
+                                for (let field in data.errors) {
+                                    let input = form.querySelector(`[name="${field}"]`);
+                                    if (input) {
+                                        input.classList.add("is-invalid");
+                                        let feedback = input.closest("td,div").querySelector(".invalid-feedback");
+                                        if (feedback) {
+                                            feedback.innerText = data.errors[field].join(", ");
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (data.errors["__all__"]) {
+                                showToast(data.errors["__all__"].join(", "), "danger");
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error:", err);
+                        showToast("Unexpected error while updating project.", "danger");
+                    });
+            });
+
+            //delete model
+            let projectIdToDelete = null;
+
+            $(document).on("click", ".delete-project", function (e) {
+                e.preventDefault();
+                projectIdToDelete = $(this).data("id");
+                var deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+                deleteModal.show();
+            });
+
+            $(document).on("click", "#confirmDeleteBtn", function () {
+                if (!projectIdToDelete) return;
+
+                $.ajax({
+                    url: `/delete_project/${projectIdToDelete}/`,
+                    type: "POST",
+                    data: {
+                        csrfmiddlewaretoken: "{{ csrf_token }}"
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            showToast(response.message, "success");
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            showToast(response.message || "Something went wrong.", "danger");
+                        }
+                    },
+                    error: function () {
+                        showToast("Unexpected error while deleting project.", "danger");
+                    }
+                });
+
+                // Hide modal after clicking confirm
+                var deleteModalEl = document.getElementById('deleteConfirmModal');
+                var deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
+                deleteModalInstance.hide();
+            });
+
+        });
+    </script>
+    {% endblock %}
     {% endblock %}
