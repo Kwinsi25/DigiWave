@@ -207,8 +207,14 @@
                                     </a>
 
                                 </td>
-                                <td>{{ project.technologies }}</td>
-                                <td>{{ project.app_mode }}</td>
+                                <td>
+                                    {% if project.technologies.all %}
+                                        {{ project.technologies.all|join:", " }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ project.app_mode.name|default:"-" }}</td>
                                 <td>
                                     {% if project.status == "Ongoing" %}
                                     <span class="badge bg-label-success">{{ project.status }}</span>
@@ -250,16 +256,16 @@
 
                                 <td>
                                     {% if project.payment_status == 'Pending' %}
-                                    <span class="badge bg-label-warning">{{ project.payment_percentage }}%
+                                    <span class="badge bg-label-warning">{{ project.payment_value  }}
                                         {{project.payment_status }}</span>
                                     {% elif project.payment_status == 'Advanced' %}
-                                    <span class="badge bg-label-info">{{ project.payment_percentage }}%
+                                    <span class="badge bg-label-info">{{ project.payment_value  }}
                                         {{project.payment_status }}</span>
                                     {% elif project.payment_status == 'Paid' %}
-                                    <span class="badge bg-label-success">{{ project.payment_percentage }}%
+                                    <span class="badge bg-label-success">{{ project.payment_value  }}
                                         {{project.payment_status }}</span>
                                     {% else %}
-                                    <span class="badge bg-label-secondary">{{ project.payment_percentage }}%
+                                    <span class="badge bg-label-secondary">{{ project.payment_value  }}
                                         {{project.payment_status }}</span>
                                     {% endif %}
                                 </td>
@@ -418,17 +424,30 @@
                             <table class="table table-bordered align-middle">
                                 <tbody>
                                     <!-- Project Basic Info -->
+                                     <tr>
+                                        <th>Quotation</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="quotation" id="quotationSelect">
+                                                <option value="">-- Select Quotation --</option>
+                                                {% for q in quotations %}
+                                                    <option value="{{ q.id }}">{{ q.quotation_no }} - {{ q.client_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </td>
+                                    </tr>
+
                                     <tr>
                                         <th>Project Name</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="project_name" required>
+                                            <input type="text" class="form-control" name="project_name" placeholder="Enter project name" >
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Start Date</th>
                                         <td>
-                                            <input type="date" class="form-control" name="start_date" required>
+                                            <input type="date" class="form-control" name="start_date" >
                                             <div class="invalid-feedback"></div>
                                         </td>
                                         <th>Deadline</th>
@@ -438,21 +457,31 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Technologies</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="technologies" required>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        <th>App Mode</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="app_mode" required>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
+                                    <th>Technologies</th>
+                                    <td>
+                                        <select class="form-select" name="technologies" multiple >
+                                            {% for tech in technologies %}
+                                                <option value="{{ tech.id }}">{{ tech.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select multiple</small>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>App Mode</th>
+                                    <td>
+                                        <select class="form-select" name="app_mode" >
+                                            <option value="">-- Select App Mode --</option>
+                                            {% for mode in app_modes %}
+                                                <option value="{{ mode.id }}">{{ mode.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
                                     <tr>
                                         <th>Status</th>
                                         <td>
-                                            <select class="form-select" name="status" required>
+                                            <select class="form-select" name="status" >
                                                 <option value="">-- Select --</option>
                                                 <option value="Ongoing">Ongoing</option>
                                                 <option value="Completed">Completed</option>
@@ -463,7 +492,7 @@
                                         </td>
                                         <th>Team Members</th>
                                         <td>
-                                            <select class="form-select" name="team_members" multiple required>
+                                            <select class="form-select" name="team_members" multiple >
                                                 {% for user in users %}
                                                 <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}
                                                 </option>
@@ -477,15 +506,14 @@
 
                                     <!-- Payment Info -->
                                     <tr>
-                                        <th>Payment %</th>
+                                        <th>Payment (₹)</th>
                                         <td>
-                                            <input type="number" class="form-control" name="payment_percentage" min="0"
-                                                max="100" required>
+                                            <input type="number" class="form-control" name="payment_value" m placeholder="Enter total payment value" min="0" >
                                             <div class="invalid-feedback"></div>
                                         </td>
                                         <th>Payment Status</th>
                                         <td>
-                                            <select class="form-select" name="payment_status" required>
+                                            <select class="form-select" name="payment_status" >
                                                 <option value="Pending">Pending</option>
                                                 <option value="Advanced">Advanced</option>
                                                 <option value="Paid">Paid</option>
@@ -530,48 +558,52 @@
 
                                     <!-- Financials -->
                                     <tr>
-                                        <th>Expense</th>
+                                        <th>Expense (₹)</th>
                                         <td>
                                             <input type="number" step="0.01" class="form-control" name="expense"
-                                                required>
+                                                 placeholder="Enter expense amount">
                                             <div class="invalid-feedback"></div>
                                         </td>
-                                        <th>Developer Charge</th>
+                                        <th>Developer Charge (₹)</th>
                                         <td>
                                             <input type="number" step="0.01" class="form-control"
-                                                name="developer_charge" required>
+                                                name="developer_charge" placeholder="Enter developer charge">
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Server Charge</th>
+                                        <th>Server Charge (₹)</th>
                                         <td>
                                             <input type="number" step="0.01" class="form-control" name="server_charge"
-                                                required>
+                                                placeholder="Enter server charge">
                                             <div class="invalid-feedback"></div>
                                         </td>
-                                        <th>3rd Party API Charge</th>
+                                        <th>3rd Party API Charge (₹)</th>
                                         <td>
                                             <input type="number" step="0.01" class="form-control"
-                                                name="third_party_api_charge" required>
+                                                name="third_party_api_charge" placeholder="Enter 3rd party API charge">
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Income</th>
-                                        <td colspan="3">
-                                            <input type="number" step="0.01" class="form-control" name="income"
-                                                required>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
+                                    <th>Mediator Charge (₹)</th>
+                                    <td>
+                                        <input type="number" step="0.01" class="form-control" name="mediator_charge" placeholder="Enter mediator charge">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                    <th>Income (₹)</th>
+                                    <td>
+                                        <input type="number" step="0.01" class="form-control" name="income" placeholder="Enter income">
+                                        <div class="invalid-feedback"></div>
+                                    </td>
+                                </tr>
 
                                     <!-- Free Service -->
                                     <tr>
                                         <th>Free Service</th>
                                         <td colspan="3">
                                             <textarea class="form-control" name="free_service" rows="2"
-                                                required></textarea>
+                                                placeholder="Describe free services included"></textarea>
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
@@ -580,19 +612,19 @@
                                     <tr>
                                         <th>Inquiry Date</th>
                                         <td>
-                                            <input type="date" class="form-control" name="inquiry_date" required>
+                                            <input type="date" class="form-control" name="inquiry_date" >
                                             <div class="invalid-feedback"></div>
                                         </td>
                                         <th>Lead Source</th>
                                         <td>
-                                            <input type="text" class="form-control" name="lead_source" required>
+                                            <input type="text" class="form-control" name="lead_source" placeholder="Enter lead source">
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Quotation Sent</th>
                                         <td>
-                                            <select class="form-select" name="quotation_sent" required>
+                                            <select class="form-select" name="quotation_sent" >
                                                 <option value="">-- Select --</option>
                                                 <option value="Yes">Yes</option>
                                                 <option value="No">No</option>
@@ -601,7 +633,7 @@
                                         </td>
                                         <th>Demo Given</th>
                                         <td>
-                                            <select class="form-select" name="demo_given" required>
+                                            <select class="form-select" name="demo_given" >
                                                 <option value="">-- Select --</option>
                                                 <option value="Yes">Yes</option>
                                                 <option value="No">No</option>
@@ -610,16 +642,16 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Quotation Amount</th>
+                                        <th>Quotation Amount (₹)</th>
                                         <td>
                                             <input type="number" step="0.01" class="form-control"
-                                                name="quotation_amount" required>
+                                                name="quotation_amount" placeholder="Enter quotation amount">
                                             <div class="invalid-feedback"></div>
                                         </td>
-                                        <th>Approval Amount</th>
+                                        <th>Approval Amount (₹)</th>
                                         <td>
                                             <input type="number" step="0.01" class="form-control" name="approval_amount"
-                                                required>
+                                                placeholder="Enter approval amount">
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
@@ -633,14 +665,14 @@
                                         </td>
                                         <th>Client Industry</th>
                                         <td>
-                                            <input type="text" class="form-control" name="client_industry" required>
+                                            <input type="text" class="form-control" name="client_industry" placeholder="Enter client industry">
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>Contract Signed</th>
                                         <td colspan="3">
-                                            <select class="form-select" name="contract_signed" required>
+                                            <select class="form-select" name="contract_signed" >
                                                 <option value="">-- Select --</option>
                                                 <option value="Yes">Yes</option>
                                                 <option value="No">No</option>
@@ -711,6 +743,11 @@
                                     <td id="pd-team-members"></td>
                                 </tr>
                                 <tr>
+                                    <th>Quotation</th>
+                                    <td id="pd-quotation-reference" colspan="3"></td>
+                                </tr>
+
+                                <tr>
                                     <th>Quotation Amount</th>
                                     <td id="pd-quotation-amount"></td>
                                     <th>Approval Amount</th>
@@ -752,8 +789,10 @@
                                     <td id="pd-third-party-charge"></td>
                                 </tr>
                                 <tr>
+                                    <th>Mediator Charge</th>
+                                    <td id="pd-mediator-charge"></td>
                                     <th>Income</th>
-                                    <td id="pd-income" colspan="3"></td>
+                                    <td id="pd-income"></td>
                                 </tr>
                                 <tr>
                                     <th>Free Service</th>
@@ -800,6 +839,19 @@
                             <table class="table table-bordered align-middle">
                                 <tbody>
                                     <!-- Project Basic Info -->
+                                     <tr>
+                                        <th>Quotation</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="quotation" id="edit-quotation">
+                                                <option value="">-- Select Quotation --</option>
+                                                {% for q in quotations %}
+                                                    <option value="{{ q.id }}">{{ q.quotation_no }} - {{ q.client_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </td>
+                                    </tr>
+
                                     <tr>
                                         <th>Project Name</th>
                                         <td colspan="3">
@@ -818,12 +870,29 @@
                                     </tr>
                                     <tr>
                                         <th>Technologies</th>
-                                        <td><input type="text" class="form-control" name="technologies"
-                                                id="edit-technologies"></td>
+                                        <td>
+                                            <select class="form-select" name="technologies" id="edit-technologies" multiple>
+                                                {% for tech in technologies %}
+                                                <option value="{{ tech.id }}">{{ tech.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select multiple</small>
+                                            <div class="invalid-feedback"></div>
+                                        </td>
                                         <th>App Mode</th>
-                                        <td><input type="text" class="form-control" name="app_mode" id="edit-app-mode">
+                                        <td>
+                                                <select class="form-select" name="app_mode" id="edit-app-mode">
+                                                <option value="">-- Select App Mode --</option>
+                                                {% for mode in app_modes %}
+                                                    <option value="{{ mode.id }}">{{ mode.name }}</option>
+                                                {% endfor %}
+                                            </select>
+
+
+                                            <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <th>Status</th>
                                         <td>
@@ -852,9 +921,9 @@
 
                                     <!-- Payment Info -->
                                     <tr>
-                                        <th>Payment %</th>
-                                        <td><input type="number" class="form-control" name="payment_percentage"
-                                                id="edit-payment-percentage" min="0" max="100"></td>
+                                        <th>Payment (₹)</th>
+                                        <td><input type="number" class="form-control" name="payment_value"
+                                                id="edit-payment-value" min="0"></td>
                                         <th>Payment Status</th>
                                         <td>
                                             <select class="form-select" name="payment_status" id="edit-payment-status">
@@ -889,24 +958,29 @@
 
                                     <!-- Financials -->
                                     <tr>
-                                        <th>Expense</th>
+                                        <th>Expense (₹)</th>
                                         <td><input type="number" step="0.01" class="form-control" name="expense"
                                                 id="edit-expense"></td>
-                                        <th>Developer Charge</th>
+                                        <th>Developer Charge (₹)</th>
                                         <td><input type="number" step="0.01" class="form-control"
                                                 name="developer_charge" id="edit-developer-charge"></td>
                                     </tr>
                                     <tr>
-                                        <th>Server Charge</th>
+                                        <th>Server Charge (₹)</th>
                                         <td><input type="number" step="0.01" class="form-control" name="server_charge"
                                                 id="edit-server-charge"></td>
-                                        <th>3rd Party API Charge</th>
+                                        <th>3rd Party API Charge (₹)</th>
                                         <td><input type="number" step="0.01" class="form-control"
                                                 name="third_party_api_charge" id="edit-third-party-charge"></td>
                                     </tr>
                                     <tr>
+                                        <th>Mediator Charge (₹)</th>
+                                        <td>
+                                            <input type="number" step="0.01" class="form-control" name="mediator_charge" id="edit-mediator-charge" placeholder="Enter mediator charge">
+                                            <div class="invalid-feedback"></div>
+                                        </td>
                                         <th>Income</th>
-                                        <td colspan="3"><input type="number" step="0.01" class="form-control"
+                                        <td><input type="number" step="0.01" class="form-control"
                                                 name="income" id="edit-income"></td>
                                     </tr>
 
@@ -945,10 +1019,10 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Quotation Amount</th>
+                                        <th>Quotation Amount (₹)</th>
                                         <td><input type="number" step="0.01" class="form-control"
                                                 name="quotation_amount" id="edit-quotation-amount"></td>
-                                        <th>Approval Amount</th>
+                                        <th>Approval Amount (₹)</th>
                                         <td><input type="number" step="0.01" class="form-control" name="approval_amount"
                                                 id="edit-approval-amount"></td>
                                     </tr>
@@ -1186,6 +1260,40 @@
                     .catch(err => console.error("Error:", err));
             });
 
+            // autofill when quotation select at the time of add
+            document.getElementById('quotationSelect').addEventListener('change', function() {
+            let quotationId = this.value;
+            if (!quotationId) return;
+                
+            fetch(`/get_quotation/?id=${quotationId}`)  // create a view that returns JSON
+                .then(res => res.json())
+                .then(data => {
+                    let leadInput = document.querySelector('input[name="lead_source"]');
+            let quotationInput = document.querySelector('input[name="quotation_amount"]');
+            let inquiryInput = document.querySelector('input[name="inquiry_date"]');
+            let quotationSelect = document.querySelector('select[name="quotation_sent"]');
+
+            // Fill values
+            leadInput.value = data.lead_source || '';
+            quotationInput.value = data.grand_total || '';
+            quotationSelect.value = "Yes";
+
+            if (data.date) {
+                let d = new Date(data.date);
+                let month = (d.getMonth() + 1).toString().padStart(2, '0');
+                let day = d.getDate().toString().padStart(2, '0');
+                inquiryInput.value = `${d.getFullYear()}-${month}-${day}`;
+            } else {
+                inquiryInput.value = '';
+            }
+
+            // Make them read-only
+            leadInput.readOnly = true;
+            quotationInput.readOnly = true;
+            inquiryInput.readOnly = true;
+            quotationSelect.disabled = true;
+        });
+        });
             // View modal fill
             // Use Django's URL tag so the path is generated correctly
             const projectDetailsUrl = "{% url 'get_project_details' %}";
@@ -1203,8 +1311,9 @@
                     $("#pd-project-id").text(p.project_id);
                     $("#pd-inquiry-date").text(p.inquiry_date);
                     $("#pd-project-name").text(p.project_name);
-                    $("#pd-technologies").text(p.technologies);
-                    $("#pd-app-mode").text(p.app_mode);
+                    $("#pd-technologies").text(p.technologies.join(", ") || "-");
+                    $("#pd-app-mode").text(p.app_mode || "-");
+
                     $("#pd-lead-source").text(p.lead_source);
                     $("#pd-status").html(`<span class="badge bg-warning text-dark">${p.status}</span>`);
                     $("#pd-quotation-sent").html(`<span class="badge bg-${p.quotation_sent === 'Yes' ? 'success' : 'danger'}">${p.quotation_sent}</span>`);
@@ -1215,8 +1324,12 @@
                         tmHtml += `<div>${m.name}</div>`;
                     });
                     $("#pd-team-members").html(tmHtml);
-                    $("#pd-quotation-amount").text(p.quotation_amount ? `₹${p.quotation_amount}` : "");
-                    $("#pd-approval-amount").text(p.approval_amount ? `₹${p.approval_amount}` : "");
+                    $("#pd-quotation-amount").text(p.quotation_amount ? `₹${p.quotation_amount}` : "-");
+                    $("#pd-quotation-reference").text(
+                        p.quotation ? `${p.quotation} (${p.client_name})` : "-"
+                    );
+
+                    $("#pd-approval-amount").text(p.approval_amount ? `₹${p.approval_amount}` : "-");
                     $("#pd-deadline").text(p.deadline);
                     $("#pd-completed-date").text(p.completed_date);
                     let statusClass = '';
@@ -1230,7 +1343,7 @@
                         statusClass = 'bg-secondary';
                     }
 
-                    $("#pd-payment-status").html(`<span class="badge ${statusClass}">${p.payment_percentage}% ${p.payment_status}</span>`);
+                    $("#pd-payment-status").html(`<span class="badge ${statusClass}">${p.payment_value} ${p.payment_status}</span>`);
                     $("#pd-client-industry").text(p.client_industry);
                     $("#pd-contract-signed").html(`<span class="badge bg-${p.contract_signed === 'Yes' ? 'success' : 'danger'}">${p.contract_signed}</span>`);
                     if (p.live_link) {
@@ -1238,11 +1351,12 @@
                     } else {
                         $("#pd-live-link").text("");
                     }
-                    $("#pd-expense").text(p.expense ? `₹${p.expense}` : "");
-                    $("#pd-developer-charge").text(p.developer_charge ? `₹${p.developer_charge}` : "");
-                    $("#pd-server-charge").text(p.server_charge ? `₹${p.server_charge}` : "");
-                    $("#pd-third-party-charge").text(p.third_party_api_charge ? `₹${p.third_party_api_charge}` : "");
-                    $("#pd-income").text(p.income ? `₹${p.income}` : "");
+                    $("#pd-expense").text(p.expense ? `₹${p.expense}` : "-");
+                    $("#pd-developer-charge").text(p.developer_charge ? `₹${p.developer_charge}` : "-");
+                    $("#pd-server-charge").text(p.server_charge ? `₹${p.server_charge}` : "-");
+                    $("#pd-third-party-charge").text(p.third_party_api_charge ? `₹${p.third_party_api_charge}` : "-");
+                    $("#pd-mediator-charge").text(p.mediator_charge ? `₹${p.mediator_charge}` : "-");
+                    $("#pd-income").text(p.income ? `₹${p.income}` : "-");
                     $("#pd-free-service").text(p.free_service);
                     if (p.postman_collection) {
                         $("#pd-postman-collection").html(`<a href="${p.postman_collection}" target="_blank">Postman JSON</a>`);
@@ -1342,16 +1456,19 @@
 
                     // Set form action to numeric id URL (update_project/<int:id>/)
                     $("#editProjectForm").attr("action", `/update_project/${p.id}/`);
+                    // Quotation
+                    $("#edit-quotation").val(p.quotation_id ? p.quotation_id.toString() : "");
                     // set hidden ID field
                     $("#edit-project-id").val(p.id);
                     // populate fields in edit modal
                     $("#edit-project-name").val(p.project_name);
                     $("#edit-start-date").val(p.start_date);
                     $("#edit-deadline").val(p.deadline);
-                    $("#edit-technologies").val(p.technologies);
-                    $("#edit-app-mode").val(p.app_mode);
                     $("#edit-status").val(p.status);
-                    $("#edit-payment-percentage").val(p.payment_percentage);
+                    // App Mode
+                    $("#edit-app-mode").val(p.app_mode_id ? p.app_mode_id.toString() : "");
+
+                    $("#edit-payment-value").val(p.payment_value);
                     $("#edit-payment-status").val(p.payment_status);
                     $("#edit-live-link").val(p.live_link);
                     $("#edit-postman-collection").val(p.postman_collection);
@@ -1361,7 +1478,9 @@
                     $("#edit-developer-charge").val(p.developer_charge);
                     $("#edit-server-charge").val(p.server_charge);
                     $("#edit-third-party-charge").val(p.third_party_api_charge);
+                    $("#edit-mediator-charge").val(p.mediator_charge);
                     $("#edit-income").val(p.income);
+                    
                     $("#edit-free-service").val(p.free_service);
                     $("#edit-inquiry-date").val(p.inquiry_date);
                     $("#edit-lead-source").val(p.lead_source);
@@ -1374,7 +1493,10 @@
                     $("#edit-contract-signed").val(p.contract_signed);
 
                     // For multi-select team members use the numeric ids returned
-                    $("#edit-team-members").val(p.team_members_ids || []);
+                    // $("#edit-team-members").val(p.team_members_ids || []);
+                    // $("#edit-technologies").val(p.technologies_ids);
+                    $("#edit-technologies").val(p.technologies_ids.map(id => id.toString()));
+                    $("#edit-team-members").val(p.team_members_ids.map(id => id.toString()));
                     // if using plugins like select2 you might need: $("#edit-team-members").trigger('change');
 
                     $("#editProjectModal").modal("show");

@@ -50,6 +50,7 @@ class ProjectPaymentAdmin(admin.ModelAdmin):
 
 admin.site.register(HostData)
 admin.site.register(Domain)
+admin.site.register(Designation)
 admin.site.register(User)
 admin.site.register(Quotation)
 admin.site.register(Client)

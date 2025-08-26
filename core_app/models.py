@@ -3,25 +3,41 @@ from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator,URLValidator
 from django.utils import timezone
 import os,re
-from django.core.validators import RegexValidator, MinLengthValidator, EmailValidator
+from django.core.validators import RegexValidator, MinLengthValidator, EmailValidator,MinValueValidator
 from django.db.models import *
 from decimal import Decimal
 
 # -----------------------------
 # User table for team members
 # -----------------------------
+class Designation(models.Model):
+    """Separate table for designations."""
+    title = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.title
+    
 class User(models.Model):
+    MARITAL_STATUS_CHOICES = [
+        ("single", "Single"),
+        ("married", "Married"),
+        ("divorced", "Divorced"),
+        ("widowed", "Widowed"),
+    ]
     first_name = models.CharField(
         max_length=50,
+        blank=True,
         validators=[MinLengthValidator(2, "First name must be at least 2 characters.")]
     )
     last_name = models.CharField(
         max_length=50,
+         blank=True,
         validators=[MinLengthValidator(2, "Last name must be at least 2 characters.")]
     )
     username = models.CharField(
         max_length=30,
         unique=True,
+         blank=True,
         validators=[RegexValidator(
             regex=r'^[\w.@+-]+$',
             message="Username can contain letters, digits and @/./+/-/_ only."
@@ -29,6 +45,7 @@ class User(models.Model):
     )
     email = models.EmailField(
         unique=True,
+         blank=True,
         validators=[EmailValidator(message="Enter a valid email address.")]
     )
     phone = models.CharField(
@@ -40,8 +57,33 @@ class User(models.Model):
             message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
         )]
     )
-    designation = models.CharField(max_length=100, blank=True, null=True)
-    
+    designations = models.ManyToManyField(Designation, blank=True, related_name="users")
+    salary = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        blank=True,
+        null=True
+    )
+    joining_date = models.DateField(blank=True, null=True)
+    last_date = models.DateField(blank=True, null=True)
+    birth_date = models.DateField(blank=True, null=True)
+    marital_status = models.CharField(
+        max_length=10,
+        choices=MARITAL_STATUS_CHOICES,
+        blank=True,
+        null=True
+    )
+    address = models.TextField(blank=True, null=True)
+
+    document_link = models.URLField(
+            max_length=500,
+            blank=True,
+            null=True,
+            help_text="Paste a valid document link (e.g., Google Drive, Dropbox, etc.)"
+        )
+
+
     password = models.CharField(
         max_length=128,
         validators=[MinLengthValidator(8, "Password must be at least 8 characters.")]
@@ -71,13 +113,13 @@ class User(models.Model):
         #Password complexity: at least 1 uppercase, 1 lowercase, 1 digit, 1 special char
         if self.password:
             if not re.search(r'[A-Z]', self.password):
-                raise ValidationError({'password': "Password must contain at least one uppercase letter."})
+                raise ValidationError("Password must contain at least one uppercase letter.")
             if not re.search(r'[a-z]', self.password):
-                raise ValidationError({'password': "Password must contain at least one lowercase letter."})
+                raise ValidationError("Password must contain at least one lowercase letter.")
             if not re.search(r'\d', self.password):
-                raise ValidationError({'password': "Password must contain at least one digit."})
+                raise ValidationError("Password must contain at least one digit.")
             if not re.search(r'[!@#$%^&*(),.?":{}|<>]', self.password):
-                raise ValidationError({'password': "Password must contain at least one special character."})
+                raise ValidationError("Password must contain at least one special character.")
 
 
         # prevent first name = last name
@@ -87,6 +129,19 @@ class User(models.Model):
 # -----------------------------
 # Project model
 # -----------------------------
+class Technology(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class AppMode(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
 class Project(models.Model):
     PROJECT_STATUS_CHOICES = [
         ('Ongoing', 'Ongoing'),
@@ -107,15 +162,21 @@ class Project(models.Model):
     ]
 
     project_id = models.CharField(max_length=10, unique=True, blank=True, null=True)
-    start_date = models.DateField(blank=True, null=True)
+    quotation = models.ForeignKey(
+        "Quotation",
+        on_delete=models.SET_NULL,   # if quotation deleted, keep project but null this field
+        blank=True,
+        null=True,
+    )
     project_name = models.CharField(max_length=255,  unique=True,blank=False, null=False)
-    technologies = models.CharField(max_length=255, blank=True, null=True)
-    app_mode = models.CharField(max_length=50, blank=True, null=True)
+    start_date = models.DateField(blank=True, null=True)
+    technologies = models.ManyToManyField(Technology, blank=True)
+    app_mode = models.ForeignKey(AppMode, on_delete=models.SET_NULL, blank=True, null=True)
     status = models.CharField(max_length=20, choices=PROJECT_STATUS_CHOICES, default="Ongoing")
 
     deadline = models.DateField(blank=True, null=True)
     team_members = models.ManyToManyField(User, blank=True, related_name="projects")
-    payment_percentage = models.PositiveIntegerField(default=0, blank=True, null=True)
+    payment_value = models.PositiveIntegerField(default=0, blank=True, null=True)
     payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default="Pending")
     live_link = models.URLField(blank=True, null=True)
 
@@ -124,6 +185,7 @@ class Project(models.Model):
     developer_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     server_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     third_party_api_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    mediator_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True) 
     income = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     # Free service
@@ -164,8 +226,8 @@ class Project(models.Model):
         if self.quotation_sent == "Yes" and not self.quotation_amount:
             raise ValidationError("Quotation amount is required when quotation is sent.")
         
-        if self.payment_percentage is not None and (self.payment_percentage < 0 or self.payment_percentage > 100):
-            raise ValidationError("Payment percentage must be between 0 and 100.")
+        if self.payment_value is not None and (self.payment_value < 0):
+            raise ValidationError("Payment value not in negative.")
     
         if self.project_name:
             qs = Project.objects.filter(project_name__iexact=self.project_name).exclude(pk=self.pk)
@@ -182,10 +244,25 @@ class Project(models.Model):
                 if match:
                     last_number = int(match.group())
             self.project_id = f"#P{last_number + 1:04d}"
+        
+
+        # ==== Auto-fill only when creating and quotation exists ====
+        if self._state.adding and self.quotation:
+            if not self.lead_source:
+                self.lead_source = self.quotation.lead_source
+
+            if not self.inquiry_date and hasattr(self.quotation, "date"):
+                self.inquiry_date = self.quotation.date
+
+            if not self.quotation_amount and hasattr(self.quotation, "grand_total"):
+                self.quotation_amount = self.quotation.grand_total
+
+            if not self.quotation_sent:
+                self.quotation_sent = "Yes"
+        super().save(*args, **kwargs)
         # ===== Update income with total_paid =====
         self.income = self.total_paid
-
-        super().save(*args, **kwargs)
+        super().save(update_fields=["income"])
     
     # ==== Payment Helpers ====
     @property
@@ -431,7 +508,7 @@ class Quotation(models.Model):
     #other
     payment_terms = models.TextField(blank=True)
     additional_notes = models.TextField(blank=True)
-
+    lead_source = models.CharField(max_length=50, blank=True, null=True)
     signature = models.ImageField(upload_to='signatures/', blank=True, null=True)
     signatory_name = models.CharField(max_length=255, blank=True)
     signatory_designation = models.CharField(max_length=255, blank=True)
@@ -439,15 +516,31 @@ class Quotation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def clean(self):
-        if not self.company_name:
-            raise ValidationError('Company name is required.')
-        if not self.date:
-            raise ValidationError('Quotation date is required.')
-        if not self.valid_until:
-            raise ValidationError('Valid until date is required.')
-        if not self.client_name:
-            raise ValidationError('Client name is required.')
+    @classmethod
+    def get_next_quotation_no(cls):
+        year = timezone.now().year
+        last_qtn = cls.objects.filter(
+            quotation_no__startswith=f"QTN-{year}-"
+        ).aggregate(Max('quotation_no'))['quotation_no__max']
+
+        if last_qtn:
+            try:
+                last_seq = int(last_qtn.split('-')[-1])
+            except (IndexError, ValueError):
+                last_seq = 0
+            new_seq = last_seq + 1
+        else:
+            new_seq = 1
+        return f"QTN-{year}-{str(new_seq).zfill(3)}"
+    # def clean(self):
+    #     if not self.company_name:
+    #         raise ValidationError('Company name is required.')
+    #     if not self.date:
+    #         raise ValidationError('Quotation date is required.')
+    #     if not self.valid_until:
+    #         raise ValidationError('Valid until date is required.')
+    #     if not self.client_name:
+    #         raise ValidationError('Client name is required.')
 
         
     def save(self, *args, **kwargs):
@@ -482,7 +575,9 @@ class Quotation(models.Model):
             self.client_email = ""  # leave email blank
         else:
             # Optional: raise error if neither valid
-            raise ValidationError("Client Contact must be a valid phone number or email.")
+            self.client_contact = "" 
+            self.client_email = "" 
+            # raise ValidationError("Client Contact must be a valid phone number or email.")
 
         # Validate dates
         today = timezone.now().date()

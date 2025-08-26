@@ -1,31 +1,27 @@
-from django.shortcuts import render
 from django.shortcuts import render, redirect,get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse,HttpResponse, Http404,FileResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from .models import *
 from django.urls import reverse
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.core.paginator import Paginator
 from django.utils import timezone
-from datetime import timedelta
 from django.utils.dateparse import parse_date
 from collections import defaultdict
 import json
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image
-from django.shortcuts import get_object_or_404
 from reportlab.lib.units import mm
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-from django.http import HttpResponse
-from django.http import JsonResponse, Http404,FileResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout as django_logout
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count, Subquery, OuterRef
 import os
 from django.conf import settings
+from decimal import Decimal, InvalidOperation
 
 
 # -----------------------------
@@ -121,6 +117,9 @@ def project_list(request):
     paginator = Paginator(projects, records_per_page) 
     page_obj = paginator.get_page(page_number) # Safe pagination 
     print(users) 
+    technologies = Technology.objects.all()      
+    app_modes = AppMode.objects.all() 
+    quotations = Quotation.objects.all()
     # Count stats
     total_projects = projects.count()
     ongoing_count = projects.filter(status="Ongoing").count()
@@ -131,6 +130,9 @@ def project_list(request):
                 { 'projects': projects, 
                 'users': users, 
                 'page_obj': page_obj, 
+                'quotations': quotations,
+                'technologies': technologies,   
+                'app_modes': app_modes,        
                 'records_per_page': records_per_page, 
                 'records_options': [20, 50, 100, 200, 300] ,
                 'total_projects': total_projects,
@@ -147,22 +149,24 @@ def save_project(request):
     if request.method == "POST":
         try:
             data = request.POST  # works for normal form POST
-
+            # Get selected quotation object if any
+            quotation_id = data.get("quotation")
+            quotation = Quotation.objects.filter(id=quotation_id).first() if quotation_id else None
             # Create new Project object
             project = Project(
                 project_name=data.get("project_name"),
                 start_date=data.get("start_date") or None,
                 deadline=data.get("deadline") or None,
-                technologies=data.get("technologies"),
-                app_mode=data.get("app_mode"),
+                app_mode=AppMode.objects.filter(id=data.get("app_mode")).first() if data.get("app_mode") else None,
                 status=data.get("status"),
-                payment_percentage=data.get("payment_percentage") or 0,
+                payment_value=data.get("payment_value") or 0,
                 payment_status=data.get("payment_status"),
                 live_link=data.get("live_link"),
                 expense=data.get("expense") or None,
                 developer_charge=data.get("developer_charge") or None,
                 server_charge=data.get("server_charge") or None,
                 third_party_api_charge=data.get("third_party_api_charge") or None,
+                mediator_charge=data.get("mediator_charge") or None,
                 income=data.get("income") or None,
                 free_service=data.get("free_service"),
                 postman_collection=data.get("postman_collection"),
@@ -176,13 +180,19 @@ def save_project(request):
                 approval_amount=data.get("approval_amount") or None,
                 completed_date=data.get("completed_date") or None,
                 client_industry=data.get("client_industry"),
-                contract_signed=data.get("contract_signed")
+                contract_signed=data.get("contract_signed"),
+                quotation=quotation
             )
 
              #  Run backend validation
             project.full_clean()   # will call clean() + field validations
             project.save()
-
+            # Handle ManyToMany: Technologies
+            tech_ids = request.POST.getlist("technologies")
+            if tech_ids:
+                project.technologies.set(Technology.objects.filter(id__in=tech_ids))
+            else:
+                project.technologies.clear()
             # Save team members (comma-separated usernames)
             team_member_ids = request.POST.getlist("team_members")  # <-- gets a list of selected IDs as strings
             print(team_member_ids, "team member IDs")
@@ -201,6 +211,18 @@ def save_project(request):
             return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
 
     return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}}, status=405)
+
+def parse_date(val):
+    try:
+        return datetime.strptime(val, "%Y-%m-%d").date() if val else None
+    except (ValueError, TypeError):
+        return None
+
+def to_decimal(val):
+    try:
+        return Decimal(val)
+    except (TypeError, ValueError, InvalidOperation):
+        return Decimal(0)
 
 def get_project_details(request):
     """
@@ -232,37 +254,55 @@ def get_project_details(request):
     ]
     print(team_members_display)
     data = {
+
         "id": project.id,   # numeric id (important)
         "project_id": project.project_id,  
         "start_date": project.start_date.strftime('%Y-%m-%d') if project.start_date else '',
         "project_name": project.project_name,
-        "technologies": project.technologies,
-        "app_mode": project.app_mode,
+        #quotation  
+        "quotation_id": project.quotation.id if project.quotation else None,
+        "quotation_no": project.quotation.quotation_no if project.quotation else '',
+        "client_name": project.quotation.client_name if project.quotation else '',
+
+        "technologies": [t.name for t in project.technologies.all()],
+        # App Mode
+        "app_mode_id": project.app_mode.id if project.app_mode else None,
+        "app_mode_name": project.app_mode.name if project.app_mode else '',
+        "app_mode": project.app_mode.name if project.app_mode else '',
+
         "status": project.status,
         "deadline": project.deadline.strftime('%Y-%m-%d') if project.deadline else '',
-        "payment_percentage": project.payment_percentage,
+        "payment_value": str(project.payment_value) if project.payment_value is not None else '',
         "payment_status": project.payment_status,
+        
         "live_link": project.live_link,
         "expense": str(project.expense) if project.expense is not None else '',
         "developer_charge": str(project.developer_charge) if project.developer_charge is not None else '',
         "server_charge": str(project.server_charge) if project.server_charge is not None else '',
         "third_party_api_charge": str(project.third_party_api_charge) if project.third_party_api_charge is not None else '',
+        "mediator_charge": str(project.mediator_charge) if project.mediator_charge is not None else '',
         "income": str(project.income) if project.income is not None else '',
         "free_service": project.free_service or '',
+        
         "postman_collection": project.postman_collection,
         "data_folder": project.data_folder,
         "other_link": project.other_link,
+        
         "inquiry_date": project.inquiry_date.strftime('%Y-%m-%d') if project.inquiry_date else '',
         "lead_source": project.lead_source,
         "quotation_sent": project.quotation_sent,
         "demo_given": project.demo_given,
         "quotation_amount": str(project.quotation_amount) if project.quotation_amount is not None else '',
+        "quotation": project.quotation.quotation_no if project.quotation else None,
+        # "client_name": project.quotation.client_name if project.quotation else None,
         "approval_amount": str(project.approval_amount) if project.approval_amount is not None else '',
-        "completed_date": project.completed_date.strftime('%Y-%m-%d') if project.completed_date else '-',
+        "completed_date": project.completed_date.strftime('%Y-%m-%d') if project.completed_date else '',
         "client_industry": project.client_industry,
         "contract_signed": project.contract_signed,
         "team_members_display": team_members_display,
         "team_members_ids": list(project.team_members.values_list('id', flat=True)),
+        # ManyToMany IDs
+        "technologies_ids": list(project.technologies.values_list("id", flat=True)),
     }
 
     return JsonResponse({"success": True, "mode": mode, "project": data})
@@ -282,12 +322,11 @@ def update_project(request, id):
             project.project_name = data.get("project_name")
             project.start_date = data.get("start_date") or None
             project.deadline = data.get("deadline") or None
-            project.technologies = data.get("technologies")
-            project.app_mode = data.get("app_mode")
+            project.app_mode_id = data.get("app_mode") or None
             project.status = data.get("status")
 
             # Payment info
-            project.payment_percentage = data.get("payment_percentage") or 0
+            project.payment_value = to_decimal(data.get("payment_value"))
             project.payment_status = data.get("payment_status")
 
             # Links
@@ -297,23 +336,24 @@ def update_project(request, id):
             project.other_link = data.get("other_link")
 
             # Financials
-            project.expense = data.get("expense") or 0
-            project.developer_charge = data.get("developer_charge") or 0
-            project.server_charge = data.get("server_charge") or 0
-            project.third_party_api_charge = data.get("third_party_api_charge") or 0
-            project.income = data.get("income") or 0
+            project.expense = to_decimal(data.get("expense"))
+            project.developer_charge = to_decimal(data.get("developer_charge"))
+            project.server_charge = to_decimal(data.get("server_charge"))
+            project.third_party_api_charge = to_decimal(data.get("third_party_api_charge"))
+            project.mediator_charge = to_decimal(data.get("mediator_charge"))
+            project.income = to_decimal(data.get("income"))
             project.free_service = data.get("free_service")
 
             # Sales / lead tracking
-            project.inquiry_date = data.get("inquiry_date") or None
+            project.inquiry_date = parse_date(data.get("inquiry_date"))
             project.lead_source = data.get("lead_source")
             project.quotation_sent = data.get("quotation_sent")
             project.demo_given = data.get("demo_given")
-            project.quotation_amount = data.get("quotation_amount") or 0
-            project.approval_amount = data.get("approval_amount") or 0
+            project.quotation_amount = to_decimal(data.get("quotation_amount"))
+            project.approval_amount = to_decimal(data.get("approval_amount"))
 
             # Completion / client info
-            project.completed_date = data.get("completed_date") or None
+            project.completed_date = parse_date(data.get("completed_date"))
             project.client_industry = data.get("client_industry")
             project.contract_signed = data.get("contract_signed")
 
@@ -322,6 +362,10 @@ def update_project(request, id):
 
             project.save()
 
+            # ManyToMany: Technologies
+            tech_ids = request.POST.getlist("technologies")
+            project.technologies.set(Technology.objects.filter(id__in=tech_ids))
+            
             # Team members (ManyToMany)
             team_member_ids = request.POST.getlist("team_members")
             members = User.objects.filter(id__in=team_member_ids)
@@ -857,7 +901,7 @@ def user_list(request):
         created_at__month=timezone.now().month
     ).count()
     inactive_users = users.filter(is_active=False).count()
-
+    designations = Designation.objects.all().order_by("title")
     context = {
         "page_obj": page_obj,  # paginated domains
         "records_per_page": records_per_page,
@@ -866,6 +910,7 @@ def user_list(request):
         'active_users': active_users,
         'new_users_this_month': new_users_this_month,
         'inactive_users': inactive_users,
+        "designations": designations
     }
 
     return render(request, 'user.html', context)
@@ -879,8 +924,14 @@ def add_user(request):
                 username=request.POST.get("username"),
                 email=request.POST.get("email"),
                 phone=request.POST.get("phone") or None,
-                designation=request.POST.get("designation") or None,
                 password=request.POST.get("password"),
+                salary=request.POST.get("salary") or None,
+                joining_date=request.POST.get("joining_date") or None,
+                last_date=request.POST.get("last_date") or None,
+                birth_date=request.POST.get("birth_date") or None,
+                marital_status=request.POST.get("marital_status") or None,
+                document_link = request.POST.get("document_link") or None,
+                address=request.POST.get("address") or None,
                 is_active=True if request.POST.get("is_active") == "on" else False,
             )
 
@@ -891,10 +942,30 @@ def add_user(request):
             # run model validations
             user.full_clean()
             user.save()
+            # Handle many-to-many designations
+            designation_ids = request.POST.getlist("designations")
+            if designation_ids:
+                user.designations.set(designation_ids)
 
             return JsonResponse({"success": True, "message": "User added successfully!"})
         except ValidationError as ve:
-            return JsonResponse({"success": False, "errors": ve.message_dict}, status=400)
+            flat_errors = []
+            detailed_errors = {}
+
+            for field, messages in ve.message_dict.items():
+                for msg in messages:
+                    flat_errors.append(msg)   # just the text messages
+                detailed_errors[field] = messages
+
+            return JsonResponse(
+                {
+                    "success": False,
+                    "flat_errors": flat_errors,
+                    "detailed_errors": detailed_errors
+                },
+                status=400
+            )
+
         except Exception as e:
             return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
 
@@ -914,7 +985,17 @@ def get_user(request, id):
         "username": user.username,
         "email": user.email,
         "phone": user.phone,
-        "designation": user.designation,
+        # Return id + title instead of just title
+        "designations": [
+            {"id": d.id, "title": d.title} for d in user.designations.all()
+        ],
+        "salary": str(user.salary) if user.salary else None,
+        "joining_date": user.joining_date.strftime("%Y-%m-%d") if user.joining_date else None,
+        "last_date": user.last_date.strftime("%Y-%m-%d") if user.last_date else None,
+        "birth_date": user.birth_date.strftime("%Y-%m-%d") if user.birth_date else None,
+        "marital_status": user.marital_status if user.marital_status else None,
+        "address": user.address if user.address else None,
+        "document_link": user.document_link,
         "is_active": user.is_active,
         "projects": [p.project_name for p in user.projects.all()],
         "profile_picture_url": request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None,
@@ -936,7 +1017,20 @@ def update_user(request, id):
             user.username = request.POST.get("username")
             user.email = request.POST.get("email")
             user.phone = request.POST.get("phone") or None
-            user.designation = request.POST.get("designation") or None
+            
+            # Salary
+            salary = request.POST.get("salary")
+            user.salary = salary if salary else None
+
+            # Dates
+            user.joining_date = request.POST.get("joining_date") or None
+            user.last_date = request.POST.get("last_date") or None
+            user.birth_date = request.POST.get("birth_date") or None
+
+            # Marital status, address, document link
+            user.marital_status = request.POST.get("marital_status") or None
+            user.address = request.POST.get("address") or None
+            user.document_link = request.POST.get("document_link") or None
 
             # Update password only if provided
             password = request.POST.get("password")
@@ -952,6 +1046,11 @@ def update_user(request, id):
 
             user.full_clean()
             user.save()
+
+            # ManyToMany (designations)
+            designations = request.POST.getlist("designations")
+            user.save()
+            user.designations.set(designations)  # update M2M after save
 
             return JsonResponse({"success": True, "message": "User updated successfully!"})
         except ValidationError as ve:
@@ -1004,12 +1103,14 @@ def quotation_list(request):
 
     # get all users
     users = User.objects.all()
-
+    next_no = Quotation.get_next_quotation_no()
+    print(next_no) 
     context = {
         "page_obj": page_obj,
         "records_per_page": records_per_page,
         "records_options": [20, 50, 100, 200, 300],
         "today": today,
+        "quotation_no":next_no,
         "total_quotations": total_quotations,
         "active_quotations": active_quotations,
         "expired_quotations": expired_quotations,
@@ -1101,7 +1202,7 @@ def add_quotation(request):
                 client_name=data.get("client_name"),
                 client_contact=data.get("client_contact", ""),
                 client_address=data.get("client_address", ""),
-                
+                lead_source = data.get("lead_source",""),
 
                 web_services=services["web"],
                 mobile_services=services["mobile"],
@@ -1124,12 +1225,23 @@ def add_quotation(request):
                 signature=files.get("signature"),
             )
 
-            messages.success(request, "Quotation added successfully!")
-            return redirect("quotation_list")
+            return JsonResponse({"success": True, "message": "Quotation added successfully!"})
+
+        except ValidationError as ve:
+            if hasattr(ve, "message_dict"):
+                flat_errors = []
+                for field, msgs in ve.message_dict.items():
+                    for msg in msgs:
+                        flat_errors.append(f"{field}: {msg}" if field != "__all__" else msg)
+            else:
+                flat_errors = ve.messages
+
+            return JsonResponse({"success": False, "flat_errors": flat_errors}, status=400)
 
         except Exception as e:
-            messages.error(request, f"Error adding quotation: {str(e)}")
-            return redirect("quotation_list")
+            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
+
+    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method"]}}, status=405)
         
 def get_quotation(request):
     quotation_id = request.GET.get("id")
@@ -1204,6 +1316,7 @@ def get_quotation(request):
         "client_contact": quotation.client_contact,
         "client_email": quotation.client_email,
         "client_address": quotation.client_address,
+        "lead_source": quotation.lead_source,
         "prepared_by": quotation.prepared_by.id if quotation.prepared_by else None,
 
         # --- Services ---
@@ -1316,7 +1429,7 @@ def update_quotation(request, id):
             quotation.client_name = data.get("client_name")
             quotation.client_contact = data.get("client_contact", "")  # save() validates phone/email
             quotation.client_address = data.get("client_address", "")
-
+            quotation.lead_source = data.get("lead_source", "") 
             # ---------- Services (category-split) ----------
             services = parse_services()
             quotation.web_services = services["web"]
