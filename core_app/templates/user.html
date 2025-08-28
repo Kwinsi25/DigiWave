@@ -3,6 +3,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+
 {% block extra_css %}
 <style>
     .scrollable-table-body {
@@ -188,6 +189,10 @@
                                     </a>
                                 </td>
                             </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center">No employee found.</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -289,7 +294,7 @@
                 <!-- display user data -->
                 <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel"
                     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-dialog modal-xl modal-dialog-scrollable">
                         <div class="modal-content">
                             <div class="modal-header table-info text-white">
                                 <h5 class="modal-title" id="viewUserModalLabel">
@@ -300,160 +305,302 @@
                             </div>
 
                             <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered align-middle">
-                                        <tbody>
-                                            <tr>
-                                            <th>Username</th>
-                                            <td id="view-username" colspan="3"></td>
-                                            </tr>
-                                            <tr>
-                                            <th>First Name</th>
-                                            <td id="view-firstname"></td>
-                                            <th>Last Name</th>
-                                            <td id="view-lastname"></td>
-                                            </tr>
-                                            <tr>
-                                            <th>Email</th>
-                                            <td id="view-email"></td>
-                                            <th>Phone</th>
-                                            <td id="view-phone"></td>
-                                            </tr>
-                                            <tr>
-                                            <th>Designations</th>
-                                            <td id="view-designations"></td>
-                                            <th>Status</th>
-                                            <td id="view-status"></td>
-                                            </tr>
-                                            <tr>
-                                            <th>Salary</th>
-                                            <td id="view-salary"></td>
-                                            <th>Marital Status</th>
-                                            <td id="view-marital-status"></td>
-                                            </tr>
-                                            <tr>
-                                            <th>Joining Date</th>
-                                            <td id="view-joining-date"></td>
-                                            <th>Last Date</th>
-                                            <td id="view-last-date"></td>
-                                            </tr>
-                                            <tr>
-                                            <th>Birth Date</th>
-                                            <td id="view-birth-date"></td>
-                                            <th>Address</th>
-                                            <td id="view-address"></td>
-                                            </tr>
-                                            <tr>
-                                            <th>Projects</th>
-                                            <td colspan="3">
-                                                <ul id="view-projects" class="mb-0"></ul>
-                                            </td>
-                                            </tr>
-                                            <tr>
-                                            <th>Document</th>
-                                            <td colspan="3" id="view-document-link"></td>
-                                            </tr>
-                                            <tr>
-                                            <th>Profile Picture</th>
-                                            <td colspan="3" id="view-profile-picture"></td>
-                                            </tr>
-                                        </tbody>
-                                        </table>
+                                <table class="table table-borderless w-100 text-center mb-3">
+                    <tr>
+                        <td colspan="2">
+                            <a id="view-profile-picture-link" href="#" target="_blank">
+                                <img id="view-profile-picture-img"
+                                     src="https://via.placeholder.com/140?text=No+Image"
+                                     class="rounded-circle border" style="width:140px; height:140px; object-fit:cover;">
+                            </a>
+                            <div id="view-status" class="mt-2"></div>
+                        </td>
+                    </tr>
+                </table>
 
-                                    <script>
-                                        document.addEventListener("DOMContentLoaded", function () {
-                                            const modalEl = document.getElementById("viewUserModal");
-                                            const viewUserModal = new bootstrap.Modal(modalEl);
-                                            document.querySelectorAll(".view-user").forEach(btn => {
-                                                btn.addEventListener("click", function (e) {
-                                                    e.preventDefault();
-                                                    const userId = this.dataset.userId;
+                <!-- Personal Details -->
+                <table class="table table-bordered mb-3">
+                    <thead class="table-light">
+                        <tr>
+                            <th colspan="4"><i class="bx bx-id-card me-1"></i> Personal Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Employee ID</th>
+                            <td id="view-employee-id" colspan="3"></td>
+                           
+                        </tr>
+                        <tr>
+                            <th>First Name</th>
+                            <td id="view-firstname"></td>
+                            <th>Last Name</th>
+                            <td id="view-lastname"></td>
+                        </tr>
+                        <tr>
+                            <th>Gender</th>
+                            <td id="view-gender"></td>
+                            <th>Username</th>
+                            <td id="view-username"></td>
+                        </tr>
+                        <tr>
+                            <th>Password</th>
+                            <td colspan="3">
+                                <span id="view-password-dots">••••••••</span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="toggle-view-password">
+                                    <i class="bx bx-show"></i>
+                                </button>
+                            </td>
+                        </tr>
 
-                                                    fetch(`/get_user/${userId}/`, {
-                                                        headers: { "X-Requested-With": "XMLHttpRequest" }
-                                                    })
-                                                        .then(res => res.json())
-                                                        .then(data => {
-                                                            // Basic info
-                                                            document.getElementById("view-username").textContent = data.username || "-";
-                                                            document.getElementById("view-firstname").textContent = data.first_name || "-";
-                                                            document.getElementById("view-lastname").textContent = data.last_name || "-";
-                                                            document.getElementById("view-email").textContent = data.email || "-";
-                                                            document.getElementById("view-phone").textContent = data.phone || "-";
 
-                                                            // Designations (badges)
-                                                            const designationCell = document.getElementById("view-designations");
-                                                            designationCell.innerHTML = "";
-                                                            if (data.designations && data.designations.length) {
-                                                                data.designations.forEach(d => {
-                                                                designationCell.innerHTML += `<span class="badge bg-primary me-1">${d.title}</span>`;
-                                                                });
-                                                            } else {
-                                                                designationCell.textContent = "-";
-                                                            }
+                        <tr>
+                            <th>Birth Date</th>
+                            <td id="view-birth-date"></td>
+                            <th>Marital Status</th>
+                            <td id="view-marital-status"></td>
+                        </tr>
+                    </tbody>
+                </table>
 
-                                                            // Status
-                                                            document.getElementById("view-status").innerHTML = data.is_active
-                                                                ? `<span class="badge bg-label-success">Active</span>`
-                                                                : `<span class="badge bg-label-danger">Inactive</span>`;
+                <!-- Job Details -->
+                <table class="table table-bordered mb-3">
+                    <thead class="table-light">
+                        <tr>
+                            <th colspan="4"><i class="bx bx-briefcase me-1"></i> Job Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Employee Type</th>
+                            <td id="view-employee-type"></td>
+                            <th>Salary</th>
+                            <td id="view-salary"></td>
+                        </tr>
+                        <tr>
+                            <th>Joining Date</th>
+                            <td id="view-joining-date"></td>
+                            <th>Last Date</th>
+                            <td id="view-last-date"></td>
+                        </tr>
+                        <tr>
+                            <th>Designations</th>
+                            <td id="view-designations"></td>
+                            <th>Technologies</th>
+                            <td id="view-technologies"></td>
+                        </tr>
+                    </tbody>
+                </table>
 
-                                                            // Extra fields
-                                                            document.getElementById("view-salary").textContent = data.salary || "-";
-                                                            document.getElementById("view-marital-status").textContent = data.marital_status || "-";
-                                                            document.getElementById("view-joining-date").textContent = data.joining_date || "-";
-                                                            document.getElementById("view-last-date").textContent = data.last_date || "-";
-                                                            document.getElementById("view-birth-date").textContent = data.birth_date || "-";
-                                                            document.getElementById("view-address").textContent = data.address || "-";
+                <!-- Contact Details -->
+                <table class="table table-bordered mb-3">
+                    <thead class="table-light">
+                        <tr>
+                            <th colspan="4"><i class="bx bx-phone me-1"></i> Contact Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Phone</th>
+                            <td id="view-phone"></td>
+                            <th>Email</th>
+                            <td id="view-email"></td>
+                        </tr>
+                        <tr>
+                            <th>Current Address</th>
+                            <td colspan="3" id="view-current-address"></td>
+                        </tr>
+                        <tr>
+                            <th>Permanent Address</th>
+                            <td colspan="3" id="view-permanent-address"></td>
+                        </tr>
+                    </tbody>
+                </table>
 
-                                                            // Projects
-                                                            const projectList = document.getElementById("view-projects");
-                                                            projectList.innerHTML = "";
-                                                            if (data.projects && data.projects.length) {
-                                                                data.projects.forEach(p => {
-                                                                let li = document.createElement("li");
-                                                                li.textContent = p;
-                                                                projectList.appendChild(li);
-                                                                });
-                                                            } else {
-                                                                projectList.innerHTML = "<li>No projects assigned</li>";
-                                                            }
+                <!-- Bank Details -->
+                <table class="table table-bordered mb-3">
+                    <thead class="table-light">
+                        <tr>
+                            <th colspan="4"><i class="bx bx-buildings me-1"></i> Bank Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Account Holder</th>
+                            <td id="view-account-holder"></td>
+                            <th>Account Number</th>
+                            <td id="view-account-number"></td>
+                        </tr>
+                        <tr>
+                            <th>IFSC Code</th>
+                            <td id="view-ifsc-code"></td>
+                            <th>Branch</th>
+                            <td id="view-branch"></td>
+                        </tr>
+                    </tbody>
+                </table>
 
-                                                            // Document link
-                                                            document.getElementById("view-document-link").innerHTML = data.document_link
-                                                                ? `<a href="${data.document_link}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                                                    <i class="bx bx-link"></i> View Document
-                                                                </a>`
-                                                                : "No document provided";
+                <!-- Projects & Document -->
+                <table class="table table-bordered mb-3">
+                    <thead class="table-light">
+                        <tr>
+                            <th colspan="4"><i class="bx bx-folder-open me-1"></i> Other Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Projects</th>
+                            <td colspan="3"><ul id="view-projects" class="mb-0"></ul></td>
+                        </tr>
+                        <tr>
+                            <th>Document</th>
+                            <td colspan="3" id="view-document-link"></td>
+                        </tr>
+                    </tbody>
+                </table>
 
-                                                            // Profile picture
-                                                            document.getElementById("view-profile-picture").innerHTML = data.profile_picture_url
-                                                                ? `<a href="${data.profile_picture_url}" target="_blank">
-                                                                    <img src="${data.profile_picture_url}" class="img-thumbnail rounded" style="max-width:80px; max-height:80px;">
-                                                                </a>`
-                                                                : "No picture";
-                                                            // Show modal
-                                                            // show with existing instance
-                                                            viewUserModal.show();
-                                                        })
-                                                        .catch(() => showToast("Error loading user details", "danger"));
-                                                });
-                                            });
-                                        });
-                                    </script>
-
-                                </div>
+            </div>
                             </div>
 
+                                    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modalEl = document.getElementById("viewUserModal");
+    const viewUserModal = new bootstrap.Modal(modalEl);
+
+    document.querySelectorAll(".view-user").forEach(btn => {
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            const userId = this.dataset.userId;
+
+            fetch(`/get_user/${userId}/`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Profile picture & status
+                const picLink = document.getElementById("view-profile-picture-link");
+                const picImg = document.getElementById("view-profile-picture-img");
+                if (data.profile_picture_url) {
+                    picLink.href = data.profile_picture_url;
+                    picImg.src = data.profile_picture_url;
+                } else {
+                    picLink.href = "#";
+                    picImg.src = "https://via.placeholder.com/140?text=No+Image";
+                }
+                document.getElementById("view-status").innerHTML = data.is_active
+                    ? `<span class="badge bg-label-success">Active</span>`
+                    : `<span class="badge bg-label-danger">Inactive</span>`;
+
+                // Personal Details
+                document.getElementById("view-employee-id").textContent = data.id || "-";
+                document.getElementById("view-firstname").textContent = data.first_name || "-";
+                document.getElementById("view-lastname").textContent = data.last_name || "-";
+                document.getElementById("view-username").textContent = data.username || "-";
+                // Set password
+                const passwordSpan = document.getElementById("view-password-dots");
+const toggleBtn = document.getElementById("toggle-view-password");
+
+// Store the actual password from data
+passwordSpan.dataset.password = data.password || "Not Set";
+
+// Click handler
+toggleBtn.onclick = () => {
+    if (passwordSpan.textContent === "••••••••") {
+        passwordSpan.textContent = passwordSpan.dataset.password;
+        toggleBtn.querySelector("i").className = "bx bx-hide";
+    } else {
+        passwordSpan.textContent = "••••••••";
+        toggleBtn.querySelector("i").className = "bx bx-show";
+    }
+};
+
+                document.getElementById("view-gender").textContent = data.gender || "-";
+                document.getElementById("view-birth-date").textContent = data.birth_date || "-";
+                document.getElementById("view-marital-status").textContent = data.marital_status || "-";
+
+                // Job Details
+                document.getElementById("view-employee-type").textContent = data.employee_type || "-";
+                document.getElementById("view-salary").textContent = data.salary || "-";
+                document.getElementById("view-joining-date").textContent = data.joining_date || "-";
+                document.getElementById("view-last-date").textContent = data.last_date || "-";
+
+                // Designations
+                const designationCell = document.getElementById("view-designations");
+                designationCell.innerHTML = "";
+                if (data.designations && data.designations.length) {
+                    data.designations.forEach(d => {
+                        designationCell.innerHTML += `<span class="badge bg-primary me-1 mb-1">${d.title}</span><br/>`;
+                    });
+                } else {
+                    designationCell.textContent = "-";
+                }
+
+                // Technologies
+                const techCell = document.getElementById("view-technologies");
+                techCell.innerHTML = "";
+                if (data.technologies && data.technologies.length) {
+                    data.technologies.forEach(t => {
+                        techCell.innerHTML += `<span class="badge bg-info me-1 mb-1">${t.name}</span><br/>`;
+                    });
+                } else {
+                    techCell.textContent = "-";
+                }
+
+                // Contact Details
+                document.getElementById("view-phone").textContent = data.phone || "-";
+                document.getElementById("view-email").textContent = data.email || "-";
+                document.getElementById("view-current-address").textContent = data.current_address || "-";
+                document.getElementById("view-permanent-address").textContent = data.permanent_address || "-";
+
+                // Bank Details
+                document.getElementById("view-account-holder").textContent = data.account_holder || "-";
+                document.getElementById("view-account-number").textContent = data.account_number || "-";
+                document.getElementById("view-ifsc-code").textContent = data.ifsc_code || "-";
+                document.getElementById("view-branch").textContent = data.branch || "-";
+
+                // Projects
+                const projectList = document.getElementById("view-projects");
+                projectList.innerHTML = "";
+                if (data.projects && data.projects.length) {
+                    data.projects.forEach(p => {
+                        const li = document.createElement("li");
+                        li.textContent = p;
+                        projectList.appendChild(li);
+                    });
+                } else {
+                    projectList.innerHTML = "<li>No projects assigned</li>";
+                }
+
+                // Document
+                const docCell = document.getElementById("view-document-link");
+                docCell.innerHTML = data.document_link
+                    ? `<a href="${data.document_link}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="bx bx-link"></i> View Document
+                      </a>`
+                    : "No document provided";
+                
+                
+                // Show modal
+                viewUserModal.show();
+            })
+            .catch(() => showToast("Error loading user details", "danger"));
+        });
+    });
+});
+</script>
+
+
+                                
 
                         </div>
                     </div>
-                </div>
+                
 
 
                 <!-- add user modal -->
                 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel"
                     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-dialog modal-xl modal-dialog-scrollable">
                         <div class="modal-content">
                             <div class="modal-header table-primary text-white">
                                 <h5 class="modal-title" id="addUserModalLabel">
@@ -470,100 +617,156 @@
                                     <div class="table-responsive">
                                         <table class="table table-bordered align-middle">
                                             <tbody>
-                                                <tr>
-                                                    <th>First Name</th>
-                                                    <td><input type="text" class="form-control" name="first_name"
-                                                            placeholder="Enter first name"></td>
-                                                    <th>Last Name</th>
-                                                    <td><input type="text" class="form-control" name="last_name"
-                                                            placeholder="Enter last name"></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Username</th>
-                                                    <td><input type="text" class="form-control" name="username"
-                                                            placeholder="Choose a username"></td>
-                                                    <th>Password</th>
-                                                    <td><div class="input-group">
-                                                            <input type="password" class="form-control" name="password" id="password-field" placeholder="Enter password">
-                                                            <button type="button" class="btn btn-outline-secondary" id="toggle-password">
-                                                                <i class="bx bx-show" id="toggle-icon"></i>
-                                                            </button>
-                                                        </div></td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th>Phone</th>
-                                                            <td><input type="text" class="form-control" name="phone"  placeholder="Enter phone number"></td>
-                                                            <th>Email</th>
-                                                            <td><input type="email" class="form-control" name="email" placeholder="Enter email address">
-                                                            </td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Birth Date</th>
-                                                    <td><input type="date" class="form-control" name="birth_date" placeholder="Select birth date"></td>
-                                                    <th>Joining Date</th>
-                                                    <td><input type="date" class="form-control" name="joining_date" placeholder="Select joining date"></td>
-                                                </tr>
-                                                
-                                                <tr>
-                                                    <th>Salary</th> 
-                                                    <td><input type="number" step="0.01" class="form-control" name="salary" placeholder="Enter salary"></td>
-                                                    <th>Last Date</th>
-                                                    <td><input type="date" class="form-control" name="last_date" placeholder="Select last date (if any)"></td>
-                                                </tr>
+                                <!-- Personal Details Section -->
+                                <tr class="table-light">
+                                    <th colspan="4">Personal Details</th>
+                                </tr>
+                                <tr>
+                                    <th>First Name</th>
+                                    <td><input type="text" class="form-control" name="first_name" placeholder="Enter first name"></td>
+                                    <th>Last Name</th>
+                                    <td><input type="text" class="form-control" name="last_name" placeholder="Enter last name"></td>
+                                </tr>
+                                <tr>
+                                    <th>Username</th>
+                                    <td><input type="text" class="form-control" name="username" placeholder="Choose a username"></td>
+                                    <th>Password</th>
+                                    <td>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" name="password" id="password-field" placeholder="Enter password">
+                                            <button type="button" class="btn btn-outline-secondary" id="toggle-password">
+                                                <i class="bx bx-show" id="toggle-icon"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Gender</th>
+                                    <td>
+                                        <select class="form-control" name="gender">
+                                            <option value="">-- Select --</option>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </td>
+                                    <th>Birth Date</th>
+                                    <td><input type="text" class="form-control flat-date" name="birth_date" placeholder="Select birth date"></td>
+                                </tr>
+                                <tr>
+                                    <th>Marital Status</th>
+                                    <td colspan="3">
+                                        <select class="form-control" name="marital_status">
+                                            <option value="">-- Select --</option>
+                                            <option value="single">Single</option>
+                                            <option value="married">Married</option>
+                                            <option value="divorced">Divorced</option>
+                                            <option value="widowed">Widowed</option>
+                                        </select>
+                                    </td>
+                                </tr>
 
-                                                <tr>
-                                                    <th>Marital Status</th>
-                                                    <td>
-                                                        <select class="form-control" name="marital_status">
-                                                            <option value="">-- Select --</option>
-                                                            <option value="single">Single</option>
-                                                            <option value="married">Married</option>
-                                                            <option value="divorced">Divorced</option>
-                                                            <option value="widowed">Widowed</option>
-                                                        </select>
-                                                    </td>
-                                                    <th>Document Link</th>
-                                                        <td colspan="3">
-                                                            <input type="url" class="form-control" name="document_link" placeholder="https://example.com/document">
-                                                        </td>
-                                                </tr>
+                                <!-- Job Details Section -->
+                                <tr class="table-light">
+                                    <th colspan="4">Job Details</th>
+                                </tr>
+                                <tr>
+                                    <th>Employee Type</th>
+                                    <td>
+                                        <select class="form-control" name="employee_type">
+                                            <option value="">-- Select --</option>
+                                            <option value="fixed">Fixed</option>
+                                            <option value="salary">Salary</option>
+                                        </select>
+                                    </td>
+                                    <th>Salary</th>
+                                    <td><input type="number" step="0.01" class="form-control" name="salary" placeholder="Enter salary"></td>
+                                </tr>
+                                <tr>
+                                    <th>Joining Date</th>
+                                    <td><input type="text" class="form-control flat-date" name="joining_date" placeholder="Select joining date"></td>
+                                    <th>Last Date</th>
+                                    <td><input type="text" class="form-control flat-date" name="last_date" placeholder="Select last date (if any)"></td>
+                                </tr>
+                                <tr>
+                                    <th>Designations</th>
+                                    <td>
+                                        <select name="designations" class="form-control" multiple>
+                                            {% for des in designations %}
+                                                <option value="{{ des.id }}">{{ des.title }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="text-muted">Hold Ctrl (or Cmd on Mac) to select multiple</small>
+                                    </td>
+                                    <th>Technologies</th>
+                                    <td>
+                                        <select name="technologies" class="form-control" multiple>
+                                            {% for tech in technologies %}
+                                                <option value="{{ tech.id }}">{{ tech.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="text-muted">Hold Ctrl (or Cmd on Mac) to select multiple</small>
+                                    </td>
+                                </tr>
 
-                                                <tr>
-                                                    <th>Address</th>
-                                                    <td colspan="3">
-                                                        <textarea class="form-control" name="address" rows="2" placeholder="Enter full address"></textarea>
-                                                    </td>
-                                                </tr>
+                                <!-- Contact Details Section -->
+                                <tr class="table-light">
+                                    <th colspan="4">Contact Details</th>
+                                </tr>
+                                <tr>
+                                    <th>Current Address</th>
+                                    <td colspan="3"><textarea class="form-control" name="current_address" rows="2" placeholder="Enter current address"></textarea></td>
+                                </tr>
+                                <tr>
+                                    <th>Permanent Address</th>
+                                    <td colspan="3"><textarea class="form-control" name="permanent_address" rows="2" placeholder="Enter permanent address"></textarea></td>
+                                </tr>
+                                <tr>
+                                    <th>Phone</th>
+                                    <td><input type="text" class="form-control" name="phone" placeholder="Enter phone number"></td>
+                                    <th>Email</th>
+                                    <td><input type="email" class="form-control" name="email" placeholder="Enter email address"></td>
+                                </tr>
+                                <tr>
+                                    <th>Document Link</th>
+                                    <td colspan="3"><input type="url" class="form-control" name="document_link" placeholder="https://example.com/document"></td>
+                                </tr>
 
-                                                <tr>
-                                                    <th>Designations</th>
-                                                    <td colspan="3">
-                                                        <select name="designations" class="form-control" multiple>
-                                                            {% for des in designations %}
-                                                                <option value="{{ des.id }}">{{ des.title }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                        <small class="text-muted">Hold Ctrl (or Cmd on Mac) to select multiple</small>
-                                                    </td>
-                                                </tr>
+                                <!-- Bank Details Section -->
+                                <tr class="table-light">
+                                    <th colspan="4">Bank Details</th>
+                                </tr>
+                                <tr>
+                                    <th>Account Holder</th>
+                                    <td><input type="text" class="form-control" name="account_holder" placeholder="Enter account holder name"></td>
+                                    <th>Account Number</th>
+                                    <td><input type="text" class="form-control" name="account_number" placeholder="Enter account number"></td>
+                                </tr>
+                                <tr>
+                                    <th>IFSC Code</th>
+                                    <td><input type="text" class="form-control" name="ifsc_code" placeholder="Enter IFSC code"></td>
+                                    <th>Branch</th>
+                                    <td><input type="text" class="form-control" name="branch" placeholder="Enter branch"></td>
+                                </tr>
 
-                                                <tr>
-                                                    <th>Profile Picture</th>
-                                                    <td colspan="3"><input type="file" class="form-control"
-                                                            name="profile_picture" accept="image/*"></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Active</th>
-                                                    <td colspan="3">
-                                                        <div class="form-check">
-                                                            <input type="checkbox" class="form-check-input"
-                                                                name="is_active" id="add-is-active" checked>
-                                                            <label class="form-check-label" for="add-is-active">Is
-                                                                Active</label>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
+                                <!-- Other Section -->
+                                <tr class="table-light">
+                                    <th colspan="4">Other</th>
+                                </tr>
+                                <tr>
+                                    <th>Profile Picture</th>
+                                    <td colspan="3"><input type="file" class="form-control" name="profile_picture" accept="image/*"></td>
+                                </tr>
+                                <tr>
+                                    <th>Active</th>
+                                    <td colspan="3">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" name="is_active" id="add-is-active" checked>
+                                            <label class="form-check-label" for="add-is-active">Is Active</label>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
                                         </table>
                                     </div>
                                 </div>
@@ -580,7 +783,7 @@
                 <!-- update user modal -->
                 <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel"
                     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-dialog modal-xl modal-dialog-scrollable">
                         <div class="modal-content">
                             <div class="modal-header table-primary text-white">
                                 <h5 class="modal-title" id="editUserModalLabel">
@@ -597,108 +800,149 @@
                                 <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
                                     <div class="table-responsive">
                                         <table class="table table-bordered align-middle">
-                                            <tbody>
-                                                <tr>
-                                                    <th>First Name</th>
-                                                    <td><input type="text" class="form-control" name="first_name"
-                                                            id="edit-first-name"></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Last Name</th>
-                                                    <td><input type="text" class="form-control" name="last_name"
-                                                            id="edit-last-name"></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Username</th>
-                                                    <td><input type="text" class="form-control" name="username"
-                                                            id="edit-username"></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Email</th>
-                                                    <td><input type="email" class="form-control" name="email"
-                                                            id="edit-email"></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Phone</th>
-                                                    <td><input type="text" class="form-control" name="phone"
-                                                            id="edit-phone"></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Password</th>
-                                                    <td>
-                                                        <input type="password" class="form-control" name="password"
-                                                            id="edit-password"
-                                                            placeholder="Leave blank to keep current password">
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Salary</th>
-                                                    <td><input type="number" step="0.01" class="form-control" name="salary" id="edit-salary"></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Joining Date</th>
-                                                    <td><input type="date" class="form-control" name="joining_date" id="edit-joining-date"></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Last Date</th>
-                                                    <td><input type="date" class="form-control" name="last_date" id="edit-last-date"></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Birth Date</th>
-                                                    <td><input type="date" class="form-control" name="birth_date" id="edit-birth-date"></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Marital Status</th>
-                                                    <td>
-                                                        <select class="form-control" name="marital_status" id="edit-marital-status">
-                                                            <option value="">-- Select --</option>
-                                                            <option value="single">Single</option>
-                                                            <option value="married">Married</option>
-                                                            <option value="divorced">Divorced</option>
-                                                            <option value="widowed">Widowed</option>
-                                                        </select>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Address</th>
-                                                    <td><textarea class="form-control" name="address" id="edit-address"></textarea></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Document Link</th>
-                                                    <td><input type="url" class="form-control" name="document_link" id="edit-document-link"></td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Designations</th>
-                                                    <td>
-                                                        <select class="form-control" name="designations" id="edit-designations" multiple>
-                                                            {% for designation in designations %}
-                                                                <option value="{{ designation.id }}">{{ designation.title }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </td>
-                                                </tr>
+                            <tbody>
+                                <!-- Personal Details -->
+                                <tr class="table-light"><th colspan="4">Personal Details</th></tr>
+                                <tr>
+                                    <th>First Name</th>
+                                    <td><input type="text" class="form-control" name="first_name" id="edit-first-name"></td>
+                                    <th>Last Name</th>
+                                    <td><input type="text" class="form-control" name="last_name" id="edit-last-name"></td>
+                                </tr>
+                                <tr>
+                                    <th>Username</th>
+                                    <td><input type="text" class="form-control" name="username" id="edit-username"></td>
+                                    <th>Password</th>
+                                    <td>
+                                        <div class="input-group">
+        <input type="password" class="form-control" name="password" id="edit-password"
+               placeholder="Leave blank to keep current password">
+        <button type="button" class="btn btn-outline-secondary" id="toggle-edit-password">
+            <i class="bx bx-show"></i>
+        </button>
+    </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Gender</th>
+                                    <td>
+                                        <select class="form-control" name="gender" id="edit-gender">
+                                            <option value="">-- Select --</option>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </td>
+                                    <th>Birth Date</th>
+                                    <td><input type="text" class="form-control flat-date" name="birth_date" id="edit-birth-date"></td>
+                                </tr>
+                                <tr>
+                                    <th>Marital Status</th>
+                                    <td colspan="3">
+                                        <select class="form-control" name="marital_status" id="edit-marital-status">
+                                            <option value="">-- Select --</option>
+                                            <option value="single">Single</option>
+                                            <option value="married">Married</option>
+                                            <option value="divorced">Divorced</option>
+                                            <option value="widowed">Widowed</option>
+                                        </select>
+                                    </td>
+                                </tr>
 
-                                                <tr>
-                                                    <th>Profile Picture</th>
-                                                    <td>
-                                                        <input type="file" class="form-control" name="profile_picture"
-                                                            id="edit-profile-picture">
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Active</th>
-                                                    <td>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox"
-                                                                name="is_active" id="edit-is-active">
-                                                            <label class="form-check-label"
-                                                                for="edit-is-active">Active</label>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                                <!-- Job Details -->
+                                <tr class="table-light"><th colspan="4">Job Details</th></tr>
+                                <tr>
+                                    <th>Employee Type</th>
+                                    <td>
+                                        <select class="form-control" name="employee_type" id="edit-employee-type">
+                                            <option value="">-- Select --</option>
+                                            <option value="fixed">Fixed</option>
+                                            <option value="salary">Salary</option>
+                                        </select>
+                                    </td>
+                                    <th>Salary</th>
+                                    <td><input type="number" step="0.01" class="form-control" name="salary" id="edit-salary"></td>
+                                </tr>
+                                <tr>
+                                    <th>Joining Date</th>
+                                    <td><input type="text" class="form-control flat-date" name="joining_date" id="edit-joining-date"></td>
+                                    <th>Last Date</th>
+                                    <td><input type="text" class="form-control flat-date" name="last_date" id="edit-last-date"></td>
+                                </tr>
+                                <tr>
+                                    <th>Designations</th>
+                                    <td>
+                                        <select name="designations" class="form-control" id="edit-designations" multiple>
+                                            {% for des in designations %}
+                                                <option value="{{ des.id }}">{{ des.title }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="text-muted">Hold Ctrl (Cmd on Mac) to select multiple</small>
+                                    </td>
+                                    <th>Technologies</th>
+                                    <td>
+                                        <select name="technologies" class="form-control" id="edit-technologies" multiple>
+                                            {% for tech in technologies %}
+                                                <option value="{{ tech.id }}">{{ tech.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="text-muted">Hold Ctrl (Cmd on Mac) to select multiple</small>
+                                    </td>
+                                </tr>
+
+                                <!-- Contact Details -->
+                                <tr class="table-light"><th colspan="4">Contact Details</th></tr>
+                                <tr>
+                                    <th>Current Address</th>
+                                    <td colspan="3"><textarea class="form-control" name="current_address" id="edit-current-address" rows="2"></textarea></td>
+                                </tr>
+                                <tr>
+                                    <th>Permanent Address</th>
+                                    <td colspan="3"><textarea class="form-control" name="permanent_address" id="edit-permanent-address" rows="2"></textarea></td>
+                                </tr>
+                                <tr>
+                                    <th>Phone</th>
+                                    <td><input type="text" class="form-control" name="phone" id="edit-phone"></td>
+                                    <th>Email</th>
+                                    <td><input type="email" class="form-control" name="email" id="edit-email"></td>
+                                </tr>
+                                <tr>
+                                    <th>Document Link</th>
+                                    <td colspan="3"><input type="url" class="form-control" name="document_link" id="edit-document-link"></td>
+                                </tr>
+
+                                <!-- Bank Details -->
+                                <tr class="table-light"><th colspan="4">Bank Details</th></tr>
+                                <tr>
+                                    <th>Account Holder</th>
+                                    <td><input type="text" class="form-control" name="account_holder" id="edit-account-holder"></td>
+                                    <th>Account Number</th>
+                                    <td><input type="text" class="form-control" name="account_number" id="edit-account-number"></td>
+                                </tr>
+                                <tr>
+                                    <th>IFSC Code</th>
+                                    <td><input type="text" class="form-control" name="ifsc_code" id="edit-ifsc-code"></td>
+                                    <th>Branch</th>
+                                    <td><input type="text" class="form-control" name="branch" id="edit-branch"></td>
+                                </tr>
+
+                                <!-- Other Details -->
+                                <tr class="table-light"><th colspan="4">Other</th></tr>
+                                <tr>
+                                    <th>Profile Picture</th>
+                                    <td colspan="3"><input type="file" class="form-control" name="profile_picture" id="edit-profile-picture" accept="image/*"></td>
+                                </tr>
+                                <tr>
+                                    <th>Active</th>
+                                    <td colspan="3">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" name="is_active" id="edit-is-active">
+                                            <label class="form-check-label" for="edit-is-active">Is Active</label>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
 
                                     </div>
                                 </div>
@@ -742,11 +986,38 @@
 </div>
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        // calander
+        flatpickr(".flat-date", {
+        dateFormat: "Y-m-d",
+        allowInput: true,
+        altInput: true,
+        altFormat: "F j, Y", // Modern display format
+    });
+        // edit time view password
+        const editPasswordInput = document.getElementById("edit-password");
+    const toggleBtn = document.getElementById("toggle-edit-password");
+
+    toggleBtn.addEventListener("click", () => {
+        if (editPasswordInput.type === "password") {
+            editPasswordInput.type = "text";
+            toggleBtn.querySelector("i").className = "bx bx-hide";
+        } else {
+            editPasswordInput.type = "password";
+            toggleBtn.querySelector("i").className = "bx bx-show";
+        }
+    });
+
         // view password
         const togglePassword = document.getElementById("toggle-password");
         const passwordField = document.getElementById("password-field");
+        
         const toggleIcon = document.getElementById("toggle-icon");
 
         togglePassword.addEventListener("click", function () {
@@ -882,48 +1153,105 @@
             });
         });
 
-        $(document).on("click", ".edit-user", function (e) {
-            e.preventDefault();
+            $(document).on("click", ".edit-user", function (e) {
+                e.preventDefault();
 
-            const userId = $(this).data("user-id");
+                const userId = $(this).data("user-id");
 
-            $.ajax({
-                url: `/get_user/${userId}/`,
-                type: "GET",
-                success: function (res) {
-                    $("#edit-user-id").val(res.id);
-                    $("#edit-first-name").val(res.first_name);
-                    $("#edit-last-name").val(res.last_name);
-                    $("#edit-username").val(res.username);
-                    $("#edit-email").val(res.email);
-                    $("#edit-phone").val(res.phone);
-                    $("#edit-password").val(""); // keep empty unless changing
-                    $("#edit-salary").val(res.salary);
-                    $("#edit-joining-date").val(res.joining_date);
-                    $("#edit-last-date").val(res.last_date);
-                    $("#edit-birth-date").val(res.birth_date);
-                    $("#edit-marital-status").val(res.marital_status);
-                    $("#edit-address").val(res.address);
-                    $("#edit-document-link").val(res.document_link);
+                $.ajax({
+                    url: `/get_user/${userId}/`,
+                    type: "GET",
+                    success: function (res) {
+                        // Basic Info
+            $("#edit-user-id").val(res.id);
+            $("#edit-first-name").val(res.first_name);
+            $("#edit-last-name").val(res.last_name);
+            $("#edit-username").val(res.username);
+            $("#edit-email").val(res.email);
+            $("#edit-phone").val(res.phone);
+            $("#edit-password").val(res.password); // keep empty unless changing
 
-    let designationIds = res.designations.map(d => d.id);
-    $("#edit-designations").val(designationIds).trigger("change");
-
-
-
-                    $("#edit-is-active").prop("checked", res.is_active);
-
-                    // Open modal
-                    let modal = new bootstrap.Modal(document.getElementById("editUserModal"));
-
-                    modal.show();
-                },
-                error: function () {
-                    showToast("Failed to fetch user details.", "danger");
-                    
-                }
+            // Personal Details
+            $("#edit-gender").val(res.gender);
+           // Assuming flatpickr instance
+            const editBirthDate = flatpickr("#edit-birth-date", {
+                dateFormat: "Y-m-d",
+                allowInput: true,
+                altInput: true,
+                altFormat: "F j, Y",
             });
-        });
+
+            // Later, when fetching data:
+            editBirthDate.setDate(res.birth_date, true); 
+            $("#edit-marital-status").val(res.marital_status);
+
+            // Job Details
+            $("#edit-employee-type").val(res.employee_type);
+            $("#edit-salary").val(res.salary);
+            // $("#edit-joining-date").val(res.joining_date);
+            const editJoiningDate = flatpickr("#edit-joining-date", {
+                dateFormat: "Y-m-d",
+                allowInput: true,
+                altInput: true,
+                altFormat: "F j, Y",
+            });
+
+            // Later, when fetching data:
+            editJoiningDate.setDate(res.joining_date, true); 
+            // $("#edit-last-date").val(res.last_date);
+            const editLastDate = flatpickr("#edit-last-date", {
+                dateFormat: "Y-m-d",
+                allowInput: true,
+                altInput: true,
+                altFormat: "F j, Y",
+            });
+
+            // Later, when fetching data:
+            editLastDate.setDate(res.last_date, true); 
+            // Multi-select fields
+            let designationIds = res.designations.map(d => d.id);
+            $("#edit-designations").val(designationIds).trigger("change");
+
+            let technologyIds = res.technologies.map(t => t.id);
+            $("#edit-technologies").val(technologyIds).trigger("change");
+
+            // Contact Details
+            $("#edit-current-address").val(res.current_address);
+            $("#edit-permanent-address").val(res.permanent_address);
+            $("#edit-document-link").val(res.document_link);
+
+            // Bank Details
+            $("#edit-account-holder").val(res.account_holder);
+            $("#edit-account-number").val(res.account_number);
+            $("#edit-ifsc-code").val(res.ifsc_code);
+            $("#edit-branch").val(res.branch);
+
+            // Active status
+            $("#edit-is-active").prop("checked", res.is_active);
+
+            // Profile picture preview (optional)
+            if (res.profile_picture_url) {
+                $("#edit-profile-picture").next(".profile-preview").remove(); // remove previous preview
+                $("#edit-profile-picture").after(`
+                    <div class="mt-2 profile-preview">
+                        <a href="${res.profile_picture_url}" target="_blank">
+                            <img src="${res.profile_picture_url}" class="img-thumbnail rounded" style="max-width:80px; max-height:80px;">
+                        </a>
+                    </div>
+                `);
+            } else {
+                $("#edit-profile-picture").next(".profile-preview").remove();
+            }
+
+            // Open modal
+            let modal = new bootstrap.Modal(document.getElementById("editUserModal"));
+            modal.show();
+        },
+        error: function () {
+            showToast("Failed to fetch user details.", "danger");
+        }
+                });
+            });
 
 
 

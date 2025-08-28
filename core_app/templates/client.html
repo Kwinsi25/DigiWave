@@ -65,6 +65,7 @@
 
         <div class="table-responsive text-nowrap scrollable-table-body">
           <table class="table">
+          <table class="table" id="clientsTable">
             <thead>
               <tr>
                 <th>Sr No.</th>
@@ -96,6 +97,10 @@
                   <a href="#" class="text-danger delete-client" data-client-id="{{ client.id }}"><i
                       class="bx bx-trash"></i></a>
                 </td>
+              </tr>
+              {% empty %}
+              <tr id="noClientRow">
+                  <td colspan="6" class="text-center">No client found.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -455,6 +460,44 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    // search
+   document.getElementById("searchBox").addEventListener("keyup", function () {
+  let query = this.value.toLowerCase();
+  let rows = document.querySelectorAll("#clientsTable tbody tr");
+
+  rows.forEach(row => {
+    let text = row.innerText.toLowerCase();
+
+    if (query && text.includes(query)) {
+      row.style.display = "";
+
+      // highlight all td except last column (actions)
+      let cells = row.querySelectorAll("td");
+      cells.forEach((td, index) => {
+        if (index === cells.length - 1) return; // skip last column
+
+        let original = td.getAttribute("data-original") || td.innerText;
+        td.setAttribute("data-original", original); // keep safe copy
+        let regex = new RegExp(`(${query})`, "gi");
+        td.innerHTML = original.replace(regex, "<mark>$1</mark>");
+      });
+
+    } else if (!query) {
+      // reset everything
+      row.style.display = "";
+      let cells = row.querySelectorAll("td");
+      cells.forEach((td, index) => {
+        if (index === cells.length - 1) return; // skip last column
+        let original = td.getAttribute("data-original") || td.innerText;
+        td.innerHTML = original;
+      });
+    } else {
+      row.style.display = "none";
+    }
+  });
+});
+
+
     document.getElementById('recordsPerPage').addEventListener('change', function () {
       const form = document.getElementById('recordsForm');
       const hiddenPage = document.createElement('input');

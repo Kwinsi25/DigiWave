@@ -142,16 +142,17 @@
                                 <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
                                 <td>{{ q.quotation_no }}</td>
                                 <td>
-                                    <a href="#" data-bs-toggle="modal" data-bs-target="#viewQuotationModal"
-                                        class="fw-bold quotation-link" data-quotation-id="{{ q.id }}">
+                                    
                                         {{ q.company_name }}
-                                    </a>
+                                    
                                 </td>
                                 <td>{{ q.date }}</td>
                                 <td>{{ q.valid_until }}</td>
                                 <td>
-
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#viewQuotationModal"
+                                        class="fw-bold quotation-link" data-quotation-id="{{ q.id }}">
                                     {{ q.client_name }}
+                                    </a>
 
                                 </td>
 
@@ -174,6 +175,10 @@
 
 
                                 </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center">No quotation found.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -524,6 +529,7 @@
                                                 <th>Discount Type</th>
                                                 <td>
                                                     <select name="discount_type" class="form-select">
+                                                        <option value="none">None</option>
                                                         <option value="flat">Flat</option>
                                                         <option value="percent">Percent</option>
                                                     </select>
@@ -533,7 +539,7 @@
                                             </tr>
                                             <tr>
                                                 <th>Tax Rate (%)</th>
-                                                <td><input type="number" class="form-control" name="tax_rate" value="18">
+                                                <td><input type="number" class="form-control" name="tax_rate" value="0.00">
                                                 </td>
                                                 <th>Grand Total</th>
                                                 <td><input type="text" class="form-control" name="grand_total" readonly>
@@ -805,6 +811,7 @@
                                         <th>Discount Type</th>
                                         <td>
                                             <select id="discount_type" name="discount_type" class="form-select">
+                                                <option value="none">None</option>
                                                 <option value="flat">Flat</option>
                                                 <option value="percent">Percent</option>
                                             </select>
@@ -1483,7 +1490,7 @@
                     // --- 4. Summary ---
                     setText("view-sub-services", data.subtotal_services);
                     setText("view-sub-infra", data.subtotal_infra);
-                    setText("view-discount-type", data.discount_type);  // "Flat" or "Percent"
+                    setText("view-discount-type", data.discount_type);  
                     setText("view-discount-value", data.discount_value);
                     setText("view-tax-amount", data.tax_amount);
                     setText("view-grand-total", data.grand_total);

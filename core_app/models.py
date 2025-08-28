@@ -24,6 +24,15 @@ class User(models.Model):
         ("divorced", "Divorced"),
         ("widowed", "Widowed"),
     ]
+    EMPLOYEE_TYPE_CHOICES = [
+        ("fixed", "Fixed"),
+        ("salary", "Salary"),
+    ]
+    GENDER_CHOICES = [
+        ("male", "Male"),
+        ("female", "Female"),
+        ("other", "Other"),
+    ]
     first_name = models.CharField(
         max_length=50,
         blank=True,
@@ -58,6 +67,13 @@ class User(models.Model):
         )]
     )
     designations = models.ManyToManyField(Designation, blank=True, related_name="users")
+    technologies = models.ManyToManyField('Technology', blank=True, related_name="users")
+    employee_type = models.CharField(
+        max_length=10,
+        choices=EMPLOYEE_TYPE_CHOICES,
+        blank=True,
+        null=True
+    )
     salary = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -68,20 +84,32 @@ class User(models.Model):
     joining_date = models.DateField(blank=True, null=True)
     last_date = models.DateField(blank=True, null=True)
     birth_date = models.DateField(blank=True, null=True)
+    gender = models.CharField(
+        max_length=10,
+        choices=GENDER_CHOICES,
+        blank=True,
+        null=True
+    )
     marital_status = models.CharField(
         max_length=10,
         choices=MARITAL_STATUS_CHOICES,
         blank=True,
         null=True
     )
-    address = models.TextField(blank=True, null=True)
-
+    current_address = models.TextField(blank=True, null=True)
+    permanent_address = models.TextField(blank=True, null=True)
     document_link = models.URLField(
             max_length=500,
             blank=True,
             null=True,
             help_text="Paste a valid document link (e.g., Google Drive, Dropbox, etc.)"
         )
+
+    # Bank details
+    account_holder = models.CharField(max_length=100, blank=True, null=True)
+    account_number = models.CharField(max_length=30, blank=True, null=True)
+    ifsc_code = models.CharField(max_length=20, blank=True, null=True)
+    branch = models.CharField(max_length=100, blank=True, null=True)
 
 
     password = models.CharField(
@@ -161,6 +189,11 @@ class Project(models.Model):
         ('No', 'No'),
     ]
 
+    PROJECT_TYPE_CHOICES = [
+        ('Fixed', 'Fixed'),
+        ('Salary', 'Salary Based'),
+    ]
+
     project_id = models.CharField(max_length=10, unique=True, blank=True, null=True)
     quotation = models.ForeignKey(
         "Quotation",
@@ -169,6 +202,7 @@ class Project(models.Model):
         null=True,
     )
     project_name = models.CharField(max_length=255,  unique=True,blank=False, null=False)
+    project_type = models.CharField(max_length=20, choices=PROJECT_TYPE_CHOICES, default="Fixed")
     start_date = models.DateField(blank=True, null=True)
     technologies = models.ManyToManyField(Technology, blank=True)
     app_mode = models.ForeignKey(AppMode, on_delete=models.SET_NULL, blank=True, null=True)
@@ -498,11 +532,11 @@ class Quotation(models.Model):
     total_server_domain_charge = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
 
     # Summary fields
-    discount_type = models.CharField(max_length=10, choices=[('flat','Flat'),('percent','Percent')], default='flat')
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    discount_type = models.CharField(max_length=10, choices=[('none', 'None'),('flat','Flat'),('percent','Percent')], default='none')
     discount_value = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     after_discount_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=18.00)
-    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     grand_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
 
     #other
@@ -612,7 +646,9 @@ class Quotation(models.Model):
             safe_total(self.cloud_services) +
             safe_total(self.ai_ml_services)
         )
-
+        # calculate sub total which is addition of all above services (web,mobile,cloud, ai/ml)
+        subtotal = self.total_service_charge
+        
         # Calculate total server and domain charges
         def calc_total_list(field_list):
             if field_list and isinstance(field_list, list):
@@ -645,18 +681,24 @@ class Quotation(models.Model):
             safe_total_list(self.ssl_certificate) +
             safe_total_list(self.email_hosting)
         )
-        # Calculate after discount
-        subtotal = self.total_service_charge + self.total_server_domain_charge
-        if self.discount_type == 'flat':
-            self.after_discount_total = max(0, subtotal - self.discount_value)
-        else:  # percent
-            self.after_discount_total = max(0, subtotal - (subtotal * (self.discount_value / 100)))
+        
 
         # Calculate tax
-        self.tax_amount = self.after_discount_total * (self.tax_rate / 100)
+        if self.tax_rate > 0:
+            self.tax_amount = subtotal * (self.tax_rate / 100)
+        else:
+            self.tax_amount = subtotal
+        
+        # Calculate discount value
+        if self.discount_type == 'flat':
+            self.after_discount_total = self.discount_value
+        elif self.discount_type == "percent":
+            self.after_discount_total = self.tax_amount * (self.discount_value / 100)
+        else:  # 'none'
+            self.after_discount_total = Decimal(0)
 
         # Calculate grand total
-        self.grand_total = self.after_discount_total + self.tax_amount
+        self.grand_total = self.tax_amount - self.after_discount_total + safe_total_list(self.domain_registration) + safe_total_list(self.server_hosting) 
 
         super().save(*args, **kwargs)
 

@@ -439,8 +439,17 @@
 
                                     <tr>
                                         <th>Project Name</th>
-                                        <td colspan="3">
+                                        <td>
                                             <input type="text" class="form-control" name="project_name" placeholder="Enter project name" >
+                                            <div class="invalid-feedback"></div>
+                                        </td>
+                                        <th>Project Type</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="project_type" required>
+                                                <option value="">-- Select Project Type --</option>
+                                                <option value="Fixed">Fix</option>
+                                                <option value="Salary">Salary</option>
+                                            </select>
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
@@ -725,6 +734,11 @@
                                     <td id="pd-technologies"></td>
                                 </tr>
                                 <tr>
+                                    <th>Project Type</th>
+                                    <td id="pd-project-type" colspan="3"></td>
+                                </tr>
+
+                                <tr>
                                     <th>App Mode</th>
                                     <td id="pd-app-mode"></td>
                                     <th>Lead Source</th>
@@ -854,10 +868,19 @@
 
                                     <tr>
                                         <th>Project Name</th>
-                                        <td colspan="3">
+                                        <td>
                                             <input type="text" class="form-control" name="project_name"
                                                 id="edit-project-name" required>
                                         </td>
+                                        <th>Project Type</th>
+                                            <td>
+                                                <select class="form-select" name="project_type" id="edit-project-type">
+                                                    <option value="">-- Select Project Type --</option>
+                                                    <option value="Fixed">Fix</option>
+                                                    <option value="Salary">Salary</option>
+                                                </select>
+                                                <div class="invalid-feedback"></div>
+                                            </td>
                                     </tr>
                                     <tr>
                                         <th>Start Date</th>
@@ -1311,6 +1334,7 @@
                     $("#pd-project-id").text(p.project_id);
                     $("#pd-inquiry-date").text(p.inquiry_date);
                     $("#pd-project-name").text(p.project_name);
+                    $('#pd-project-type').text(p.project_type);
                     $("#pd-technologies").text(p.technologies.join(", ") || "-");
                     $("#pd-app-mode").text(p.app_mode || "-");
 
@@ -1462,6 +1486,7 @@
                     $("#edit-project-id").val(p.id);
                     // populate fields in edit modal
                     $("#edit-project-name").val(p.project_name);
+                    $("#edit-project-type").val(p.project_type);
                     $("#edit-start-date").val(p.start_date);
                     $("#edit-deadline").val(p.deadline);
                     $("#edit-status").val(p.status);

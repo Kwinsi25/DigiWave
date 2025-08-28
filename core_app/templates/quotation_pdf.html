@@ -1,0 +1,390 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quotation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jaldi:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Jaldi', sans-serif;
+      background: #fff;
+    }
+
+    /* HEADER */
+    .header {
+      background: #052455;
+      color: #fff;
+      position: relative;
+      padding: 20px 40px 80px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      clip-path: polygon(0 0, 100% 0, 100% 75%, 50% 100%, 0 75%);
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-area img {
+      height: 50px;
+      width: auto;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .logo-text h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .logo-text small {
+      font-size: 14px;
+      letter-spacing: 4px;
+    }
+
+    .company-address {
+      text-align: right;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    /* QUOTATION TITLE */
+    .quotation-title {
+      text-align: center;
+      margin: 40px 0 20px 0;
+    }
+
+    .quotation-title h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: bold;
+      color: #000;
+    }
+
+    .quotation-title small {
+      display: block;
+      margin-top: 4px;
+      font-size: 14px;
+      color: #444;
+    }
+
+    /* META INFO (Date, Due Date, To) */
+    .meta-info {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 40px 5px 40px; /* reduced bottom margin */
+  font-size: 14px;
+}
+.meta-info p {
+  margin: 0;  /* removes extra line gaps */
+}
+
+    .meta-info strong {
+      font-weight: 700;
+    }
+
+    .meta-left {
+      flex: 1;
+    }
+
+    .meta-right {
+      flex: 1;
+      text-align: right;
+    }
+
+    .meta-right p {
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    hr {
+      margin: 10px 40px;
+      border: none;
+      border-top: 1px solid #000;
+    }
+
+    /* CLIENT INFO */
+    .client-info {
+      margin: 20px 40px;
+      font-size: 14px;
+    }
+
+    .client-info strong {
+      font-size: 16px;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .client-info p {
+      margin: 2px 0;
+    }
+    table.quotation-table {
+  width: calc(100% - 80px); /* 40px margin left + right */
+  margin: 20px 40px;       /* same as other blocks */
+  border-collapse: collapse;
+  font-size: 14px;
+  font-family: 'Jaldi', sans-serif;
+}
+
+
+  table.quotation-table th {
+    background: #E6FAFA; /* light aqua background */
+    color: #000;
+    font-weight: 700;
+    padding: 10px;
+    text-align: left;
+  }
+
+  table.quotation-table th,
+  table.quotation-table td {
+    border: none;
+    padding: 10px;
+  }
+
+  table.quotation-table thead tr {
+    border-bottom: 3px solid #2CDBD9; /* teal bottom line */
+  }
+
+  table.quotation-table tbody tr {
+    background: #FAFAFA; /* row background */
+  }
+
+  table.quotation-table tbody tr:nth-child(even) {
+    background: #fff; /* alternate row */
+  }
+
+  table.quotation-table td {
+    padding: 10px;
+    vertical-align: top;
+  }
+
+  table.quotation-table .amount {
+    text-align: left;
+    font-weight: 600;
+  }
+  .summary-section {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 40px;
+  font-size: 14px;
+  gap: 40px;
+}
+
+.summary-left {
+  flex: 1;
+}
+
+.summary-left .section {
+  margin-bottom: 15px;
+}
+
+.summary-left strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 15px;
+}
+
+.summary-left ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.summary-right {
+  flex: 0.6;
+  text-align: right;
+}
+
+.summary-right p {
+  margin: 5px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.summary-right span {
+  min-width: 100px;
+  text-align: right;
+}
+
+.summary-right .total {
+  color: #2CDBD9;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.total{
+  background: #052455;
+  color: #fff;
+  padding: 8px 12px;
+  margin-top: 10px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+}
+
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo-area">
+      <img src="{% static 'img/digiwave_logo_crop.png' %}" alt="Company Logo">
+      <div class="logo-text">
+        <h1>DIGIWAVE</h1>
+        <small>TECHNOLOGIES</small>
+      </div>
+    </div>
+
+    <div class="company-address">
+      401 Medani Jain Hostel, Navjivan Press Road,<br>
+      Income Tax Cross Road, Ahmedabad, Gujarat, India - 380009
+    </div>
+  </header>
+
+  <!-- QUOTATION TITLE -->
+  <div class="quotation-title">
+    <h2>QUOTATION</h2>
+    <small>{{ quotation.quotation_no }}</small>
+  </div>
+
+  <!-- META INFO -->
+<!-- META INFO -->
+<div class="meta-info">
+  <div class="meta-left">
+    <p><strong>Date:</strong> {{ quotation.date|date:"d M, Y" }}</p>
+  </div>
+</div>
+
+<div class="meta-info">
+  <div class="meta-left">
+    <p><strong>Due Date:</strong> {{ quotation.valid_until|date:"d M, Y" }}</p>
+  </div>
+  <div class="meta-right" style="align-self: center;">
+    <p><strong>To:</strong></p>
+  </div>
+</div>
+<hr>
+
+
+<!-- CLIENT INFO (aligned right) -->
+<div class="client-info" style="text-align:right; margin: 20px 40px; font-size:14px;">
+  <strong>{{ quotation.client_name }}</strong>
+  <p>{{ quotation.client_address }}</p>
+</div>
+
+<table class="quotation-table">
+  <thead>
+        <tr>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Unit Price</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in all_items %}
+        <tr>
+            <td>{{ item.category }}</td>
+            <td>{{ item.description }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.unit_price }}</td>
+            <td>{{ item.total }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No services added.</td></tr>
+        {% endfor %}
+    </tbody>
+ 
+</table>
+<!-- AFTER TABLE SECTION -->
+<div class="summary-section">
+  <!-- LEFT SIDE -->
+  <div class="summary-left">
+    <!-- Payment Terms -->
+    {% if quotation.payment_terms %}
+    <div class="section">
+      <strong>Payment Terms & Conditions:</strong>
+      <ul>
+        {% for term in quotation.payment_terms.splitlines %}
+          <li>{{ term }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- Additional Notes -->
+    {% if quotation.additional_notes %}
+    <div class="section">
+      <strong>Notes:</strong>
+      <ul>
+        {% for note in quotation.additional_notes.splitlines %}
+          <li>{{ note }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- RIGHT SIDE -->
+  <div class="summary-right">
+    <p><strong>Subtotal:</strong> <span>{{ subtotals }}</span></p>
+  {% if tax_rate != "-" %}
+    <p><strong>Tax ({{ tax_rate }}%):</strong> <span>{{ tax_amount }}</span></p>
+  {% else %}
+    <p><strong>Tax:</strong> <span>-</span></p>
+  {% endif %}
+  <p><strong>Server Charge:</strong> <span>({{ server_duration }}) {{ server_total }}</span></p>
+  <p><strong>Domain Charge:</strong> <span>({{ domain_duration }}) {{ domain_total }}</span></p>
+  {% if discount_display != "-" %}
+  <p>
+    <strong>Discount ({{ discount_display }}):</strong>
+    <span>{{ after_discount_total }}</span>
+  </p>
+{% else %}
+  <p><strong>Discount:</strong> <span>-</span></p>
+{% endif %}
+
+
+
+  <p class="total"><strong>Grand Total:</strong> <span>₹{{ grand_total }}</span></p>
+
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer" style="margin-top: 50px; padding: 20px 40px; font-size: 14px; display: flex; justify-content: space-between; background: #fff;">
+
+  <!-- LEFT SIDE: Bank Details -->
+  <div class="footer-left" style="line-height: 1.5;">
+    <p><strong>Account Holder:</strong> DOSHI NAMAN PRAKASHBHAI</p>
+    <p><strong>Account Number:</strong> 50100463075872</p>
+    <p><strong>IFSC:</strong> HDFC0004227</p>
+    <p><strong>Branch:</strong> JALARAM MANDIR PALDI</p>
+  </div>
+
+  <!-- RIGHT SIDE: CEO Contact -->
+  <div class="footer-right" style="text-align: right; line-height: 1.5;">
+    <p><strong>CEO Naman Doshi</strong></p>
+    <p>hello.digiwave@gmail.com</p>
+    <p>+91 9624185617</p>
+    <img src="{% static 'img/qr_code.png' %}" alt="QR Code" style="height: 70px; width: 70px; margin-top: 5px;">
+  </div>
+
+</div>
+
+</body>
+</html>
