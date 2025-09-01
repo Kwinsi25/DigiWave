@@ -74,7 +74,12 @@ class User(models.Model):
         blank=True,
         null=True
     )
-    salary = models.DecimalField(
+    fixed_employee_details = models.JSONField(
+        blank=True,
+        null=True,
+        help_text="Stores amount, date, description for fixed employees in JSON format"
+    )
+    amount = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         validators=[MinValueValidator(0)],
@@ -380,15 +385,12 @@ class HostData(models.Model):
     ]
 
     project = models.ManyToManyField(Project, related_name='host_data',blank=True)
-    company_name = models.CharField(max_length=255, blank=True, null=True)
     hosting_provider = models.CharField(max_length=255, blank=True, null=True)
     server_name = models.CharField(max_length=255, blank=True, null=True)  # New
     server_type = models.CharField(max_length=50, blank=True, null=True)
     plan_package = models.CharField(max_length=100, blank=True, null=True)
     server_ip = models.GenericIPAddressField(blank=True, null=True, unique=True)
-    location = models.CharField(max_length=255, blank=True, null=True)  # New
     operating_system = models.CharField(max_length=100, blank=True, null=True)  # New
-    control_panel = models.CharField(max_length=50, blank=True, null=True)
     login_url = models.URLField(blank=True, null=True)
     username = models.CharField(max_length=100, blank=True, null=True)
     password = models.CharField(max_length=255, blank=True, null=True)
@@ -400,12 +402,10 @@ class HostData(models.Model):
     purchase_date = models.DateField(blank=True, null=True)
     expiry_date = models.DateField(blank=True, null=True)
     server_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    uptime = models.CharField(max_length=50, blank=True, null=True)  # New
-    cpu_usage = models.CharField(max_length=50, blank=True, null=True)  # New
-    memory_usage = models.CharField(max_length=50, blank=True, null=True)  # New
-    disk_space = models.CharField(max_length=50, blank=True, null=True)  # New
-    backup_status = models.CharField(max_length=50, blank=True, null=True)  # New
-    linked_services = models.TextField(blank=True, null=True)  # New
+    memory = models.CharField(max_length=50, blank=True, null=True)  
+    RAM = models.CharField(max_length=50, blank=True, null=True)  
+    backup_status = models.CharField(max_length=50, blank=True, null=True)  
+    linked_services = models.TextField(blank=True, null=True)  
     status = models.CharField(max_length=20, choices=HOST_STATUS_CHOICES, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
 
@@ -437,21 +437,59 @@ class HostData(models.Model):
 # Domain model
 # -----------------------------
 class Domain(models.Model):
+    PAYMENT_METHOD_CHOICES = [
+        ('Bank Transfer', 'Bank Transfer'),
+        ('UPI', 'UPI'),
+        ('Cash', 'Cash'),
+        ('Cheque', 'Cheque'),
+        ('Other', 'Other'),
+    ]
+
+    PAYMENT_MODE_CHOICES = [
+        ('Client', 'Client'),
+        ('Company', 'Company'),
+    ]
+
+    AUTO_RENEWAL_CHOICES = [
+        ('On','On'),
+        ('Off','Off')
+    ]
     project = models.ManyToManyField(Project, related_name='domains',blank=True)
     domain_name = models.CharField(max_length=255, blank=True, null=True)
+    
+    sub_domain1 = models.CharField(max_length=255, blank=True, null=True)
+    sub_domain2 = models.CharField(max_length=255, blank=True, null=True)
+
     purchase_date = models.DateField(blank=True, null=True)
     expiry_date = models.DateField(blank=True, null=True)
     left_days = models.PositiveIntegerField(blank=True, null=True)
+    auto_renewal = models.CharField(max_length=50, choices=AUTO_RENEWAL_CHOICES, blank=True, null=True)
+
     registrar = models.CharField(max_length=255, blank=True, null=True)
     renewal_status = models.CharField(max_length=50, blank=True, null=True)
+    
     dns_configured = models.BooleanField(default=False)
     nameservers = models.TextField(blank=True, null=True)
+
     ssl_installed = models.BooleanField(default=False)
     ssl_expiry = models.DateField(blank=True, null=True)
+    
     credentials_user = models.CharField(max_length=255, blank=True, null=True)
     credentials_pass = models.CharField(max_length=255, blank=True, null=True)
+    
     linked_services = models.TextField(blank=True, null=True)
     
+    # Payment-related
+    domain_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text="Charge in INR")
+    client_payment_status = models.CharField(
+        max_length=20,
+        choices=[("Received", "Received"), ("Pending", "Pending")],
+        default="Pending"
+    )
+    payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True)
+    payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODE_CHOICES, default="Client")
+    payment_details = models.JSONField(blank=True, null=True)
+
     notes = models.TextField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -474,6 +512,24 @@ class Domain(models.Model):
         # Cost-related validation example
         if self.ssl_expiry and self.expiry_date and self.ssl_expiry > self.expiry_date:
             errors["ssl_expiry"] = "SSL expiry cannot be after domain expiry."
+
+         # Validate payment details based on method
+        if self.payment_method:
+            details = self.payment_details or {}
+
+            if self.payment_method == "Bank Transfer":
+                required_fields = ["bank_name", "account_no", "ifsc_code"]
+            elif self.payment_method == "UPI":
+                required_fields = ["upi_id"]
+            elif self.payment_method == "Cheque":
+                required_fields = ["cheque_no", "cheque_name"]
+            else:
+                required_fields = []
+
+            for field in required_fields:
+                if field not in details or not details[field]:
+                    errors["payment_details"] = f"'{field}' is required for {self.payment_method}."
+
 
         if errors:
             raise ValidationError(errors)

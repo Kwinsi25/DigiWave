@@ -148,9 +148,9 @@
             <thead>
               <tr>
                 <th>Sr No.</th>
+                <th>Domain Name</th>
                 <th>Project ID</th>
                 <th>Project Name</th>
-                <th>Domain Name</th>
                 <th>Purchase Date</th>
                 <th>Expiry Date</th>
                 <th>Left Days</th>
@@ -163,7 +163,9 @@
               {% for domain in page_obj %}
               <tr>
                 <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
-
+                <td>
+                  <a href="#" class="fw-bold domain-link" data-domain-id="{{ domain.id }}">{{ domain.domain_name }}</a>
+                </td>
                 <!-- Projects -->
                 <td>
                   {% if domain.project.exists %}
@@ -179,16 +181,13 @@
                 <td>
                   {% if domain.project.exists %}
                   {% for p in domain.project.all %}
-                  <a href="#" class="fw-bold domain-link" data-domain-id="{{ domain.id }}">
+                  
                     {{ p.project_name }}
-                  </a><br>
+                  <br>
                   {% endfor %}
                   {% else %}
                   <span class="text-muted">No Project</span>
                   {% endif %}
-                </td>
-                <td>
-                  <a href="#">{{ domain.domain_name }}</a>
                 </td>
                 <td>{{ domain.purchase_date|date:"Y-m-d" }}</td>
                 <td>{{ domain.expiry_date|date:"Y-m-d" }}</td>
@@ -223,8 +222,101 @@
 
           {% block extra_js %}
           <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+          <!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
           <script>
+            // Reusable Flatpickr with Year Dropdown (no arrows)
+function initFlatpickrWithYearDropdown(selector, defaultDate = null) {
+    const fp = flatpickr(selector, {
+        dateFormat: "Y-m-d",
+        allowInput: true,
+        altInput: true,
+        altFormat: "F j, Y",
+        monthSelectorType: "dropdown",
+        onReady: function(selectedDates, dateStr, instance) {
+            const yearSelect = document.createElement("select");
+            yearSelect.classList.add("flatpickr-year-dropdown");
+
+            // Generate year options (1900 → 2099)
+            for (let y = 1900; y <= 2099; y++) {
+                let opt = document.createElement("option");
+                opt.value = y;
+                opt.textContent = y;
+                if (y === instance.currentYear) opt.selected = true;
+                yearSelect.appendChild(opt);
+            }
+
+            // Replace year input with dropdown
+            const yearInput = instance.currentYearElement;
+            yearInput.parentNode.replaceChild(yearSelect, yearInput);
+
+            // Remove arrows ↑ ↓
+            const container = yearSelect.parentNode;
+            const upBtn = container.querySelector(".arrowUp");
+            const downBtn = container.querySelector(".arrowDown");
+            if (upBtn) upBtn.remove();
+            if (downBtn) downBtn.remove();
+
+            // Update Flatpickr on change
+            yearSelect.addEventListener("change", function () {
+                instance.changeYear(parseInt(this.value));
+            });
+        }
+    });
+
+    if (defaultDate) {
+        fp.setDate(defaultDate, true);
+    }
+
+    return fp;
+}
+
             document.addEventListener("DOMContentLoaded", function () {
+              // CALANDER
+              flatpickr(".flat-date", {
+    dateFormat: "Y-m-d",
+    allowInput: true,
+    altInput: true,
+    altFormat: "F j, Y",
+    monthSelectorType: "dropdown",   // ✅ Month dropdown
+    onReady: function(selectedDates, dateStr, instance) {
+        const yearSelect = document.createElement("select");
+        yearSelect.classList.add("flatpickr-year-dropdown");
+
+        // Generate year options (1900 → 2099)
+        for (let y = 1900; y <= 2099; y++) {
+            let opt = document.createElement("option");
+            opt.value = y;
+            opt.textContent = y;
+            if (y === instance.currentYear) opt.selected = true;
+            yearSelect.appendChild(opt);
+        }
+
+        // Replace year input with dropdown
+        const yearInput = instance.currentYearElement;
+        yearInput.parentNode.replaceChild(yearSelect, yearInput);
+
+        // Remove ↑ ↓ buttons
+        if (instance.yearElements) {
+            instance.yearElements.forEach(el => el.style.display = "none");
+        }
+        const container = yearSelect.parentNode;
+        const upBtn = container.querySelector(".arrowUp");
+        const downBtn = container.querySelector(".arrowDown");
+        if (upBtn) upBtn.remove();
+        if (downBtn) downBtn.remove();
+
+        // Update Flatpickr when year changes
+        yearSelect.addEventListener("change", function () {
+            instance.changeYear(parseInt(this.value));
+        });
+    }
+});
+
+
               const toasts = document.querySelectorAll('#toast-container .toast');
               toasts.forEach(function (toast) {
                 setTimeout(() => {
@@ -235,7 +327,15 @@
                 }, 3000); // Auto-hide after 3 seconds
               });
             });
-
+            function formatDate(dateStr) {
+    if (!dateStr) return "-"; // show dash if null
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-GB", {  // "01 Sep 2025"
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
+}
             $(document).ready(function () {
               const domainDetailsUrl = "{% url 'get_domain_details' %}";
 
@@ -256,8 +356,8 @@
 
                   $("#dd-domain-name").text(d.domain_name || '-');
                   $("#dd-registrar").text(d.registrar || '-');
-                  $("#dd-purchase-date").text(d.purchase_date || '-');
-                  $("#dd-expiry-date").text(d.expiry_date || '-');
+                  document.getElementById("dd-purchase-date").innerText = formatDate(d.purchase_date);
+                  document.getElementById("dd-expiry-date").innerText   = formatDate(d.expiry_date);
 
                   $("#dd-renewal-status")
                     .removeClass()
@@ -279,13 +379,74 @@
                     .addClass('badge ' + (d.ssl_installed ? 'bg-label-success' : 'bg-label-danger'))
                     .text(d.ssl_installed ? 'Yes' : 'No');
 
-                  $("#dd-ssl-expiry").text(d.ssl_expiry || '-');
+                  document.getElementById("dd-ssl-expiry").innerText    = formatDate(d.ssl_expiry);
                   $("#dd-credentials").html(
                     `<strong>User:</strong> ${d.credentials_user || '-'}<br>
              <strong>Pass:</strong> ${d.credentials_pass || '-'}`
                   );
                   $("#dd-linked-services").text(d.linked_services || '-');
                   $("#dd-notes").text(d.notes || '-');
+                  $("#dd-sub-domain1").text(d.sub_domain1 || "-");
+$("#dd-sub-domain2").text(d.sub_domain2 || "-");
+$("#dd-domain-charge").text(d.domain_charge );
+$("#dd-auto-renewal")
+  .removeClass()
+  .addClass('badge ' + (d.auto_renewal ? 'bg-label-success' : 'bg-label-danger'))
+  .text(d.auto_renewal ? "On" : "Off");
+
+$("#dd-payment-status")
+  .removeClass()
+  .addClass('badge ' +
+    (d.client_payment_status === "Paid" ? 'bg-label-success' :
+     d.client_payment_status === "Pending" ? 'bg-label-warning' : 'bg-label-danger'))
+  .text(d.client_payment_status || "-");
+
+$("#dd-payment-method").text(d.payment_method || "-");
+$("#dd-payment-mode").text(d.payment_mode || "-");
+
+// Pretty print JSON payment details
+// Render payment details based on method
+let paymentHtml = "-";
+
+if (d.payment_details) {
+  const details = d.payment_details;   // <-- already an object, no need to JSON.parse
+
+  if (d.payment_method === "Bank Transfer") {
+    paymentHtml = `
+      <table class="table table-sm table-bordered mb-0">
+        <tr><th>Bank Name</th><td>${details.bank_name || "-"}</td></tr>
+        <tr><th>Account No</th><td>${details.account_no || "-"}</td></tr>
+        <tr><th>IFSC Code</th><td>${details.ifsc_code || "-"}</td></tr>
+      </table>
+    `;
+  } else if (d.payment_method === "UPI") {
+    paymentHtml = `
+      <table class="table table-sm table-bordered mb-0">
+        <tr><th>UPI ID</th><td>${details.upi_id || "-"}</td></tr>
+      </table>
+    `;
+  } else if (d.payment_method === "Cheque") {
+    paymentHtml = `
+      <table class="table table-sm table-bordered mb-0">
+        <tr><th>Cheque No</th><td>${details.cheque_no || "-"}</td></tr>
+        <tr><th>Cheque Name</th><td>${details.cheque_name || "-"}</td></tr>
+      </table>
+    `;
+  } else if (d.payment_method === "Other") {
+    paymentHtml = `
+      <table class="table table-sm table-bordered mb-0">
+        <tr><th>Description</th><td>${details.description || "-"}</td></tr>
+      </table>
+    `;
+  } else if (d.payment_method === "Cash") {
+    paymentHtml = `<span class="badge bg-success">Cash Payment</span>`;
+  } else {
+    paymentHtml = `<pre>${JSON.stringify(details, null, 2)}</pre>`;
+  }
+}
+
+$("#dd-payment-details").html(paymentHtml);
+
 
                   $("#domainDetailsModal").modal("show");
                 });
@@ -303,24 +464,52 @@
 
                   $("#editDomainForm").attr("action", `/update_domain/${domainId}/`);
                   $("#edit-domain-name").val(d.domain_name || '');
-                  $("#edit-registrar").val(d.registrar || '');
-                  $("#edit-purchase-date").val(d.purchase_date || '');
-                  $("#edit-expiry-date").val(d.expiry_date || '');
-                  $("#edit-renewal-status").val(d.renewal_status || '');
-                  $("#edit-dns-configured").prop('checked', d.dns_configured);
-                  $("#edit-nameservers").val(d.nameservers || '');
-                  $("#edit-ssl-installed").prop('checked', d.ssl_installed);
-                  $("#edit-ssl-expiry").val(d.ssl_expiry || '');
-                  $("#edit-credentials-user").val(d.credentials_user || '');
-                  $("#edit-credentials-pass").val(d.credentials_pass || '');
-                  $("#edit-linked-services").val(d.linked_services || '');
-                  $("#edit-notes").val(d.notes || '');
-                  $("#edit-projects option").prop("selected", false);
-                  if (d.projects && d.projects.length > 0) {
-                    d.projects.forEach(p => {
-                      $(`#edit-projects option[value='${p.id}']`).prop("selected", true);
-                    });
-                  }
+      $("#edit-subdomain1").val(d.sub_domain1 || '');
+      $("#edit-subdomain2").val(d.sub_domain2 || '');
+      $("#edit-registrar").val(d.registrar || '');
+      const editPurchaseDate = initFlatpickrWithYearDropdown("#edit-purchase-date", d.purchase_date);
+      const editExpiryDate   = initFlatpickrWithYearDropdown("#edit-expiry-date", d.expiry_date);
+      $("#edit-renewal-status").val(d.renewal_status || '');
+      $("#edit-auto-renewal").val(d.auto_renewal || 'Off');
+      $("#edit-domain-charge").val(d.domain_charge || '');
+      $("#edit-dns-configured").prop('checked', d.dns_configured);
+      $("#edit-nameservers").val(d.nameservers || '');
+      $("#edit-ssl-installed").prop('checked', d.ssl_installed);
+      const editsslExpiryDate = initFlatpickrWithYearDropdown("#edit-ssl-expiry", d.ssl_expiry);
+      $("#edit-credentials-user").val(d.credentials_user || '');
+      $("#edit-credentials-pass").val(d.credentials_pass || '');
+      $("#edit-linked-services").val(d.linked_services || '');
+      $("#edit-client-payment-status").val(d.client_payment_status || 'Pending');
+      $("#edit-payment-mode").val(d.payment_mode || 'Client');
+      $("#edit-payment-method").val(d.payment_method || '');
+      $("#edit-notes").val(d.notes || '');
+
+      // Projects multi-select
+      $("#edit-projects option").prop("selected", false);
+      if (d.projects && d.projects.length > 0) {
+        d.projects.forEach(p => {
+          $(`#edit-projects option[value='${p.id}']`).prop("selected", true);
+        });
+      }
+
+      // Show dynamic payment fields
+      $(".edit-payment-extra").addClass("d-none");
+      if (d.payment_method === "Bank Transfer") {
+        $("#edit-bank-name").val(d.payment_details?.bank_name || '');
+        $("#edit-account-no").val(d.payment_details?.account_no || '');
+        $("#edit-ifsc-code").val(d.payment_details?.ifsc_code || '');
+        $("#edit-bank-fields").removeClass("d-none");
+      } else if (d.payment_method === "UPI") {
+        $("#edit-upi-id").val(d.payment_details?.upi_id || '');
+        $("#edit-upi-fields").removeClass("d-none");
+      } else if (d.payment_method === "Cheque") {
+        $("#edit-cheque-no").val(d.payment_details?.cheque_no || '');
+        $("#edit-cheque-name").val(d.payment_details?.cheque_name || '');
+        $("#edit-cheque-fields").removeClass("d-none");
+      } else if (d.payment_method === "Other") {
+        $("#edit-other-details").val(d.payment_details?.description || '');
+        $("#edit-other-fields").removeClass("d-none");
+      }
                   $("#editDomainModal").modal("show");
                 });
               });
@@ -443,57 +632,80 @@
 
       </div>
 
-      <!--/ All Projects Table -->
-
     </div>
-    <!-- /Content -->
 
-    <div class="content-backdrop fade"></div>
   </div>
-  <!-- Content wrapper -->
 
 </div>
-<!-- Layout page -->
+
 </div>
-<!-- Layout container -->
+
 </div>
-<!-- Layout wrapper -->
-<!-- domain Details Modal -->
+
+<!-- Domain Details Modal -->
 <div class="modal fade" id="domainDetailsModal" tabindex="-1" aria-labelledby="domainDetailsModalLabel"
   aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+  <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header table-primary text-white">
-        <h5 class="modal-title" id="domainDetailsModalLabel">
-
-        </h5>
+        <h5 class="modal-title" id="domainDetailsModalLabel">Domain Details</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body px-4 py-3">
         <div class="table-responsive">
           <table class="table table-bordered table-striped align-middle">
             <tbody>
+              <!-- Domain & Subdomains -->
               <tr>
                 <th>Domain Name</th>
-                <td colspan="3" id="dd-domain-name"></td>
+                <td id="dd-domain-name" colspan="3"></td>
               </tr>
               <tr>
-                <th>Registrar</th>
-                <td id="dd-registrar"></td>
+                <th>Sub Domain 1</th>
+                <td id="dd-sub-domain1"></td>
+                <th>Sub Domain 2</th>
+                <td id="dd-sub-domain2"></td>
+              </tr>
+              <tr>
+              <th>Registrar</th>
+              <td id="dd-registrar" colspan="3"></td>
+              </tr>
+              <!-- Dates & Renewal -->
+              <tr>
                 <th>Purchase Date</th>
                 <td id="dd-purchase-date"></td>
-              </tr>
-              <tr>
                 <th>Expiry Date</th>
                 <td id="dd-expiry-date"></td>
-                <th>Renewal Status</th>
-                <td><span id="dd-renewal-status" class="badge"></span></td>
               </tr>
               <tr>
-                <th>DNS Configured</th>
-                <td><span id="dd-dns-configured" class="badge"></span></td>
-                <th>Nameservers</th>
-                <td id="dd-nameservers"></td>
+                <th>Renewal Status</th>
+                <td><span id="dd-renewal-status" class="badge"></span></td>
+                <th>Auto Renewal</th>
+                <td><span id="dd-auto-renewal" class="badge"></span></td>
+              </tr>
+
+              <!-- Charges & Payment -->
+              <tr>
+                <th>Domain Charge (INR)</th>
+                <td id="dd-domain-charge"></td>
+                <th>Payment Status</th>
+                <td><span id="dd-payment-status" class="badge"></span></td>
+              </tr>
+              <tr>
+                <th>Payment Method</th>
+                <td id="dd-payment-method"></td>
+                <th>Payment Mode</th>
+                <td id="dd-payment-mode"></td>
+              </tr>
+              <tr>
+                <th>Payment Details</th>
+                <td colspan="3" id="dd-payment-details"></td>
+              </tr>
+
+              <!-- Credentials & Security -->
+              <tr>
+                <th>Credentials</th>
+                <td colspan="3" id="dd-credentials"></td>
               </tr>
               <tr>
                 <th>SSL Installed</th>
@@ -502,9 +714,13 @@
                 <td id="dd-ssl-expiry"></td>
               </tr>
               <tr>
-                <th>Credentials</th>
-                <td colspan="3" id="dd-credentials"></td>
+                <th>DNS Configured</th>
+                <td><span id="dd-dns-configured" class="badge"></span></td>
+                <th>Nameservers</th>
+                <td id="dd-nameservers"></td>
               </tr>
+
+              <!-- Linked Services & Notes -->
               <tr>
                 <th>Linked Services</th>
                 <td colspan="3" id="dd-linked-services"></td>
@@ -513,15 +729,14 @@
                 <th>Notes</th>
                 <td colspan="3" id="dd-notes"></td>
               </tr>
-
             </tbody>
           </table>
-
         </div>
       </div>
     </div>
   </div>
 </div>
+
 
 
 <!-- Add Domain Data Modal -->
@@ -542,36 +757,174 @@
           <div class="table-responsive">
             <table class="table table-bordered align-middle">
               <tbody>
+                  <tr>
+                  <th>Associated Projects</th>
+                  <td colspan="3">
+                    <select class="form-select" name="projects" multiple>
+                      {% for project in projects %}
+                      <option value="{{ project.id }}">{{ project.project_name }}</option>
+                      {% endfor %}
+                    </select>
+                    <small class="text-muted">Hold CTRL (Windows) or ⌘ (Mac) to select multiple projects. Leave empty if
+                      not linked to any project.</small>
+                  </td>
+                </tr>
+
                 <tr>
                   <th>Domain Name</th>
                   <td colspan="3">
-                    <input type="text" class="form-control" name="domainName" required>
+                    <input type="text" class="form-control" name="domainName" placeholder="Enter domain name">
+                  </td>
+                </tr>
+                <tr>
+                  <th>Sub Domain 1</th>
+                  <td>
+                    <input type="text" class="form-control" name="subDomain1" placeholder="e.g. blog.example.com">
+                  </td>
+                  <th>Sub Domain 2</th>
+                  <td>
+                    <input type="text" class="form-control" name="subDomain2" placeholder="e.g. shop.example.com">
                   </td>
                 </tr>
                 <tr>
                   <th>Registrar</th>
-                  <td>
-                    <input type="text" class="form-control" name="registrar" required>
-                  </td>
-                  <th>Purchase Date</th>
-                  <td>
-                    <input type="date" class="form-control" name="purchaseDate" required>
+                  <td colspan="3">
+                    <input type="text" class="form-control" name="registrar" placeholder="Enter registrar detail">
                   </td>
                 </tr>
+
+
                 <tr>
+                  <th>Purchase Date</th>
+                  <td>
+                    <!-- <input type="date" class="form-control" name="purchaseDate" required> -->
+                     <input type="text" class="form-control flat-date" name="purchaseDate" placeholder="Select purchase date">
+                  </td>
                   <th>Expiry Date</th>
                   <td>
-                    <input type="date" class="form-control" name="expiryDate" required>
+                    <!-- <input type="date" class="form-control" name="expiryDate" required> -->
+                     <input type="text" class="form-control flat-date" name="expiryDate" placeholder="Select expiry date">
                   </td>
+                </tr>
+
+
+                <tr>
                   <th>Renewal Status</th>
                   <td>
-                    <select class="form-select" name="renewalStatus" required>
+                    <select class="form-select" name="renewalStatus">
+                      <option value="">-- Select Renewal Status --</option>
                       <option value="Active">Active</option>
                       <option value="Expired">Expired</option>
                       <option value="Pending">Pending</option>
                     </select>
                   </td>
+                  <th>Auto Renewal</th>
+                  <td>
+                    <select class="form-select" name="autoRenewal">
+                      <option value="">-- Select --</option>
+                      <option value="On">On</option>
+                      <option value="Off">Off</option>
+                    </select>
+                  </td>
                 </tr>
+
+                <tr>
+                  <th>Domain Charge (INR)</th>
+                  <td>
+                    <input type="number" step="0.01" class="form-control" name="domainCharge" placeholder="e.g. 1200.00">
+                  </td>
+                  <th>Client Payment Status</th>
+                  <td>
+                    <select class="form-select" name="clientPaymentStatus">
+                      <option value="">-- Select Payment Status --</option>
+                      <option value="Pending">Pending</option>
+                      <option value="Received">Received</option>
+                    </select>
+                  </td>
+                </tr>
+
+
+                <tr>
+                  <th>Payment Mode</th>
+                  <td>
+                    <select class="form-select" name="paymentMode">
+                      <option value="">-- Select Mode --</option>
+                      <option value="Client">Client</option>
+                      <option value="Company">Company</option>
+                    </select>
+                  </td>
+
+                  <th>Payment Method</th>
+                  <td colspan="3">
+                    <select class="form-select" name="paymentMethod" id="paymentMethod">
+                      <option value="">-- Select Method --</option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                      <option value="UPI">UPI</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Cheque">Cheque</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </td>
+                </tr>
+
+                <!-- Dynamic Fields -->
+                <tr id="bankFields" class="d-none">
+                  <th>Bank Details</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control mb-2" name="bank_name" placeholder="Bank Name">
+                    <input type="text" class="form-control mb-2" name="account_no" placeholder="Account Number">
+                    <input type="text" class="form-control" name="ifsc_code" placeholder="IFSC Code">
+                  </td>
+                </tr>
+
+                <tr id="upiFields" class="d-none">
+                  <th>UPI</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control" name="upi_id" placeholder="UPI ID">
+                  </td>
+                </tr>
+
+                <tr id="chequeFields" class="d-none">
+                  <th>Cheque</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control mb-2" name="cheque_no" placeholder="Cheque Number">
+                    <input type="text" class="form-control" name="cheque_name" placeholder="Cheque Holder Name">
+                  </td>
+                </tr>
+
+                <tr id="otherFields" class="d-none">
+                  <th>Other Payment Info</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control" name="other_details" placeholder="Additional Info">
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>Credentials User</th>
+                  <td>
+                    <input type="text" class="form-control" name="credentialsUser" placeholder="Enter username">
+                  </td>
+                  <th>Credentials Pass</th>
+                  <td>
+                    <input type="password" class="form-control" name="credentialsPass" placeholder="Enter password">
+                  </td>
+                </tr>
+
+                <tr>
+                  <th>SSL Installed</th>
+                  <td>
+                    <select class="form-select" name="sslInstalled">
+                      <option value="True">Yes</option>
+                      <option value="False">No</option>
+                    </select>
+                  </td>
+                  <th>SSL Expiry</th>
+                  <td>
+                    <!-- <input type="date" class="form-control" name="sslExpiry"> -->
+                    <input type="text" class="form-control flat-date" name="sslExpiry" placeholder="Select ssl Expiry date">
+                  </td>
+                </tr>
+
                 <tr>
                   <th>DNS Configured</th>
                   <td>
@@ -586,42 +939,7 @@
                       placeholder="e.g. ns1.example.com, ns2.example.com">
                   </td>
                 </tr>
-                <tr>
-                  <th>Associated Projects</th>
-                  <td colspan="3">
-                    <select class="form-select" name="projects" multiple>
-                      {% for project in projects %}
-                      <option value="{{ project.id }}">{{ project.project_name }}</option>
-                      {% endfor %}
-                    </select>
-                    <small class="text-muted">Hold CTRL (Windows) or ⌘ (Mac) to select multiple projects. Leave empty if
-                      not linked to any project.</small>
-                  </td>
-                </tr>
 
-                <tr>
-                  <th>SSL Installed</th>
-                  <td>
-                    <select class="form-select" name="sslInstalled">
-                      <option value="True">Yes</option>
-                      <option value="False">No</option>
-                    </select>
-                  </td>
-                  <th>SSL Expiry</th>
-                  <td>
-                    <input type="date" class="form-control" name="sslExpiry">
-                  </td>
-                </tr>
-                <tr>
-                  <th>Credentials User</th>
-                  <td>
-                    <input type="text" class="form-control" name="credentialsUser">
-                  </td>
-                  <th>Credentials Pass</th>
-                  <td>
-                    <input type="password" class="form-control" name="credentialsPass">
-                  </td>
-                </tr>
                 <tr>
                   <th>Linked Services</th>
                   <td colspan="3">
@@ -629,6 +947,9 @@
                       placeholder="e.g. Email Hosting, Website Hosting">
                   </td>
                 </tr>
+                
+
+
                 <tr>
                   <th>Notes</th>
                   <td colspan="3">
@@ -644,14 +965,36 @@
           <button type="submit" class="btn btn-primary">Save Domain</button>
         </div>
       </form>
+      <script>
+        const methodSelect = document.getElementById("paymentMethod");
+const bankFields = document.getElementById("bankFields");
+const upiFields = document.getElementById("upiFields");
+const chequeFields = document.getElementById("chequeFields");
+const otherFields = document.getElementById("otherFields");
+
+methodSelect.addEventListener("change", function () {
+    // hide all first
+    bankFields.classList.add("d-none");
+    upiFields.classList.add("d-none");
+    chequeFields.classList.add("d-none");
+    otherFields.classList.add("d-none");
+
+    if (this.value === "Bank Transfer") bankFields.classList.remove("d-none");
+    if (this.value === "UPI") upiFields.classList.remove("d-none");
+    if (this.value === "Cheque") chequeFields.classList.remove("d-none");
+    if (this.value === "Other") otherFields.classList.remove("d-none");
+});
+
+      </script>
     </div>
   </div>
 </div>
 
 <!-- update domain data modal -->
 <!-- Edit Domain Modal -->
+<!-- Edit Domain Modal -->
 <div class="modal fade" id="editDomainModal" tabindex="-1" aria-labelledby="editDomainModalLabel" aria-hidden="true"
-  data-bs-backdrop="static" data-bs-keyboard="false" >
+  data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header table-primary text-white">
@@ -667,9 +1010,9 @@
           <div class="table-responsive">
             <table class="table table-bordered align-middle">
               <tbody>
-                <!-- Projects Multi-Select -->
+                <!-- Associated Projects -->
                 <tr>
-                  <th>Project(s)</th>
+                  <th>Associated Projects</th>
                   <td colspan="3">
                     <select class="form-select" name="projects" id="edit-projects" multiple>
                       {% for project in projects %}
@@ -678,11 +1021,11 @@
                       </option>
                       {% endfor %}
                     </select>
-                    <small class="text-muted">Hold Ctrl (Cmd on Mac) to select multiple</small>
+                    <small class="text-muted">Hold CTRL (Windows) or ⌘ (Mac) to select multiple projects.</small>
                   </td>
                 </tr>
 
-                <!-- Domain Name -->
+                <!-- Domain Name & Subdomains -->
                 <tr>
                   <th>Domain Name</th>
                   <td colspan="3">
@@ -690,107 +1033,190 @@
                       value="{{ domain.domain_name }}" required>
                   </td>
                 </tr>
+                <tr>
+                  <th>Sub Domain 1</th>
+                  <td><input type="text" class="form-control" id="edit-subdomain1" name="subDomain1" value="{{ domain.sub_domain1 }}"></td>
+                  <th>Sub Domain 2</th>
+                  <td><input type="text" class="form-control" id="edit-subdomain2" name="subDomain2" value="{{ domain.sub_domain2 }}"></td>
+                </tr>
 
-                <!-- Registrar & Purchase Date -->
+                <!-- Registrar & Dates -->
                 <tr>
                   <th>Registrar</th>
-                  <td>
+                  <td colspan="3">
                     <input type="text" class="form-control" id="edit-registrar" name="registrar"
                       value="{{ domain.registrar }}">
                   </td>
+                </tr>
+                <tr>
                   <th>Purchase Date</th>
-                  <td>
-                    <input type="date" class="form-control" id="edit-purchase-date" name="purchaseDate"
-                      value="{{ domain.purchase_date }}">
-                  </td>
+                  <td><input type="text" class="form-control flat-date" id="edit-purchase-date" name="purchaseDate"
+                      placeholder="Select purchase date" value="{{ domain.purchase_date }}"></td>
+                  <th>Expiry Date</th>
+                  <td><input type="text" class="form-control flat-date" id="edit-expiry-date" name="expiryDate"
+                      placeholder="Select expiry date" value="{{ domain.expiry_date }}"></td>
                 </tr>
 
-                <!-- Expiry Date & Renewal Status -->
+                <!-- Renewal Status & Auto Renewal -->
                 <tr>
-                  <th>Expiry Date</th>
-                  <td>
-                    <input type="date" class="form-control" id="edit-expiry-date" name="expiryDate"
-                      value="{{ domain.expiry_date }}">
-                  </td>
                   <th>Renewal Status</th>
                   <td>
                     <select class="form-select" id="edit-renewal-status" name="renewalStatus">
                       <option value="Active" {% if domain.renewal_status == 'Active' %}selected{% endif %}>Active</option>
-                      <option value="Expired" {% if domain.renewal_status == 'Expired' %}selected{% endif %}>Expired
-                      </option>
-                      <option value="Pending" {% if domain.renewal_status == 'Pending' %}selected{% endif %}>Pending
-                      </option>
+                      <option value="Expired" {% if domain.renewal_status == 'Expired' %}selected{% endif %}>Expired</option>
+                      <option value="Pending" {% if domain.renewal_status == 'Pending' %}selected{% endif %}>Pending</option>
+                    </select>
+                  </td>
+                  <th>Auto Renewal</th>
+                  <td>
+                    <select class="form-select" id="edit-auto-renewal" name="autoRenewal">
+                      <option value="On" {% if domain.auto_renewal == 'On' %}selected{% endif %}>On</option>
+                      <option value="Off" {% if domain.auto_renewal == 'Off' %}selected{% endif %}>Off</option>
                     </select>
                   </td>
                 </tr>
 
-                <!-- DNS Configured & Nameservers -->
+                <!-- Domain Charge & Client Payment Status -->
                 <tr>
-                  <th>DNS Configured</th>
+                  <th>Domain Charge (INR)</th>
+                  <td><input type="number" step="0.01" class="form-control" id="edit-domain-charge" name="domainCharge" value="{{ domain.domain_charge }}"></td>
+                  <th>Client Payment Status</th>
                   <td>
-                    <input type="checkbox" id="edit-dns-configured" name="dnsConfigured" value="True" {% if domain.dns_configured %}checked{% endif %}>
-                    <label for="edit-dns-configured">Yes</label>
-                  </td>
-                  <th>Nameservers</th>
-                  <td>
-                    <textarea class="form-control" id="edit-nameservers" name="nameservers"
-                      placeholder="e.g. ns1.example.com&#10;ns2.example.com">{{ domain.nameservers }}</textarea>
+                    <select class="form-select" id="edit-client-payment-status" name="clientPaymentStatus">
+                      <option value="Pending" {% if domain.client_payment_status == 'Pending' %}selected{% endif %}>Pending</option>
+                      <option value="Received" {% if domain.client_payment_status == 'Received' %}selected{% endif %}>Received</option>
+                    </select>
                   </td>
                 </tr>
 
-                <!-- SSL Installed & SSL Expiry -->
+                <!-- Payment Mode & Payment Method -->
                 <tr>
-                  <th>SSL Installed</th>
+                  <th>Payment Mode</th>
                   <td>
-                    <input type="checkbox" id="edit-ssl-installed" name="sslInstalled" value="True" {% if domain.ssl_installed %}checked{% endif %}>
-                    <label for="edit-ssl-installed">Yes</label>
+                    <select class="form-select" id="edit-payment-mode" name="paymentMode">
+                      <option value="Client" {% if domain.payment_mode == 'Client' %}selected{% endif %}>Client</option>
+                      <option value="Company" {% if domain.payment_mode == 'Company' %}selected{% endif %}>Company</option>
+                    </select>
                   </td>
-                  <th>SSL Expiry</th>
-                  <td>
-                    <input type="date" class="form-control" id="edit-ssl-expiry" name="sslExpiry"
-                      value="{{ domain.ssl_expiry }}">
+                  <th>Payment Method</th>
+                  <td colspan="3">
+                    <select class="form-select" id="edit-payment-method" name="paymentMethod">
+                      <option value="">-- Select Method --</option>
+                      <option value="Bank Transfer" {% if domain.payment_method == 'Bank Transfer' %}selected{% endif %}>Bank Transfer</option>
+                      <option value="UPI" {% if domain.payment_method == 'UPI' %}selected{% endif %}>UPI</option>
+                      <option value="Cash" {% if domain.payment_method == 'Cash' %}selected{% endif %}>Cash</option>
+                      <option value="Cheque" {% if domain.payment_method == 'Cheque' %}selected{% endif %}>Cheque</option>
+                      <option value="Other" {% if domain.payment_method == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
                   </td>
+                </tr>
+
+                <!-- Dynamic Payment Fields -->
+                <tr id="edit-bank-fields" class="edit-payment-extra d-none">
+                  <th>Bank Details</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control mb-2" id="edit-bank-name" name="bank_name" placeholder="Bank Name" value="{{ domain.bank_name }}">
+                    <input type="text" class="form-control mb-2" id="edit-account-no" name="account_no" placeholder="Account Number" value="{{ domain.account_no }}">
+                    <input type="text" class="form-control" id="edit-ifsc-code" name="ifsc_code" placeholder="IFSC Code" value="{{ domain.ifsc_code }}">
+                  </td>
+                </tr>
+
+                <tr id="edit-upi-fields" class="edit-payment-extra d-none">
+                  <th>UPI</th>
+                  <td colspan="3"><input type="text" class="form-control" id="edit-upi-id" name="upi_id" placeholder="UPI ID" value="{{ domain.upi_id }}"></td>
+                </tr>
+
+                <tr id="edit-cheque-fields" class="edit-payment-extra d-none">
+                  <th>Cheque</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control mb-2" id="edit-cheque-no" name="cheque_no" placeholder="Cheque Number" value="{{ domain.cheque_no }}">
+                    <input type="text" class="form-control" id="edit-cheque-name" name="cheque_name" placeholder="Cheque Holder Name" value="{{ domain.cheque_name }}">
+                  </td>
+                </tr>
+
+                <tr id="edit-other-fields" class="edit-payment-extra d-none">
+                  <th>Other Payment Info</th>
+                  <td colspan="3"><input type="text" class="form-control" id="edit-other-details" name="other_details" placeholder="Additional Info" value="{{ domain.other_details }}"></td>
                 </tr>
 
                 <!-- Credentials -->
                 <tr>
                   <th>Credentials User</th>
-                  <td>
-                    <input type="text" class="form-control" id="edit-credentials-user" name="credentialsUser"
-                      value="{{ domain.credentials_user }}">
-                  </td>
+                  <td><input type="text" class="form-control" id="edit-credentials-user" name="credentialsUser" value="{{ domain.credentials_user }}"></td>
                   <th>Credentials Pass</th>
+                  <td><input type="password" class="form-control" id="edit-credentials-pass" name="credentialsPass" value="{{ domain.credentials_pass }}"></td>
+                </tr>
+
+                <!-- SSL & DNS -->
+                <tr>
+                  <th>SSL Installed</th>
                   <td>
-                    <input type="password" class="form-control" id="edit-credentials-pass" name="credentialsPass"
-                      value="{{ domain.credentials_pass }}">
+                    <select class="form-select" id="edit-ssl-installed" name="sslInstalled">
+                      <option value="True" {% if domain.ssl_installed %}selected{% endif %}>Yes</option>
+                      <option value="False" {% if not domain.ssl_installed %}selected{% endif %}>No</option>
+                    </select>
                   </td>
+                  <th>SSL Expiry</th>
+                  <td><input type="text" class="form-control flat-date" id="edit-ssl-expiry" name="sslExpiry" placeholder="Select SSL expiry date" value="{{ domain.ssl_expiry }}"></td>
+                </tr>
+
+                <tr>
+                  <th>DNS Configured</th>
+                  <td>
+                    <select class="form-select" name="dnsConfigured" id="edit-dns-configured">
+                      <option value="True" {% if domain.dns_configured %}selected{% endif %}>Yes</option>
+                      <option value="False" {% if not domain.dns_configured %}selected{% endif %}>No</option>
+                    </select>
+                  </td>
+                  <th>Nameservers</th>
+                  <td><input type="text" class="form-control" id="edit-nameservers" name="nameservers" value="{{ domain.nameservers }}"></td>
                 </tr>
 
                 <!-- Linked Services -->
                 <tr>
                   <th>Linked Services</th>
-                  <td colspan="3">
-                    <input type="text" class="form-control" id="edit-linked-services" name="linkedServices"
-                      placeholder="e.g. Email Hosting, Website Hosting" value="{{ domain.linked_services }}">
-                  </td>
+                  <td colspan="3"><input type="text" class="form-control" id="edit-linked-services" name="linkedServices" value="{{ domain.linked_services }}"></td>
                 </tr>
 
                 <!-- Notes -->
                 <tr>
                   <th>Notes</th>
-                  <td colspan="3">
-                    <textarea class="form-control" id="edit-notes" name="notes" rows="2">{{ domain.notes }}</textarea>
-                  </td>
+                  <td colspan="3"><textarea class="form-control" id="edit-notes" name="notes" rows="2">{{ domain.notes }}</textarea></td>
                 </tr>
 
               </tbody>
             </table>
+
+            <script>
+              const editMethodSelect = document.getElementById("edit-payment-method");
+              const editBankFields = document.getElementById("edit-bank-fields");
+              const editUpiFields = document.getElementById("edit-upi-fields");
+              const editChequeFields = document.getElementById("edit-cheque-fields");
+              const editOtherFields = document.getElementById("edit-other-fields");
+
+              function toggleEditPaymentFields() {
+                editBankFields.classList.add("d-none");
+                editUpiFields.classList.add("d-none");
+                editChequeFields.classList.add("d-none");
+                editOtherFields.classList.add("d-none");
+
+                if (editMethodSelect.value === "Bank Transfer") editBankFields.classList.remove("d-none");
+                if (editMethodSelect.value === "UPI") editUpiFields.classList.remove("d-none");
+                if (editMethodSelect.value === "Cheque") editChequeFields.classList.remove("d-none");
+                if (editMethodSelect.value === "Other") editOtherFields.classList.remove("d-none");
+              }
+
+              editMethodSelect.addEventListener("change", toggleEditPaymentFields);
+
+              // Initialize on load
+              toggleEditPaymentFields();
+            </script>
+
           </div>
         </div>
 
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary">Update Domain</button>
-
         </div>
       </form>
     </div>

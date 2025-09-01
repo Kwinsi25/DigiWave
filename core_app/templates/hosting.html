@@ -144,14 +144,12 @@
 
                             <tr>
                                 <th>Sr No.</th>
-                                <th>Project ID</th>
-                                <th>Company Name</th>
-                                <th>Project Name</th>
                                 <th>Hosting Provider</th>
+                                <th>Project ID</th>
+                                <th>Project Name</th>
                                 <th>Server Type</th>
                                 <th>Plan / Package</th>
                                 <th>Server IP</th>
-                                <th>Control Panel</th>
                                 <th>Login URL</th>
                                 <th>Username</th>
                                 <th>Password</th>
@@ -170,6 +168,8 @@
                             {% for host in page_obj %}
                             <tr>
                                 <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                                <td><a href="#" data-bs-toggle="modal" data-bs-target="#hostDetailsModal"
+                                        class="fw-bold host-link" data-host-id="{{ host.id }}">{{ host.hosting_provider }}</a></td>
                                 <td>
                                     {% if host.project.exists %}
                                     {% for p in host.project.all %}
@@ -179,24 +179,22 @@
                                     <span class="text-muted"> - </span>
                                     {% endif %}
                                 </td>
-                                <td>{{ host.company_name }}</td>
+                                
                                 <td>
                                     {% if host.project.exists %}
                                     {% for p in host.project.all %}
-                                    <a href="#" data-bs-toggle="modal" data-bs-target="#hostDetailsModal"
-                                        class="fw-bold host-link" data-host-id="{{ host.id }}">
+                                    
                                         {{ p.project_name }}
-                                    </a> <br>
+                                     <br>
                                     {% endfor %}
                                     {% else %}
                                     <span class="text-muted">No Project</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ host.hosting_provider }}</td>
+                                
                                 <td>{{ host.server_type }}</td>
                                 <td>{{ host.plan_package }}</td>
                                 <td>{{ host.server_ip }}</td>
-                                <td>{{ host.control_panel }}</td>
                                 <td><a href="{{ host.login_url }}" target="_blank">{{ host.login_url }}</a></td>
                                 <td>{{ host.username }}</td>
                                 <td>{{ host.password }}</td>
@@ -350,7 +348,7 @@
             <div class="modal-content">
                 <div class="modal-header table-primary text-white">
                     <h5 class="modal-title" id="hostDetailsModalLabel">
-                        <i class="bx bx-folder-open me-2"></i> Project Details: {{ host.project.project_name }}
+                        <i class="bx bx-folder-open me-2"></i> Hosting Details :
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
@@ -366,8 +364,7 @@
                                 <tr>
                                     <th>IP Address</th>
                                     <td id="hd-server-ip"></td>
-                                    <th>Location</th>
-                                    <td id="hd-location"></td>
+                                    
                                 </tr>
                                 <tr>
                                     <th>Operating System</th>
@@ -380,17 +377,12 @@
                                     <td>
                                         <span id="hd-status" class="badge"></span>
                                     </td>
-                                    <th>Uptime</th>
-                                    <td id="hd-uptime"></td>
-                                </tr>
-                                <tr>
-                                    <th>CPU Usage</th>
-                                    <td id="hd-cpu-usage"></td>
-                                    <th>Memory Usage</th>
+                                    <th>Memory</th>
                                     <td id="hd-memory-usage"></td>
+                                    
                                 </tr>
                                 <tr>
-                                    <th>Disk Space</th>
+                                    <th>RAM</th>
                                     <td id="hd-disk-space"></td>
                                     <th>Backup Status</th>
                                     <td>
@@ -457,15 +449,6 @@
                                         </td>
                                     </tr>
 
-                                    <!-- Company Name -->
-                                    <tr>
-                                        <th>Company Name</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="company_name" required>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
                                     <!-- Hosting Provider -->
                                     <tr>
                                         <th>Hosting Provider</th>
@@ -505,11 +488,6 @@
                                             <input type="text" class="form-control" name="server_ip" required>
                                             <div class="invalid-feedback"></div>
                                         </td>
-                                        <th>Location</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="location">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
                                     </tr>
 
                                     <!-- Operating System -->
@@ -523,11 +501,7 @@
 
                                     <!-- Control Panel & Login URL -->
                                     <tr>
-                                        <th>Control Panel</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="control_panel" required>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
+                                        
                                         <th>Login URL</th>
                                         <td>
                                             <input type="url" class="form-control" name="login_url">
@@ -611,24 +585,9 @@
                                     </tr>
 
                                     <!-- Other Metrics -->
+                                
                                     <tr>
-                                        <th>Uptime</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="uptime"
-                                                placeholder="e.g. 32 days">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>CPU Usage</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="cpu_usage"
-                                                placeholder="e.g. 76%">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Memory Usage</th>
+                                        <th>Memory</th>
                                         <td colspan="3">
                                             <input type="text" class="form-control" name="memory_usage"
                                                 placeholder="e.g. 5.6 GB / 8 GB">
@@ -636,7 +595,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Disk Space</th>
+                                        <th>RAM</th>
                                         <td colspan="3">
                                             <input type="text" class="form-control" name="disk_space"
                                                 placeholder="e.g. 120 GB / 150 GB">
@@ -739,16 +698,7 @@
                                         </td>
                                     </tr>
 
-                                    <!-- Company Name -->
-                                    <tr>
-                                        <th>Company Name</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="company_name"
-                                                id="edit-company-name">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
+                                    
                                     <!-- Hosting Provider -->
                                     <tr>
                                         <th>Hosting Provider</th>
@@ -785,7 +735,7 @@
                                         </td>
                                     </tr>
 
-                                    <!-- Server IP & Location -->
+                                    <!-- Server IP  -->
                                     <tr>
                                         <th>Server IP</th>
                                         <td>
@@ -793,11 +743,7 @@
                                                 id="edit-server-ip">
                                             <div class="invalid-feedback"></div>
                                         </td>
-                                        <th>Location</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="location" id="edit-location">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
+                                        
                                     </tr>
 
                                     <!-- Operating System -->
@@ -812,12 +758,7 @@
 
                                     <!-- Control Panel & Login URL -->
                                     <tr>
-                                        <th>Control Panel</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="control_panel"
-                                                id="edit-control-panel">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
+                                        
                                         <th>Login URL</th>
                                         <td>
                                             <input type="url" class="form-control" name="login_url" id="edit-login-url">
@@ -909,24 +850,9 @@
                                     </tr>
 
                                     <!-- Other Metrics -->
+                                    
                                     <tr>
-                                        <th>Uptime</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="uptime" id="edit-uptime"
-                                                placeholder="e.g. 32 days">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>CPU Usage</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="cpu_usage" id="edit-cpu-usage"
-                                                placeholder="e.g. 76%">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Memory Usage</th>
+                                        <th>Memory</th>
                                         <td colspan="3">
                                             <input type="text" class="form-control" name="memory_usage"
                                                 id="edit-memory-usage" placeholder="e.g. 5.6 GB / 8 GB">
@@ -934,7 +860,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Disk Space</th>
+                                        <th>RAM</th>
                                         <td colspan="3">
                                             <input type="text" class="form-control" name="disk_space"
                                                 id="edit-disk-space" placeholder="e.g. 120 GB / 150 GB">
@@ -1102,11 +1028,10 @@
                 $.get(hostDetailsUrl, { id: hostId, mode: "view" }, function (res) {
                     if (!res.success) return console.error(res.error);
                     const h = res.host;
-
+                    console.log(h)
                     // Fill VIEW modal fields
                     $("#hd-server-name").text(h.server_name || '-');
                     $("#hd-server-ip").text(h.server_ip || '-');
-                    $("#hd-location").text(h.location || '-');
                     $("#hd-operating-system").text(h.operating_system || '-');
                     $("#hd-server-type").text(h.server_type || '-');
 
@@ -1122,10 +1047,10 @@
                         .addClass('badge ' + (h.backup_status === "Scheduled" ? 'bg-label-info' :
                             h.backup_status === "Completed" ? 'bg-label-success' : 'bg-label-danger'));
 
-                    $("#hd-cpu-usage").text(h.cpu_usage || '-');
-                    $("#hd-uptime").text(h.uptime || '-');
-                    $("#hd-memory-usage").text(h.memory_usage || '-');
-                    $("#hd-disk-space").text(h.disk_space || '-');
+                    
+                    $("#hd-memory-usage").text(h.memory || '-');
+                    $("#hd-disk-space").text(h.ram || '-');  // use h.ram now
+
                     $("#hd-ssh-username").text(h.ssh_username || '-');
                     $("#hd-ssh-ftp-access").text(h.ssh_ftp_access || '-');
                     $("#hd-linked-services").text(h.linked_services || '-');
@@ -1157,15 +1082,13 @@
                         const ids = h.projects.map(p => p.id.toString());
                         $("#edit-project").val(ids).trigger("change");  // works with normal select or select2
                     }
-                    $("#edit-company-name").val(h.company_name || '');
+                    
                     $("#edit-server-name").val(h.server_name || '');
                     $("#edit-hosting-provider").val(h.hosting_provider || '');
                     $("#edit-server-type").val(h.server_type || '');
                     $("#edit-plan-package").val(h.plan_package || '');
                     $("#edit-server-ip").val(h.server_ip || '');
-                    $("#edit-location").val(h.location || '');
                     $("#edit-operating-system").val(h.operating_system || '');
-                    $("#edit-control-panel").val(h.control_panel || '');
                     $("#edit-login-url").val(h.login_url || '');
                     $("#edit-username").val(h.username || '');
                     $("#edit-password").val(h.password || '');
@@ -1177,10 +1100,8 @@
                     $("#edit-purchase-date").val(h.purchase_date || '');
                     $("#edit-expiry-date").val(h.expiry_date || '');
                     $("#edit-server-cost").val(h.server_cost || '');
-                    $("#edit-uptime").val(h.uptime || '');
-                    $("#edit-cpu-usage").val(h.cpu_usage || '');
-                    $("#edit-memory-usage").val(h.memory_usage || '');
-                    $("#edit-disk-space").val(h.disk_space || '');
+                    $("#edit-memory-usage").val(h.memory || '');
+                    $("#edit-disk-space").val(h.ram || '');
                     $("#edit-backup-status").val(h.backup_status || '');
                     $("#edit-linked-services").val(h.linked_services || '');
                     $("#edit-status").val(h.status || '');

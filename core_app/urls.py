@@ -40,6 +40,7 @@ urlpatterns = [
     #employees
     path('employees/', user_list, name='user_list'),
     path('add_user/', add_user, name='add_user'),
+    path('add_fixed_details/', add_fixed_details, name='add_fixed_details'),
     path("get_user/<int:id>/", get_user, name="get_user"),
     path('update_user/<int:id>/', update_user, name='update_user'),
     path('delete_user/<int:id>/', delete_user, name='delete_user'),
@@ -66,6 +67,9 @@ urlpatterns = [
     path('get_files/', get_files, name='get_files'),
     path('delete_file/<int:file_id>/', delete_file, name='delete_file'),
     path("delete_files/", delete_files, name="delete_files"),
+    path('delete_folder/<int:id>/', delete_folder, name='delete_folder'),
+    path('folder/<int:id>/', view_folder, name='view_folder'),
+
 
     #payment
     path('payment/', payment_list, name='payment_list'),

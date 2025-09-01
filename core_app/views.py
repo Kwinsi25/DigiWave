@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect,get_object_or_404
-from django.http import JsonResponse,HttpResponse, Http404,FileResponse
+from django.http import JsonResponse,HttpResponse, Http404
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from .models import *
@@ -10,11 +10,12 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date
 from collections import defaultdict
 import json
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image
-from reportlab.lib.units import mm
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
+from datetime import date
+# from reportlab.lib.pagesizes import A4
+# from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image
+# from reportlab.lib.units import mm
+# from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+# from reportlab.lib import colors
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout as django_logout
 from django.views.decorators.csrf import csrf_exempt
@@ -427,11 +428,11 @@ def host_list(request):
     down_servers = host_data_list.filter(status="Inactive").count()
 
     # High CPU Load -> assume > 80% 
-    high_cpu_servers = host_data_list.filter(
-        cpu_usage__regex=r'^\d+%'  # ensure valid percentage
-    ).filter(
-        cpu_usage__gte="80%"  # adjust based on how you store cpu_usage
-    ).count()
+    # high_cpu_servers = host_data_list.filter(
+    #     cpu_usage__regex=r'^\d+%'  # ensure valid percentage
+    # ).filter(
+    #     cpu_usage__gte="80%"  # adjust based on how you store cpu_usage
+    # ).count()
 
     paginator = Paginator(host_data_list, records_per_page)
     page_obj = paginator.get_page(page_number)
@@ -444,7 +445,7 @@ def host_list(request):
         'total_servers': total_servers,
         'running_servers': running_servers,
         'down_servers': down_servers,
-        'high_cpu_servers': high_cpu_servers,
+        # 'high_cpu_servers': high_cpu_servers,
     })
 
 
@@ -460,15 +461,12 @@ def add_host_data(request):
             
             host_data = HostData(
                 # project=project,
-                company_name=request.POST.get("company_name"),
                 hosting_provider=request.POST.get("hosting_provider"),
                 server_name=request.POST.get("server_name"),
                 server_type=request.POST.get("server_type"),
                 plan_package=request.POST.get("plan_package"),
                 server_ip = request.POST.get("server_ip") or None,
-                location=request.POST.get("location"),
                 operating_system=request.POST.get("operating_system"),
-                control_panel=request.POST.get("control_panel"),
                 login_url=request.POST.get("login_url"),
                 username=request.POST.get("username"),
                 password=request.POST.get("password"),
@@ -480,10 +478,8 @@ def add_host_data(request):
                 purchase_date=request.POST.get("purchase_date") or None,
                 expiry_date=request.POST.get("expiry_date") or None,
                 server_cost=request.POST.get("server_cost") or None,
-                uptime=request.POST.get("uptime"),
-                cpu_usage=request.POST.get("cpu_usage"),
-                memory_usage=request.POST.get("memory_usage"),
-                disk_space=request.POST.get("disk_space"),
+                memory=request.POST.get("memory_usage"),
+                RAM=request.POST.get("disk_space"),
                 backup_status=request.POST.get("backup_status"),
                 linked_services=request.POST.get("linked_services"),
                 status=request.POST.get("status"),
@@ -531,15 +527,12 @@ def get_host_details(request):
     data = {
         "host_id": host.id,
         "projects": projects,   # list of projects
-        "company_name": host.company_name,
         "server_name": host.server_name,
         "hosting_provider": host.hosting_provider,
         "server_type": host.server_type,
         "plan_package": host.plan_package,
         "server_ip": host.server_ip,
-        "location": host.location,
         "operating_system": host.operating_system,
-        "control_panel": host.control_panel,
         "login_url": host.login_url,
         "username": host.username,
         "password": host.password,
@@ -552,10 +545,9 @@ def get_host_details(request):
         "expiry_date": host.expiry_date.strftime("%Y-%m-%d") if host.expiry_date else None,
         "server_cost": str(host.server_cost) if host.server_cost else None,
         "status": host.status,
-        "uptime": host.uptime,
-        "cpu_usage": host.cpu_usage,
-        "memory_usage": host.memory_usage,
-        "disk_space": host.disk_space,
+       "memory": host.memory,
+        "ram": host.RAM,  # send as ram
+
         "backup_status": host.backup_status,
         "linked_services": host.linked_services,
         "notes": host.notes,
@@ -588,15 +580,15 @@ def update_host_data(request, id):
                 host.project.clear()  # allow "no project"
 
             # Update all fields
-            host.company_name = request.POST.get("company_name")
+
             host.server_name = request.POST.get("server_name")
             host.hosting_provider = request.POST.get("hosting_provider")
             host.server_type = request.POST.get("server_type")
             host.plan_package = request.POST.get("plan_package")
             host.server_ip = request.POST.get("server_ip")
-            host.location = request.POST.get("location")
+
             host.operating_system = request.POST.get("operating_system")
-            host.control_panel = request.POST.get("control_panel")
+
             host.login_url = request.POST.get("login_url")
             host.username = request.POST.get("username")
             host.password = request.POST.get("password")
@@ -608,10 +600,9 @@ def update_host_data(request, id):
             host.purchase_date = request.POST.get("purchase_date") or None
             host.expiry_date = request.POST.get("expiry_date") or None
             host.server_cost = request.POST.get("server_cost") or None
-            host.uptime = request.POST.get("uptime")
-            host.cpu_usage = request.POST.get("cpu_usage")
-            host.memory_usage = request.POST.get("memory_usage")
-            host.disk_space = request.POST.get("disk_space")
+
+            host.memory = request.POST.get("memory_usage")
+            host.RAM = request.POST.get("disk_space")
             host.backup_status = request.POST.get("backup_status")
             host.linked_services = request.POST.get("linked_services")
             host.status = request.POST.get("status")
@@ -713,12 +704,35 @@ def add_domain(request):
             expiry_date = datetime.strptime(expiry_date_str, "%Y-%m-%d").date() if expiry_date_str else None
             ssl_expiry = datetime.strptime(ssl_expiry_str, "%Y-%m-%d").date() if ssl_expiry_str else None
 
+             # Build payment details JSON dynamically
+            payment_method = request.POST.get('paymentMethod')
+            payment_details = {}
+
+            if payment_method == "Bank Transfer":
+                payment_details = {
+                    "bank_name": request.POST.get("bank_name"),
+                    "account_no": request.POST.get("account_no"),
+                    "ifsc_code": request.POST.get("ifsc_code"),
+                }
+            elif payment_method == "UPI":
+                payment_details = {"upi_id": request.POST.get("upi_id")}
+            elif payment_method == "Cheque":
+                payment_details = {
+                    "cheque_no": request.POST.get("cheque_no"),
+                    "cheque_name": request.POST.get("cheque_name"),
+                }
+            elif payment_method == "Other":
+                payment_details = {"other_details": request.POST.get("other_details")}
+
             domain = Domain(
                 domain_name=request.POST.get('domainName'),
+                sub_domain1=request.POST.get('subDomain1'),
+                sub_domain2=request.POST.get('subDomain2'),
                 purchase_date=purchase_date,
                 expiry_date=expiry_date,
                 registrar=request.POST.get('registrar'),
                 renewal_status=request.POST.get('renewalStatus'),
+                auto_renewal=request.POST.get('autoRenewal'),
                 dns_configured=True if request.POST.get('dnsConfigured') == "True" else False,
                 nameservers=request.POST.get('nameservers'),
                 ssl_installed=True if request.POST.get('sslInstalled') == "True" else False,
@@ -726,7 +740,12 @@ def add_domain(request):
                 credentials_user=request.POST.get('credentialsUser'),
                 credentials_pass=request.POST.get('credentialsPass'),
                 linked_services=request.POST.get('linkedServices'),
-                notes=request.POST.get('notes')
+                notes=request.POST.get('notes'),
+                domain_charge=request.POST.get('domainCharge') or None,
+                client_payment_status=request.POST.get('clientPaymentStatus'),
+                payment_method=payment_method,
+                payment_mode=request.POST.get('paymentMode'),
+                payment_details=payment_details or None
             )
 
             # Calculate left_days
@@ -775,10 +794,13 @@ def get_domain_details(request):
             for p in domain.project.all()
         ],
         "domain_name": domain.domain_name,
+        "sub_domain1": domain.sub_domain1,
+        "sub_domain2": domain.sub_domain2,
         "registrar": domain.registrar,
         "purchase_date": domain.purchase_date.strftime("%Y-%m-%d") if domain.purchase_date else None,
         "expiry_date": domain.expiry_date.strftime("%Y-%m-%d") if domain.expiry_date else None,
         "renewal_status": domain.renewal_status,
+        "auto_renewal": domain.auto_renewal,
         "dns_configured": domain.dns_configured,
         "nameservers": domain.nameservers,
         "ssl_installed": domain.ssl_installed,
@@ -787,6 +809,11 @@ def get_domain_details(request):
         "credentials_pass": domain.credentials_pass if mode == "edit" else "********",
         "linked_services": domain.linked_services,
         "notes": domain.notes,
+        "domain_charge": str(domain.domain_charge) if domain.domain_charge else "0.00",
+        "client_payment_status": domain.client_payment_status,
+        "payment_method": domain.payment_method,
+        "payment_mode": domain.payment_mode,
+        "payment_details": domain.payment_details, 
     }
 
     return JsonResponse({"success": True, "domain": data})
@@ -799,24 +826,26 @@ def update_domain(request, id):
         try:
             domain = get_object_or_404(Domain, id=id)
 
-            # Get project from project name
-            project_ids = request.POST.getlist('projects')  # Multiple project IDs from the form
+            # ==================== PROJECTS ====================
+            project_ids = request.POST.getlist('projects')
             if project_ids:
                 projects = Project.objects.filter(id__in=project_ids)
                 domain.project.set(projects)  # Replace all projects
             else:
                 domain.project.clear()
-            # Convert dates
-            purchase_date_str = request.POST.get('purchaseDate')
-            expiry_date_str = request.POST.get('expiryDate')
-            ssl_expiry_str = request.POST.get('sslExpiry')
 
-            domain.purchase_date = datetime.strptime(purchase_date_str, "%Y-%m-%d").date() if purchase_date_str else None
-            domain.expiry_date = datetime.strptime(expiry_date_str, "%Y-%m-%d").date() if expiry_date_str else None
-            domain.ssl_expiry = datetime.strptime(ssl_expiry_str, "%Y-%m-%d").date() if ssl_expiry_str else None
+            # ==================== DATES ====================
+            def parse_date(val):
+                return datetime.strptime(val, "%Y-%m-%d").date() if val else None
 
-            # Text fields
+            domain.purchase_date = parse_date(request.POST.get('purchaseDate'))
+            domain.expiry_date = parse_date(request.POST.get('expiryDate'))
+            domain.ssl_expiry = parse_date(request.POST.get('sslExpiry'))
+
+            # ==================== TEXT FIELDS ====================
             domain.domain_name = request.POST.get('domainName')
+            domain.sub_domain1 = request.POST.get('subDomain1')
+            domain.sub_domain2 = request.POST.get('subDomain2')
             domain.registrar = request.POST.get('registrar')
             domain.renewal_status = request.POST.get('renewalStatus')
             domain.nameservers = request.POST.get('nameservers')
@@ -825,17 +854,49 @@ def update_domain(request, id):
             domain.linked_services = request.POST.get('linkedServices')
             domain.notes = request.POST.get('notes')
 
-            # Boolean fields
-            domain.dns_configured = True if request.POST.get('dnsConfigured') == "True" or request.POST.get('dnsConfigured') == "on" else False
-            domain.ssl_installed = True if request.POST.get('sslInstalled') == "True" or request.POST.get('sslInstalled') == "on" else False
+            # ==================== BOOLEAN FIELDS ====================
+            domain.dns_configured = request.POST.get('dnsConfigured') in ["True", "on", "1"]
+            domain.ssl_installed = request.POST.get('sslInstalled') in ["True", "on", "1"]
 
-            # Calculate left_days
+            # ==================== EXTRA FIELDS ====================
+            domain.auto_renewal = request.POST.get('autoRenewal')  # On / Off
+            domain.domain_charge = request.POST.get('domainCharge') or None
+            domain.client_payment_status = request.POST.get('clientPaymentStatus')  # Pending / Received
+            domain.payment_mode = request.POST.get('paymentMode')  # Client / Company
+            domain.payment_method = request.POST.get('paymentMethod')  # Bank Transfer / UPI / Cash / Cheque / Other
+
+            # ==================== PAYMENT DETAILS ====================
+            payment_details = {}
+            if domain.payment_method == "Bank Transfer":
+                payment_details = {
+                    "bank_name": request.POST.get("bank_name"),
+                    "account_no": request.POST.get("account_no"),
+                    "ifsc_code": request.POST.get("ifsc_code"),
+                }
+            elif domain.payment_method == "UPI":
+                payment_details = {
+                    "upi_id": request.POST.get("upi_id"),
+                }
+            elif domain.payment_method == "Cheque":
+                payment_details = {
+                    "cheque_no": request.POST.get("cheque_no"),
+                    "cheque_name": request.POST.get("cheque_name"),
+                }
+            elif domain.payment_method == "Other":
+                payment_details = {
+                    "description": request.POST.get("other_details"),
+                }
+
+            domain.payment_details = payment_details
+
+            # ==================== LEFT DAYS ====================
             if domain.expiry_date:
                 today = timezone.now().date()
                 domain.left_days = max((domain.expiry_date - today).days, 0)
             else:
                 domain.left_days = None
 
+            # ==================== SAVE ====================
             domain.save()
             messages.success(request, f"Domain '{domain.domain_name}' updated successfully!")
 
@@ -932,8 +993,9 @@ def add_user(request):
                 email=request.POST.get("email"),
                 phone=request.POST.get("phone") or None,
                 password=request.POST.get("password"),
-                salary=request.POST.get("salary") or None,
+                amount=request.POST.get("amount") or None,
                 joining_date=request.POST.get("joining_date") or None,
+                
                 last_date=request.POST.get("last_date") or None,
                 birth_date=request.POST.get("birth_date") or None,
                 gender=request.POST.get("gender") or None,
@@ -990,13 +1052,78 @@ def add_user(request):
 
     return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method"]}}, status=405)
 
+def add_fixed_details(request):
+    if request.method != "POST":
+        return JsonResponse({
+            "success": False,
+            "errors": {"__all__": ["Invalid request method"]}
+        }, status=405)
+
+    try:
+        user_id = request.POST.get("user_id")
+        user = get_object_or_404(User, pk=user_id)
+
+        if user.employee_type != "fixed":
+            return JsonResponse({
+                "success": False,
+                "errors": {"__all__": ["Details can only be added for fixed employees."]}
+            }, status=400)
+
+        # Collect data from form
+        amount = request.POST.get("amount")
+        date = request.POST.get("date")
+        description = request.POST.get("description")
+
+         # Get existing entries or initialize empty list
+        existing_details = user.fixed_employee_details or []
+        if not isinstance(existing_details, list):
+            # In case the old data is a dict, convert it to list
+            existing_details = [existing_details]
+
+        # Append new entry
+        new_entry = {
+            "amount": float(amount) if amount else 0,
+            "date": date,
+            "description": description
+        }
+        existing_details.append(new_entry)
+
+        # Save back to JSONField
+        user.fixed_employee_details = existing_details
+        user.save()
+
+        return JsonResponse({
+            "success": True,
+            "message": "Fixed employee details saved successfully!"
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "errors": {"__all__": [str(e)]}
+        }, status=500)
+    
 def get_user(request, id):
     """
     Return JSON details of a user for editing in modal.
     """
     user = get_object_or_404(User, id=id)
     print(f"Fetching details for user ID: {user.id}, Picture: {user.profile_picture.url if user.profile_picture else 'No picture'}")
+     # Calculate total salary/fixed amount
+    total_paid = 0
+    fixed_details = []
+    if user.employee_type == "salary" and user.joining_date and user.amount:
+        today = date.today()
+        months_diff = (today.year - user.joining_date.year) * 12 + (today.month - user.joining_date.month) + 1
+        total_paid = float(user.amount) * months_diff
 
+    elif user.employee_type == "fixed" and user.fixed_employee_details:
+        # fixed_employee_details can be list or single dict
+        details = user.fixed_employee_details
+        if isinstance(details, dict):
+            details = [details]
+        total_paid = sum(d.get("amount", 0) for d in details)
+        fixed_details = details 
     return JsonResponse({
         "id": user.id,
         "first_name": user.first_name,
@@ -1007,8 +1134,9 @@ def get_user(request, id):
         "phone": user.phone,
         "gender": user.gender if user.gender else None,
         "employee_type": user.employee_type if user.employee_type else None,
-        "salary": str(user.salary) if user.salary else None,
+        "amount": total_paid,
         "joining_date": user.joining_date.strftime("%Y-%m-%d") if user.joining_date else None,
+    
         "last_date": user.last_date.strftime("%Y-%m-%d") if user.last_date else None,
         "birth_date": user.birth_date.strftime("%Y-%m-%d") if user.birth_date else None,
         "marital_status": user.marital_status if user.marital_status else None,
@@ -1025,6 +1153,7 @@ def get_user(request, id):
         "is_active": user.is_active,
         "projects": [p.project_name for p in getattr(user, "projects").all()] if hasattr(user, "projects") else [],
         "profile_picture_url": request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None,
+         "fixed_employee_details": fixed_details,
 
     })
 
@@ -1047,13 +1176,14 @@ def update_user(request, id):
             # Password (update only if provided)
             password = request.POST.get("password")
             if password:
-                user.password = password  # (⚠️ plain-text, handle hashing if needed)
+                user.password = password  # 
 
             # Job details
             user.employee_type = request.POST.get("employee_type") or None
-            salary = request.POST.get("salary")
-            user.salary = salary if salary else None
+            amount = request.POST.get("amount")
+            user.amount = amount if amount else None
             user.joining_date = request.POST.get("joining_date") or None
+            
             user.last_date = request.POST.get("last_date") or None
 
             # Personal details
@@ -1802,8 +1932,14 @@ def file_docs(request):
     paginator = Paginator(folder_rows, records_per_page)
     page_obj = paginator.get_page(page_number)
 
-    global_last_file = FileDoc.objects.order_by("-created_at").first()
-    global_last_file_name = global_last_file.name if global_last_file else "No Files"
+    # Last 3 recent files
+    recent_files = FileDoc.objects.order_by("-created_at")[:3]
+    recent_files_list = [
+        {
+            "name": f.name,
+            "created_at": f.created_at.strftime("%Y-%m-%d %H:%M:%S")
+        } for f in recent_files
+    ]
 
     context = {
         "all_projects": all_projects,
@@ -1814,7 +1950,7 @@ def file_docs(request):
         "total_projects": all_projects.count(),
         "total_folders": all_folders.count(),
         "total_files": FileDoc.objects.count(),
-        "recent_file_name": global_last_file_name,
+        "recent_files": recent_files_list,
     }
     return render(request, 'file_docs.html', context)
 
@@ -1944,6 +2080,24 @@ def delete_files(request):
 
     return JsonResponse({"success": False, "message": "Invalid request method"}, status=405)
 
+def delete_folder(request, id):
+    if request.method == "POST":
+        folder = get_object_or_404(Folder, id=id)
+        folder_name = folder.name
+        folder.delete()  # This will also delete all FileDoc linked due to CASCADE
+        return JsonResponse({"success": True, "message": f"Folder '{folder_name}' and its files deleted successfully."})
+
+    return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
+
+def view_folder(request, id):
+    folder = get_object_or_404(Folder, id=id)
+    files = folder.files.all()  # Related FileDoc objects
+
+    context = {
+        "folder": folder,
+        "files": files,
+    }
+    return render(request, "view_folder.html", context)
 
 # -----------------------------
 # Payment View  

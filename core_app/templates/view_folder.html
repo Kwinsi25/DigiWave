@@ -1,0 +1,14 @@
+<h3>{{ folder.name }}</h3>
+<p>Project: 
+    {% if folder.project %}
+    {{ folder.project.project_name }}
+    {% else %}No Project
+    {% endif %}</p>
+
+<ul>
+    {% for file in files %}
+        <li>{{ file.name }} - <a href="{{ file.file.url }}" target="_blank">Download</a></li>
+    {% empty %}
+        <li>No files in this folder.</li>
+    {% endfor %}
+</ul>
