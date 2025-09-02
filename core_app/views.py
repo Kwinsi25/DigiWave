@@ -27,6 +27,9 @@ import asyncio
 from playwright.async_api import async_playwright
 from django.template.loader import render_to_string
 
+
+def parse_date(val):
+                return datetime.strptime(val, "%Y-%m-%d").date() if val else None
 # -----------------------------
 # Login View
 # -----------------------------
@@ -156,17 +159,27 @@ def save_project(request):
             quotation_id = data.get("quotation")
             quotation = Quotation.objects.filter(id=quotation_id).first() if quotation_id else None
             # Create new Project object
+            
+            start_date_str = request.POST.get('start_date') or None
+            deadline_str = request.POST.get('deadline') or None
+            inquiry_date_str= request.POST.get("inquiry_date") or None
+            completed_date_str =request.POST.get("completed_date") or None
+
             project = Project(
                 project_name=data.get("project_name"),
                 project_type = data.get("project_type"),
-                start_date=data.get("start_date") or None,
-                deadline=data.get("deadline") or None,
+                start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date() if start_date_str else None,
+                deadline = datetime.strptime(deadline_str, "%Y-%m-%d").date() if deadline_str else None,
+                
                 app_mode=AppMode.objects.filter(id=data.get("app_mode")).first() if data.get("app_mode") else None,
                 status=data.get("status"),
+                
                 payment_value=data.get("payment_value") or 0,
                 payment_status=data.get("payment_status"),
+                
                 live_link=data.get("live_link"),
                 expense=data.get("expense") or None,
+
                 developer_charge=data.get("developer_charge") or None,
                 server_charge=data.get("server_charge") or None,
                 third_party_api_charge=data.get("third_party_api_charge") or None,
@@ -176,20 +189,27 @@ def save_project(request):
                 postman_collection=data.get("postman_collection"),
                 data_folder=data.get("data_folder"),
                 other_link=data.get("other_link"),
-                inquiry_date=data.get("inquiry_date") or None,
+                
+                
+                inquiry_date = datetime.strptime(inquiry_date_str, "%Y-%m-%d").date() if inquiry_date_str else None,
+
                 lead_source=data.get("lead_source"),
                 quotation_sent=data.get("quotation_sent"),
                 demo_given=data.get("demo_given"),
+                
                 quotation_amount=data.get("quotation_amount") or None,
                 approval_amount=data.get("approval_amount") or None,
-                completed_date=data.get("completed_date") or None,
+                
+                
+                completed_date = datetime.strptime(completed_date_str, "%Y-%m-%d").date() if completed_date_str else None,
+
                 client_industry=data.get("client_industry"),
                 contract_signed=data.get("contract_signed"),
                 quotation=quotation
             )
 
              #  Run backend validation
-            project.full_clean()   # will call clean() + field validations
+            project.full_clean()   
             project.save()
             # Handle ManyToMany: Technologies
             tech_ids = request.POST.getlist("technologies")
@@ -262,7 +282,8 @@ def get_project_details(request):
         "id": project.id,   # numeric id (important)
         "project_id": project.project_id,  
         "project_type" : project.project_type,
-        "start_date": project.start_date.strftime('%Y-%m-%d') if project.start_date else '',
+        "start_date": project.start_date.strftime('%Y-%m-%d') if project.start_date else None,
+        
         "project_name": project.project_name,
         #quotation  
         "quotation_id": project.quotation.id if project.quotation else None,
@@ -276,7 +297,7 @@ def get_project_details(request):
         "app_mode": project.app_mode.name if project.app_mode else '',
 
         "status": project.status,
-        "deadline": project.deadline.strftime('%Y-%m-%d') if project.deadline else '',
+        "deadline": project.deadline.strftime('%Y-%m-%d') if project.deadline else None,
         "payment_value": str(project.payment_value) if project.payment_value is not None else '',
         "payment_status": project.payment_status,
         
@@ -293,7 +314,7 @@ def get_project_details(request):
         "data_folder": project.data_folder,
         "other_link": project.other_link,
         
-        "inquiry_date": project.inquiry_date.strftime('%Y-%m-%d') if project.inquiry_date else '',
+        "inquiry_date": project.inquiry_date.strftime('%Y-%m-%d') if project.inquiry_date else None,
         "lead_source": project.lead_source,
         "quotation_sent": project.quotation_sent,
         "demo_given": project.demo_given,
@@ -301,7 +322,7 @@ def get_project_details(request):
         "quotation": project.quotation.quotation_no if project.quotation else None,
         # "client_name": project.quotation.client_name if project.quotation else None,
         "approval_amount": str(project.approval_amount) if project.approval_amount is not None else '',
-        "completed_date": project.completed_date.strftime('%Y-%m-%d') if project.completed_date else '',
+        "completed_date": project.completed_date.strftime('%Y-%m-%d') if project.completed_date else None,
         "client_industry": project.client_industry,
         "contract_signed": project.contract_signed,
         "team_members_display": team_members_display,
@@ -326,8 +347,10 @@ def update_project(request, id):
             # Basic info
             project.project_name = data.get("project_name")
             project.project_type = data.get("project_type")
-            project.start_date = data.get("start_date") or None
-            project.deadline = data.get("deadline") or None
+            # project.start_date = data.get("start_date") or None
+            project.start_date = parse_date(request.POST.get('start_date'))
+            # project.deadline = data.get("deadline") or None
+            project.deadline = parse_date(request.POST.get('deadline'))
             project.app_mode_id = data.get("app_mode") or None
             project.status = data.get("status")
 
@@ -351,7 +374,8 @@ def update_project(request, id):
             project.free_service = data.get("free_service")
 
             # Sales / lead tracking
-            project.inquiry_date = parse_date(data.get("inquiry_date"))
+            # project.inquiry_date = parse_date(data.get("inquiry_date"))
+            project.inquiry_date = parse_date(request.POST.get('inquiry_date'))
             project.lead_source = data.get("lead_source")
             project.quotation_sent = data.get("quotation_sent")
             project.demo_given = data.get("demo_given")
@@ -359,7 +383,8 @@ def update_project(request, id):
             project.approval_amount = to_decimal(data.get("approval_amount"))
 
             # Completion / client info
-            project.completed_date = parse_date(data.get("completed_date"))
+            # project.completed_date = parse_date(data.get("completed_date"))
+            project.completed_date = parse_date(request.POST.get('completed_date'))
             project.client_industry = data.get("client_industry")
             project.contract_signed = data.get("contract_signed")
 
@@ -835,8 +860,6 @@ def update_domain(request, id):
                 domain.project.clear()
 
             # ==================== DATES ====================
-            def parse_date(val):
-                return datetime.strptime(val, "%Y-%m-%d").date() if val else None
 
             domain.purchase_date = parse_date(request.POST.get('purchaseDate'))
             domain.expiry_date = parse_date(request.POST.get('expiryDate'))
@@ -2266,3 +2289,210 @@ def get_payment(request):
     return JsonResponse({"success": True, "data": data})
 
 
+# -----------------------------
+# Designation  View  
+# -----------------------------
+
+def designation_list(request):
+    records_per_page = int(request.GET.get('recordsPerPage', 20))
+
+    try:
+        page_number = int(request.GET.get('page', 1))
+    except ValueError:
+        page_number = 1
+    if page_number < 1:
+        page_number = 1
+    designations = Designation.objects.all().order_by('id')
+    # Manual pagination
+    paginator = Paginator(designations, records_per_page)
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'designation.html', {
+        "page_obj": page_obj,
+        "records_per_page": records_per_page,
+       "records_options": [20, 50, 100, 200, 300],
+        'total_designations': Designation.objects.count(),
+    })
+
+
+def add_designation(request):
+    if request.method == "POST":
+        try:
+            title = request.POST.get("title")
+            designation = Designation(title=title)
+            designation.full_clean()
+            designation.save()
+            messages.success(request, "Designation added successfully!")
+            return redirect("designation_list")
+
+        except ValidationError as e:
+            for field, errors in e.message_dict.items():
+                for err in errors:
+                    messages.error(request, f"{field}: {err}")
+            return redirect("designation_list")
+
+        except Exception as e:
+            messages.error(request, f"Error adding designation: {str(e)}")
+            return redirect("designation_list")
+
+    return redirect("designation_list")
+
+def get_designation(request):
+    desig_id = request.GET.get("id")
+    try:
+        designation = Designation.objects.get(id=desig_id)
+    except Designation.DoesNotExist:
+        raise Http404("Designation not found")
+
+    return JsonResponse({
+        "id": designation.id,
+        "title": designation.title,
+    })
+
+def update_designation(request):
+    if request.method == "POST":
+        desig_id = request.POST.get("id")
+        try:
+            designation = Designation.objects.get(id=desig_id)
+            designation.title = request.POST.get("title")
+            designation.full_clean()
+            designation.save()
+            messages.success(request, "Designation updated successfully!")
+            return redirect("designation_list")
+
+        except Designation.DoesNotExist:
+            messages.error(request, "Designation not found.")
+            return redirect("designation_list")
+
+        except ValidationError as e:
+            for field, errors in e.message_dict.items():
+                for err in errors:
+                    messages.error(request, f"{field}: {err}")
+            return redirect("designation_list")
+
+        except Exception as e:
+            messages.error(request, f"Error updating designation: {str(e)}")
+            return redirect("designation_list")
+
+    return redirect("designation_list")
+
+
+def delete_designation(request, id):
+    if request.method == "POST":
+        try:
+            designation = Designation.objects.get(id=id)
+            designation.delete()
+            return JsonResponse({"success": True, "message": "Designation deleted successfully!"})
+
+        except Designation.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Designation not found."})
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    return JsonResponse({"success": False, "error": "Invalid request."})
+
+# -----------------------------
+# Technology Views
+# -----------------------------
+
+def technology_list(request):
+    records_per_page = int(request.GET.get('recordsPerPage', 20))
+
+    try:
+        page_number = int(request.GET.get('page', 1))
+    except ValueError:
+        page_number = 1
+    if page_number < 1:
+        page_number = 1
+
+    technologies = Technology.objects.all().order_by('id')
+    paginator = Paginator(technologies, records_per_page)
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'technology.html', {
+        "page_obj": page_obj,
+        "records_per_page": records_per_page,
+        "records_options": [20, 50, 100, 200, 300],
+        'total_technologies': Technology.objects.count(),
+    })
+
+
+def add_technology(request):
+    if request.method == "POST":
+        try:
+            name = request.POST.get("name")
+            technology = Technology(name=name)
+            technology.full_clean()
+            technology.save()
+            messages.success(request, "Technology added successfully!")
+            return redirect("technology_list")
+
+        except ValidationError as e:
+            for field, errors in e.message_dict.items():
+                for err in errors:
+                    messages.error(request, f"{field}: {err}")
+            return redirect("technology_list")
+
+        except Exception as e:
+            messages.error(request, f"Error adding technology: {str(e)}")
+            return redirect("technology_list")
+
+    return redirect("technology_list")
+
+
+def get_technology(request):
+    tech_id = request.GET.get("id")
+    try:
+        technology = Technology.objects.get(id=tech_id)
+    except Technology.DoesNotExist:
+        raise Http404("Technology not found")
+
+    return JsonResponse({
+        "id": technology.id,
+        "name": technology.name,
+    })
+
+
+def update_technology(request):
+    if request.method == "POST":
+        tech_id = request.POST.get("id")
+        try:
+            technology = Technology.objects.get(id=tech_id)
+            technology.name = request.POST.get("name")
+            technology.full_clean()
+            technology.save()
+            messages.success(request, "Technology updated successfully!")
+            return redirect("technology_list")
+
+        except Technology.DoesNotExist:
+            messages.error(request, "Technology not found.")
+            return redirect("technology_list")
+
+        except ValidationError as e:
+            for field, errors in e.message_dict.items():
+                for err in errors:
+                    messages.error(request, f"{field}: {err}")
+            return redirect("technology_list")
+
+        except Exception as e:
+            messages.error(request, f"Error updating technology: {str(e)}")
+            return redirect("technology_list")
+
+    return redirect("technology_list")
+
+
+def delete_technology(request, id):
+    if request.method == "POST":
+        try:
+            technology = Technology.objects.get(id=id)
+            technology.delete()
+            return JsonResponse({"success": True, "message": "Technology deleted successfully!"})
+
+        except Technology.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Technology not found."})
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    return JsonResponse({"success": False, "error": "Invalid request."})

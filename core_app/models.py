@@ -159,6 +159,19 @@ class User(models.Model):
         if self.first_name and self.last_name and self.first_name.lower() == self.last_name.lower():
             raise ValidationError("First name and last name cannot be the same.")
 
+        # -----------------------------
+        # Force bank details to uppercase
+        # -----------------------------
+        if self.account_holder:
+            self.account_holder = self.account_holder.upper()
+        if self.account_number:
+            self.account_number = self.account_number.upper()
+        if self.ifsc_code:
+            self.ifsc_code = self.ifsc_code.upper()
+        if self.branch:
+            self.branch = self.branch.upper()
+
+
 # -----------------------------
 # Project model
 # -----------------------------

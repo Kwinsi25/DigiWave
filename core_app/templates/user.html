@@ -421,7 +421,7 @@
 
                                             <!-- Job + Bank -->
                                             <div class="col-md-6 ps-4">
-                                                <div class="row">
+                                                <div class="row ">
                                                     <!-- Job -->
                                                     <div class="col-md-6 border-end">
                                                         <h6 class="fw-bold mb-3 border-bottom pb-2"><i
@@ -435,7 +435,7 @@
                                                         </p>
                                                     </div>
                                                     <!-- Bank -->
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-6 ">
                                                         <h6 class="fw-bold mb-3 border-bottom pb-2"><i
                                                                 class="bx bx-buildings me-1"></i> Bank</h6>
                                                         <p><strong>Holder:</strong> <span
@@ -597,16 +597,44 @@ document.addEventListener("DOMContentLoaded", function () {
                     : "No document provided";
 
                 // ================= Job vs Fixed Employee Details =================
+                // ✅ Select correct sections
                 const jobSection = document.querySelector(".col-md-6.ps-4 > .row > .col-md-6.border-end");
+                const personalSections = document.querySelectorAll(".col-md-6.border-end");
+                const personalSection = personalSections[1]; // the second personal section
+                const bankSection = personalSection ? personalSection.nextElementSibling : null;
+
+                console.log("Job:", jobSection);
+                console.log("Personal:", personalSection);
+                console.log("Bank:", bankSection);
+
+                if (personalSection && bankSection) {
+                    // Expand personal
+                    personalSection.classList.remove("col-md-6");
+                    personalSection.classList.add("col-md-8");
+
+                    // Shrink bank
+                    bankSection.classList.remove("col-md-6");
+                    bankSection.classList.add("col-md-4");
+
+                    bankSection.querySelectorAll("p").forEach(p => {
+    p.classList.add("d-flex", "flex-nowrap");
+    p.querySelector("strong").classList.add("me-2");
+    const span = p.querySelector("span");
+    if (span) {
+        span.classList.add("text-nowrap"); // prevent breaking into multiple lines
+    }
+});
+
+                }
                 const fixedSection = document.getElementById("fixed-employee-section");
 
                 if (data.employee_type && data.employee_type.toLowerCase() === "fixed") {
                     // Hide Salary job section
                     jobSection.style.display = "none";
-                    // Make bank full width
-                    const bankSection = jobSection.nextElementSibling; // Bank column
-                    bankSection.classList.remove("col-md-6");
-                    bankSection.classList.add("col-12");
+                   
+                   
+
+                    
                     // Show Fixed section
                     fixedSection.style.display = "block";
 
@@ -829,21 +857,22 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     <th colspan="4">Bank Details</th>
                                                 </tr>
                                                 <tr>
-                                                    <th>Account Holder</th>
-                                                    <td><input type="text" class="form-control" name="account_holder"
+                                                    <th>Account Holder Name</th>
+                                                    <td><input type="text" class="form-control text-uppercase" name="account_holder"
                                                             placeholder="Enter account holder name"></td>
                                                     <th>Account Number</th>
-                                                    <td><input type="text" class="form-control" name="account_number"
+                                                    <td><input type="text" class="form-control text-uppercase" name="account_number"
                                                             placeholder="Enter account number"></td>
                                                 </tr>
                                                 <tr>
                                                     <th>IFSC Code</th>
-                                                    <td><input type="text" class="form-control" name="ifsc_code"
+                                                    <td><input type="text" class="form-control text-uppercase" name="ifsc_code"
                                                             placeholder="Enter IFSC code"></td>
                                                     <th>Branch</th>
-                                                    <td><input type="text" class="form-control" name="branch"
+                                                    <td><input type="text" class="form-control text-uppercase" name="branch"
                                                             placeholder="Enter branch"></td>
                                                 </tr>
+
 
                                                 <!-- Other Section -->
                                                 <tr class="table-light">
@@ -1091,19 +1120,19 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     <th colspan="4">Bank Details</th>
                                                 </tr>
                                                 <tr>
-                                                    <th>Account Holder</th>
-                                                    <td><input type="text" class="form-control" name="account_holder"
+                                                    <th>Account Holder Name</th>
+                                                    <td><input type="text" class="form-control text-uppercase" name="account_holder"
                                                             id="edit-account-holder"></td>
                                                     <th>Account Number</th>
-                                                    <td><input type="text" class="form-control" name="account_number"
+                                                    <td><input type="text" class="form-control text-uppercase" name="account_number"
                                                             id="edit-account-number"></td>
                                                 </tr>
                                                 <tr>
                                                     <th>IFSC Code</th>
-                                                    <td><input type="text" class="form-control" name="ifsc_code"
+                                                    <td><input type="text" class="form-control text-uppercase" name="ifsc_code"
                                                             id="edit-ifsc-code"></td>
                                                     <th>Branch</th>
-                                                    <td><input type="text" class="form-control" name="branch"
+                                                    <td><input type="text" class="form-control text-uppercase" name="branch"
                                                             id="edit-branch"></td>
                                                 </tr>
 

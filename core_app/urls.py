@@ -75,4 +75,18 @@ urlpatterns = [
     path('payment/', payment_list, name='payment_list'),
     path('add_payment/', add_payment, name='add_payment'),
     path('get_payment/', get_payment, name='get_payment'),
+
+    #designation
+    path('designations/', designation_list, name='designation_list'),
+    path('add_designation/', add_designation, name='add_designation'),
+    path('update_designation/', update_designation, name='update_designation'),
+    path('delete_designation/<int:id>/', delete_designation, name='delete_designation'),
+    path('get_designation/', get_designation, name='get_designation'),
+
+    # Technology 
+    path('technologies/', technology_list, name='technology_list'),
+    path('add_technology/', add_technology, name='add_technology'),
+    path('get_technology/', get_technology, name='get_technology'),
+    path('update_technology/', update_technology, name='update_technology'),
+    path('delete_technology/<int:id>/', delete_technology, name='delete_technology'),
 ]

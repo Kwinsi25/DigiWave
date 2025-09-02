@@ -1,5 +1,5 @@
 <!-- Menu -->
- {% load static %}
+{% load static %}
 
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
   <div class="app-brand demo">
@@ -18,6 +18,7 @@
 
   <!-- Layouts -->
    {% if request.user.is_active and request.user.is_staff and request.user.is_superuser %}
+   <!-- admin dashboard -->
   <ul class="menu-inner py-1">
     <li class="menu-item active">
       <a href="#" class="menu-link">
@@ -60,6 +61,18 @@
         <i class="menu-icon tf-icons bx bx-file"></i>
         <div data-i18n="Projects">Files & Docs</div>
       </a>
+    </li>
+
+    <li class="menu-item">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-folder"></i>
+        <div data-i18n="Data">Add Data</div>
+      </a>
+      <ul class="menu-sub">
+
+        <li class="menu-item"><a href="{% url 'designation_list' %}" class="menu-link">Role</a></li>
+        <li class="menu-item"><a href="{% url 'technology_list' %}" class="menu-link">Technology</a></li>
+      </ul>
     </li>
 
     <li class="menu-header small text-uppercase">
@@ -140,7 +153,8 @@
       </a>
     </li>
   </ul>
-  {% elif request.user.is_active and request.user.is_staff and not request.user.is_superuser %}
+  {% elif request.user.is_active and request.user.is_staff and not request.user.is_superuser %}  
+  <!-- employee dashboard -->
   <ul class="menu-inner py-1">
     <li class="menu-item active">
       <a href="#" class="menu-link">
@@ -264,5 +278,140 @@
     </li>
   </ul>
   {% endif %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const ACC_KEY = "openAccordion";
+  const SUB_KEY = "activeSubmenu";
+
+  const norm = p => {
+    if (!p) return "/";
+    p = p.split("?")[0].split("#")[0];
+    if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
+    return p;
+  };
+  const currentPath = norm(location.pathname);
+
+  // Assign stable data-id to each top-level accordion
+  const toggles = Array.from(document.querySelectorAll("#layout-menu .menu-link.menu-toggle"));
+  toggles.forEach((t, i) => {
+    const li = t.closest("li.menu-item");
+    if (li && !li.dataset.id) li.dataset.id = String(i);
+  });
+
+  // --- Force all accordions closed at start
+  document.querySelectorAll("#layout-menu li.menu-item.open").forEach(item => {
+    item.classList.remove("open", "active");
+  });
+
+  // Find link that matches current path
+  let matchedLink = null;
+  document.querySelectorAll("#layout-menu .menu-link").forEach(a => {
+    const href = a.getAttribute("href");
+    if (!href || href === "#" || href.startsWith("javascript")) return; // ⬅️ ignore placeholders
+    const linkPath = norm(href);
+    if (currentPath === linkPath || currentPath.endsWith(linkPath)) matchedLink = a;
+  });
+
+  const openLi = li => { if (li) li.classList.add("open","active"); };
+  const closeLi = li => { if (li) li.classList.remove("open","active"); };
+
+  // If current page matches a submenu, open its parent and save
+  if (matchedLink && matchedLink.closest("ul.menu-sub")) {
+    matchedLink.classList.add("active");
+    matchedLink.closest("li.menu-item")?.classList.add("active");
+    const parentLi = matchedLink.closest("ul.menu-sub")?.closest("li.menu-item");
+    openLi(parentLi);
+    if (parentLi) localStorage.setItem(ACC_KEY, parentLi.dataset.id || "");
+    localStorage.setItem(SUB_KEY, matchedLink.getAttribute("href"));
+  } else {
+    // Restore state
+    const savedSub = localStorage.getItem(SUB_KEY);
+    const savedAcc = localStorage.getItem(ACC_KEY);
+
+    if (savedSub) {
+      const el = document.querySelector(`#layout-menu .menu-link[href="${savedSub}"]`);
+      if (el) {
+        el.classList.add("active");
+        el.closest("li.menu-item")?.classList.add("active");
+        openLi(el.closest("ul.menu-sub")?.closest("li.menu-item"));
+      }
+    } else if (savedAcc) {
+      openLi(document.querySelector(`#layout-menu li.menu-item[data-id="${savedAcc}"]`));
+    }
+  }
+
+  // --- Accordion toggle (single click, no double-toggle from theme)
+  let lastClickTs = 0;
+  const MIN_GAP = 250; // ms debounce
+
+  toggles.forEach(toggle => {
+    const li = toggle.closest("li.menu-item");
+    toggle.addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation(); // block theme's own handler (prevents double toggle)
+
+      const now = Date.now();
+      if (now - lastClickTs < MIN_GAP) return; // debounce fast double clicks
+      lastClickTs = now;
+
+      const isOpen = li.classList.contains("open");
+
+      // Close others (keep this one)
+      document.querySelectorAll("#layout-menu li.menu-item.open").forEach(item => {
+        if (item !== li) closeLi(item);
+      });
+
+      if (isOpen) {
+        // Close this one and clear only accordion key
+        closeLi(li);
+        if (localStorage.getItem(ACC_KEY) === li.dataset.id) {
+          localStorage.removeItem(ACC_KEY);
+        }
+        // Do NOT clear SUB_KEY here; keep submenu highlight until navigation
+      } else {
+        // Open and store
+        openLi(li);
+        localStorage.setItem(ACC_KEY, li.dataset.id || "");
+      }
+    }, { passive: false });
+  });
+
+  // --- Save submenu clicks (so parent stays open after navigation)
+  document.querySelectorAll("#layout-menu .menu-sub .menu-link").forEach(link => {
+    link.addEventListener("click", function () {
+      const href = this.getAttribute("href");
+      if (href && href !== "#" && !href.startsWith("javascript")) { // ⬅️ ignore placeholders
+        localStorage.setItem(SUB_KEY, href);
+        const parentLi = this.closest("ul.menu-sub")?.closest("li.menu-item");
+        if (parentLi) localStorage.setItem(ACC_KEY, parentLi.dataset.id || "");
+      }
+    }, { passive: true });
+  });
+
+    // --- Handle direct (no submenu) menu links
+  document.querySelectorAll("#layout-menu > ul > li.menu-item > a.menu-link:not(.menu-toggle)").forEach(link => {
+    link.addEventListener("click", function () {
+      const href = this.getAttribute("href");
+      if (href && href !== "#" && !href.startsWith("javascript")) {
+        // Clear accordion state because this is a top-level direct link
+        localStorage.removeItem(ACC_KEY);
+        // Also clear submenu highlight (optional, if you want)
+        localStorage.removeItem(SUB_KEY);
+        // Close all accordions immediately
+        document.querySelectorAll("#layout-menu li.menu-item.open").forEach(item => {
+          item.classList.remove("open", "active");
+        });
+      }
+    }, { passive: true });
+  });
+
+});
+</script>
+{% endblock %}
+
+
 </aside>
 <!-- / Menu -->
