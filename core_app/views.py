@@ -29,7 +29,10 @@ from django.template.loader import render_to_string
 
 
 def parse_date(val):
-                return datetime.strptime(val, "%Y-%m-%d").date() if val else None
+    try:
+        return datetime.strptime(val, "%Y-%m-%d").date() if val else None
+    except (ValueError, TypeError):
+        return None
 # -----------------------------
 # Login View
 # -----------------------------
@@ -236,11 +239,7 @@ def save_project(request):
 
     return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}}, status=405)
 
-def parse_date(val):
-    try:
-        return datetime.strptime(val, "%Y-%m-%d").date() if val else None
-    except (ValueError, TypeError):
-        return None
+
 
 def to_decimal(val):
     try:
@@ -343,7 +342,14 @@ def update_project(request, id):
     if request.method == "POST":
         try:
             data = request.POST
-
+            quotation_id = data.get("quotation")
+            if quotation_id:
+                try:
+                    project.quotation = Quotation.objects.get(id=quotation_id)
+                except Quotation.DoesNotExist:
+                    project.quotation = None
+            else:
+                project.quotation = None
             # Basic info
             project.project_name = data.get("project_name")
             project.project_type = data.get("project_type")
@@ -1497,7 +1503,7 @@ def get_quotation(request):
         "quotation_no": quotation.quotation_no,
         "date": quotation.date.strftime("%Y-%m-%d"),
         "valid_until": quotation.valid_until.strftime("%Y-%m-%d"),
-        "prepared_by": str(quotation.prepared_by) if quotation.prepared_by else "",
+        # "prepared_by": str(quotation.prepared_by) if quotation.prepared_by else "",
         "company_name": quotation.company_name,
         "company_phone": quotation.company_phone,
         "company_email": quotation.company_email,
@@ -1507,7 +1513,10 @@ def get_quotation(request):
         "client_email": quotation.client_email,
         "client_address": quotation.client_address,
         "lead_source": quotation.lead_source,
-        "prepared_by": quotation.prepared_by.id if quotation.prepared_by else None,
+        "prepared_by": {
+            "id": quotation.prepared_by.id if quotation.prepared_by else None,
+            "name": quotation.prepared_by.username   if quotation.prepared_by else ""
+        },
 
         # --- Services ---
         "services": services,
@@ -2491,6 +2500,112 @@ def delete_technology(request, id):
 
         except Technology.DoesNotExist:
             return JsonResponse({"success": False, "error": "Technology not found."})
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    return JsonResponse({"success": False, "error": "Invalid request."})
+
+
+# -----------------------------
+# AppMode Views
+# -----------------------------
+
+def appmode_list(request):
+    records_per_page = int(request.GET.get('recordsPerPage', 20))
+
+    try:
+        page_number = int(request.GET.get('page', 1))
+    except ValueError:
+        page_number = 1
+    if page_number < 1:
+        page_number = 1
+
+    app_modes = AppMode.objects.all().order_by('id')
+    paginator = Paginator(app_modes, records_per_page)
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'appmode.html', {
+        "page_obj": page_obj,
+        "records_per_page": records_per_page,
+        "records_options": [20, 50, 100, 200, 300],
+        'total_app_modes': AppMode.objects.count(),
+    })
+
+
+def add_appmode(request):
+    if request.method == "POST":
+        try:
+            name = request.POST.get("name")
+            app_mode = AppMode(name=name)
+            app_mode.full_clean()
+            app_mode.save()
+            messages.success(request, "App Mode added successfully!")
+            return redirect("appmode_list")
+
+        except ValidationError as e:
+            for field, errors in e.message_dict.items():
+                for err in errors:
+                    messages.error(request, f"{field}: {err}")
+            return redirect("appmode_list")
+
+        except Exception as e:
+            messages.error(request, f"Error adding App Mode: {str(e)}")
+            return redirect("appmode_list")
+
+    return redirect("appmode_list")
+
+
+def get_appmode(request):
+    mode_id = request.GET.get("id")
+    try:
+        app_mode = AppMode.objects.get(id=mode_id)
+    except AppMode.DoesNotExist:
+        raise Http404("App Mode not found")
+
+    return JsonResponse({
+        "id": app_mode.id,
+        "name": app_mode.name,
+    })
+
+
+def update_appmode(request):
+    if request.method == "POST":
+        mode_id = request.POST.get("id")
+        try:
+            app_mode = AppMode.objects.get(id=mode_id)
+            app_mode.name = request.POST.get("name")
+            app_mode.full_clean()
+            app_mode.save()
+            messages.success(request, "App Mode updated successfully!")
+            return redirect("appmode_list")
+
+        except AppMode.DoesNotExist:
+            messages.error(request, "App Mode not found.")
+            return redirect("appmode_list")
+
+        except ValidationError as e:
+            for field, errors in e.message_dict.items():
+                for err in errors:
+                    messages.error(request, f"{field}: {err}")
+            return redirect("appmode_list")
+
+        except Exception as e:
+            messages.error(request, f"Error updating App Mode: {str(e)}")
+            return redirect("appmode_list")
+
+    return redirect("appmode_list")
+
+
+def delete_appmode(request, id):
+    if request.method == "POST":
+        try:
+            app_mode = AppMode.objects.get(id=id)
+            app_mode.delete()
+            return JsonResponse({"success": True, "message": "App Mode deleted successfully!"})
+
+        except AppMode.DoesNotExist:
+            return JsonResponse({"success": False, "error": "App Mode not found."})
 
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})

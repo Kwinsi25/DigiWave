@@ -196,9 +196,9 @@
                                 <td>{{ project.app_mode.name|default:"-" }}</td>
                                 <td>
                                     {% if project.status == "Ongoing" %}
-                                    <span class="badge bg-label-success">{{ project.status }}</span>
-                                    {% elif project.status == "Completed" %}
                                     <span class="badge bg-label-primary">{{ project.status }}</span>
+                                    {% elif project.status == "Completed" %}
+                                    <span class="badge bg-label-success">{{ project.status }}</span>
                                     {% elif project.status == "On Hold" %}
                                     <span class="badge bg-label-warning">{{ project.status }}</span>
                                     {% elif project.status == "Cancelled" %}
@@ -359,6 +359,7 @@
     </div>
 
 
+
     <!-- Add Project Modal -->
     <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true"
         data-bs-backdrop="static" data-bs-keyboard="false">
@@ -378,7 +379,12 @@
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle">
                                 <tbody>
-                                    <!-- Project Basic Info -->
+
+                                    <!-- ==================== Quotation Details ==================== -->
+                                    <tr class="table-light">
+    <th colspan="4"><i class="bx bx-file me-2"></i> Quotation Details</th>
+</tr>
+
                                     <tr>
                                         <th>Quotation</th>
                                         <td colspan="3">
@@ -394,6 +400,89 @@
                                     </tr>
 
                                     <tr>
+                                        <th>Inquiry Date</th>
+                                        <td>
+                                            <input type="text" class="form-control flat-date" name="inquiry_date"
+                                                placeholder="Select inquiry date">
+                                            <div class="invalid-feedback"></div>
+                                        </td>
+                                        <th>Lead Source</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="lead_source"
+                                                placeholder="Enter lead source">
+                                            <div class="invalid-feedback"></div>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Quotation Sent</th>
+                                        <td>
+                                            <select class="form-select" name="quotation_sent">
+                                                <option value="">-- Select --</option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </td>
+                                        <th>Demo Given</th>
+                                        <td>
+                                            <select class="form-select" name="demo_given">
+                                                <option value="">-- Select --</option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Quotation Amount (₹)</th>
+                                        <td>
+                                            <input type="number" step="0.01" class="form-control"
+                                                name="quotation_amount" placeholder="Enter quotation amount">
+                                            <div class="invalid-feedback"></div>
+                                        </td>
+                                        <th>Approval Amount (₹)</th>
+                                        <td>
+                                            <input type="number" step="0.01" class="form-control" name="approval_amount"
+                                                placeholder="Enter approval amount">
+                                            <div class="invalid-feedback"></div>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Client Industry</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="client_industry"
+                                                placeholder="Enter client industry">
+                                            <div class="invalid-feedback"></div>
+                                        </td>
+                                        <th>Client</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="client_name"
+                                                placeholder="Enter client name">
+                                            <div class="invalid-feedback"></div>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Contract Signed</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="contract_signed">
+                                                <option value="">-- Select --</option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                            </select>
+                                            <div class="invalid-feedback"></div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- ==================== Project Details ==================== -->
+                                   <tr class="table-light">
+    <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Details</th>
+</tr>
+
+                                    <tr>
                                         <th>Project Name</th>
                                         <td>
                                             <input type="text" class="form-control" name="project_name"
@@ -401,7 +490,7 @@
                                             <div class="invalid-feedback"></div>
                                         </td>
                                         <th>Project Type</th>
-                                        <td colspan="3">
+                                        <td>
                                             <select class="form-select" name="project_type" required>
                                                 <option value="">-- Select Project Type --</option>
                                                 <option value="Fixed">Fix</option>
@@ -410,19 +499,22 @@
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <th>Start Date</th>
                                         <td>
-                                            <!-- <input type="date" class="form-control" name="start_date"> -->
-                                            <input type="text" class="form-control flat-date" name="start_date" placeholder="Select start date">
+                                            <input type="text" class="form-control flat-date" name="start_date"
+                                                placeholder="Select start date">
                                             <div class="invalid-feedback"></div>
                                         </td>
                                         <th>Deadline</th>
                                         <td>
-                                           <input type="text" class="form-control flat-date" name="deadline" placeholder="Select deadline date">
+                                            <input type="text" class="form-control flat-date" name="deadline"
+                                                placeholder="Select deadline date">
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <th>Technologies</th>
                                         <td>
@@ -446,6 +538,7 @@
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <th>Status</th>
                                         <td>
@@ -472,11 +565,11 @@
                                         </td>
                                     </tr>
 
-                                    <!-- Payment Info -->
+                                    <!-- Payment, Links, Financials, Free Service -->
                                     <tr>
                                         <th>Payment (₹)</th>
                                         <td>
-                                            <input type="number" class="form-control" name="payment_value" m
+                                            <input type="number" class="form-control" name="payment_value"
                                                 placeholder="Enter total payment value" min="0">
                                             <div class="invalid-feedback"></div>
                                         </td>
@@ -491,41 +584,36 @@
                                         </td>
                                     </tr>
 
-                                    <!-- Links -->
                                     <tr>
                                         <th>Live Link</th>
-                                        <td colspan="3">
+                                        <td>
                                             <input type="url" class="form-control" name="live_link"
                                                 placeholder="https://example.com">
                                             <div class="invalid-feedback"></div>
                                         </td>
-                                    </tr>
-                                    <tr>
                                         <th>Postman Collection</th>
-                                        <td colspan="3">
+                                        <td>
                                             <input type="url" class="form-control" name="postman_collection"
                                                 placeholder="https://example.com/postman.json">
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <th>Data Folder</th>
-                                        <td colspan="3">
+                                        <td>
                                             <input type="url" class="form-control" name="data_folder"
                                                 placeholder="https://example.com/data/">
                                             <div class="invalid-feedback"></div>
                                         </td>
-                                    </tr>
-                                    <tr>
                                         <th>Other Link</th>
-                                        <td colspan="3">
+                                        <td>
                                             <input type="url" class="form-control" name="other_link"
                                                 placeholder="https://example.com/other">
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
 
-                                    <!-- Financials -->
                                     <tr>
                                         <th>Expense (₹)</th>
                                         <td>
@@ -540,6 +628,7 @@
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <th>Server Charge (₹)</th>
                                         <td>
@@ -554,6 +643,7 @@
                                             <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <th>Mediator Charge (₹)</th>
                                         <td>
@@ -569,7 +659,6 @@
                                         </td>
                                     </tr>
 
-                                    <!-- Free Service -->
                                     <tr>
                                         <th>Free Service</th>
                                         <td colspan="3">
@@ -579,80 +668,16 @@
                                         </td>
                                     </tr>
 
-                                    <!-- Sales / Lead Tracking -->
-                                    <tr>
-                                        <th>Inquiry Date</th>
-                                        <td>
-                                            <input type="text" class="form-control flat-date" name="inquiry_date" placeholder="Select inquiry date">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        <th>Lead Source</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="lead_source"
-                                                placeholder="Enter lead source">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Quotation Sent</th>
-                                        <td>
-                                            <select class="form-select" name="quotation_sent">
-                                                <option value="">-- Select --</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        <th>Demo Given</th>
-                                        <td>
-                                            <select class="form-select" name="demo_given">
-                                                <option value="">-- Select --</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Quotation Amount (₹)</th>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control"
-                                                name="quotation_amount" placeholder="Enter quotation amount">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        <th>Approval Amount (₹)</th>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control" name="approval_amount"
-                                                placeholder="Enter approval amount">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Completion / Client Info -->
                                     <tr>
                                         <th>Completed Date</th>
                                         <td>
-                                            <input type="text" class="form-control flat-date" name="completed_date" placeholder="Select completed date">
+                                            <input type="text" class="form-control flat-date" name="completed_date"
+                                                placeholder="Select completed date">
                                             <div class="invalid-feedback"></div>
                                         </td>
-                                        <th>Client Industry</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="client_industry"
-                                                placeholder="Enter client industry">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
+                                        <td colspan="2"></td>
                                     </tr>
-                                    <tr>
-                                        <th>Contract Signed</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="contract_signed">
-                                                <option value="">-- Select --</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
+
                                 </tbody>
                             </table>
                         </div>
@@ -663,10 +688,11 @@
                     </div>
                 </form>
 
-
             </div>
         </div>
     </div>
+
+
 
 
     <!-- Project Details Modal -->
@@ -676,8 +702,8 @@
             <div class="modal-content">
                 <div class="modal-header table-primary text-white">
                     <h5 class="modal-title" id="projectDetailsModalLabel">
-                        <i class="bx bx-folder-open me-2"></i> Project Details:
-                        <span id="pd-header-project-name" class="fw-bold text-warning"></span>
+                        <i class="bx bx-folder-open"></i>
+                        <span id="pd-header-project-name" class="fw-bold text-primary text-uppercase"></span>
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
@@ -686,46 +712,27 @@
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped align-middle">
                             <tbody>
-                                <tr>
-                                    <th>Project ID</th>
-                                    <td id="pd-project-id"></td>
-                                    <th>Project Name</th>
-                                    <td id="pd-project-name"></td>
-                                </tr>
-                                <tr>
-                                    <th>Inquiry Date</th>
-                                    <td id="pd-inquiry-date"></td>
-                                    <th>Project Type</th>
-                                    <td id="pd-project-type" ></td>
-                                </tr>
-                                <tr>
-                                    <th>Technologies</th>
-                                    <td id="pd-technologies" colspan="3"></td>
-                                </tr>
 
-                                <tr>
-                                    <th>App Mode</th>
-                                    <td id="pd-app-mode"></td>
-                                    <th>Lead Source</th>
-                                    <td id="pd-lead-source"></td>
-                                </tr>
-                                <tr>
-                                    <th>Status</th>
-                                    <td id="pd-status"></td>
-                                    <th>Quotation Sent?</th>
-                                    <td id="pd-quotation-sent"></td>
-                                </tr>
-                                <tr>
-                                    <th>Demo</th>
-                                    <td id="pd-demo"></td>
-                                    <th>Team Members</th>
-                                    <td id="pd-team-members"></td>
+                                <!-- 🔵 Quotation Details -->
+                                <tr class="table-light">
+                                    <td colspan="4"><i class="bx bx-file me-1 text-primary"></i>Quotation Details</td>
                                 </tr>
                                 <tr>
                                     <th>Quotation</th>
                                     <td id="pd-quotation-reference" colspan="3"></td>
                                 </tr>
-
+                                <tr>
+                                    <th>Inquiry Date</th>
+                                    <td id="pd-inquiry-date"></td>
+                                    <th>Lead Source</th>
+                                    <td id="pd-lead-source"></td>
+                                </tr>
+                                <tr>
+                                    <th>Quotation Sent?</th>
+                                    <td id="pd-quotation-sent"></td>
+                                    <th>Demo Given</th>
+                                    <td id="pd-demo"></td>
+                                </tr>
                                 <tr>
                                     <th>Quotation Amount</th>
                                     <td id="pd-quotation-amount"></td>
@@ -733,27 +740,56 @@
                                     <td id="pd-approval-amount"></td>
                                 </tr>
                                 <tr>
-                                    <th>Deadline</th>
-                                    <td id="pd-deadline"></td>
-                                    <th>Completed Date</th>
-                                    <td id="pd-completed-date"></td>
-                                </tr>
-                                <tr>
-                                    <th>Payment Status</th>
-                                    <td id="pd-payment-status" colspan="3"></td>
-                                </tr>
-                                <tr>
                                     <th>Client Industry</th>
                                     <td id="pd-client-industry"></td>
                                     <th>Contract Signed?</th>
                                     <td id="pd-contract-signed"></td>
                                 </tr>
-                                <tr>
-                                    <th>Live Link / API</th>
-                                    <td id="pd-live-link" colspan="3"></td>
+
+                                <!-- 🟢 Project Details -->
+                                <tr class="table-light">
+                                    <td colspan="4"><i class="bx bx-folder-open me-1 text-success"></i>Project Details
+                                    </td>
                                 </tr>
-                                <tr class="table-secondary fw-bold text-dark">
-                                    <td colspan="4" class="text-center">💸 Expense & Income</td>
+                                <tr>
+                                    <th>Project ID</th>
+                                    <td id="pd-project-id"></td>
+                                    <th>Project Name</th>
+                                    <td id="pd-project-name"></td>
+                                </tr>
+                                <tr>
+                                    <th>Project Type</th>
+                                    <td id="pd-project-type"></td>
+                                    <th>Status</th>
+                                    <td id="pd-status"></td>
+                                </tr>
+                                <tr>
+                                    <th>Start Date</th>
+                                    <td id="pd-start-date"></td>
+                                    <th>Deadline</th>
+                                    <td id="pd-deadline"></td>
+                                </tr>
+                                <tr>
+                                    <th>Completed Date</th>
+                                    <td id="pd-completed-date"></td>
+                                    <th>Team Members</th>
+                                    <td id="pd-team-members"></td>
+                                </tr>
+                                <tr>
+                                    <th>Technologies</th>
+                                    <td id="pd-technologies" colspan="3"></td>
+                                </tr>
+                                <tr>
+                                    <th>App Mode</th>
+                                    <td id="pd-app-mode"></td>
+                                    <th>Payment Status</th>
+                                    <td id="pd-payment-status"></td>
+                                </tr>
+
+                                <!-- 💸 Financials -->
+                                <tr class="table-light">
+                                    <td colspan="4"><i class="bx bx-dollar-circle me-1 text-danger"></i>Expense & Income
+                                    </td>
                                 </tr>
                                 <tr>
                                     <th>Expense</th>
@@ -777,6 +813,15 @@
                                     <th>Free Service</th>
                                     <td id="pd-free-service" colspan="3"></td>
                                 </tr>
+
+                                <!-- 🔗 Links -->
+                                <tr class="table-light">
+                                    <td colspan="4"><i class="bx bx-link-alt me-1 text-warning"></i>Project Links</td>
+                                </tr>
+                                <tr>
+                                    <th>Live Link</th>
+                                    <td id="pd-live-link" colspan="3"></td>
+                                </tr>
                                 <tr>
                                     <th>Postman Collection</th>
                                     <td id="pd-postman-collection" colspan="3"></td>
@@ -789,6 +834,7 @@
                                     <th>Other Link</th>
                                     <td id="pd-other-link" colspan="3"></td>
                                 </tr>
+
                             </tbody>
                         </table>
                     </div>
@@ -796,6 +842,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Edit Project Modal -->
     <div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel"
@@ -812,14 +859,18 @@
 
                 <form id="editProjectForm" method="POST">
                     {% csrf_token %}
-                    <!-- hidden ID field -->
                     <input type="hidden" name="project_id" id="edit-project-id">
 
                     <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle">
                                 <tbody>
-                                    <!-- Project Basic Info -->
+
+                                    <!-- ==================== Quotation Details ==================== -->
+                                   <tr class="table-light">
+    <th colspan="4"><i class="bx bx-file me-2"></i> Quotation Details</th>
+</tr>
+
                                     <tr>
                                         <th>Quotation</th>
                                         <td colspan="3">
@@ -835,11 +886,73 @@
                                     </tr>
 
                                     <tr>
-                                        <th>Project Name</th>
+                                        <th>Inquiry Date</th>
+                                        <td><input type="text" class="form-control flat-date" name="inquiry_date"
+                                                id="edit-inquiry-date" placeholder="Select inquiry date"></td>
+                                        <th>Lead Source</th>
+                                        <td><input type="text" class="form-control" name="lead_source"
+                                                id="edit-lead-source" placeholder="Enter lead source"></td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Quotation Sent</th>
                                         <td>
-                                            <input type="text" class="form-control" name="project_name"
-                                                id="edit-project-name" required>
+                                            <select class="form-select" name="quotation_sent" id="edit-quotation-sent">
+                                                <option value="">-- Select --</option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                            </select>
                                         </td>
+                                        <th>Demo Given</th>
+                                        <td>
+                                            <select class="form-select" name="demo_given" id="edit-demo-given">
+                                                <option value="">-- Select --</option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Quotation Amount (₹)</th>
+                                        <td><input type="number" step="0.01" class="form-control"
+                                                name="quotation_amount" id="edit-quotation-amount"
+                                                placeholder="Enter quotation amount"></td>
+                                        <th>Approval Amount (₹)</th>
+                                        <td><input type="number" step="0.01" class="form-control" name="approval_amount"
+                                                id="edit-approval-amount" placeholder="Enter approval amount"></td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Client Industry</th>
+                                        <td><input type="text" class="form-control" name="client_industry"
+                                                id="edit-client-industry" placeholder="Enter client industry"></td>
+                                        <th>Client</th>
+                                        <td><input type="text" class="form-control" name="client_name"
+                                                id="edit-client-name" placeholder="Enter client name"></td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Contract Signed</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="contract_signed"
+                                                id="edit-contract-signed">
+                                                <option value="">-- Select --</option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+
+                                    <!-- ==================== Project Details ==================== -->
+                                    <tr class="table-light">
+    <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Details</th>
+</tr>
+
+                                    <tr>
+                                        <th>Project Name</th>
+                                        <td><input type="text" class="form-control" name="project_name"
+                                                id="edit-project-name" placeholder="Enter project name"></td>
                                         <th>Project Type</th>
                                         <td>
                                             <select class="form-select" name="project_type" id="edit-project-type">
@@ -847,30 +960,29 @@
                                                 <option value="Fixed">Fix</option>
                                                 <option value="Salary">Salary</option>
                                             </select>
-                                            <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <th>Start Date</th>
                                         <td><input type="text" class="form-control flat-date" name="start_date"
-                                                id="edit-start-date" placeholder="Select start date">
-                                        </td>
+                                                id="edit-start-date" placeholder="Select start date"></td>
                                         <th>Deadline</th>
-                                        <td><input type="text" class="form-control flat-date" name="deadline" id="edit-deadline" placeholder="Select  deadline ">
-                                        </td>
+                                        <td><input type="text" class="form-control flat-date" name="deadline"
+                                                id="edit-deadline" placeholder="Select deadline"></td>
                                     </tr>
+
                                     <tr>
                                         <th>Technologies</th>
                                         <td>
                                             <select class="form-select" name="technologies" id="edit-technologies"
                                                 multiple>
+                                                <option value="">-- Select Techlologies --</option>
                                                 {% for tech in technologies %}
                                                 <option value="{{ tech.id }}">{{ tech.name }}</option>
                                                 {% endfor %}
                                             </select>
-                                            <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
-                                                multiple</small>
-                                            <div class="invalid-feedback"></div>
+                                            <small class="text-muted">Hold CTRL or CMD to select multiple</small>
                                         </td>
                                         <th>App Mode</th>
                                         <td>
@@ -880,9 +992,6 @@
                                                 <option value="{{ mode.id }}">{{ mode.name }}</option>
                                                 {% endfor %}
                                             </select>
-
-
-                                            <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
 
@@ -906,141 +1015,87 @@
                                                 </option>
                                                 {% endfor %}
                                             </select>
-                                            <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
-                                                multiple
-                                                members</small>
                                         </td>
                                     </tr>
 
-                                    <!-- Payment Info -->
+                                    <!-- Payment -->
                                     <tr>
                                         <th>Payment (₹)</th>
                                         <td><input type="number" class="form-control" name="payment_value"
-                                                id="edit-payment-value" min="0"></td>
+                                                id="edit-payment-value" placeholder="Enter payment amount"></td>
                                         <th>Payment Status</th>
                                         <td>
                                             <select class="form-select" name="payment_status" id="edit-payment-status">
+                                                <option value="">-- Select Payment Status --</option>
                                                 <option value="Pending">Pending</option>
                                                 <option value="Advanced">Advanced</option>
                                                 <option value="Paid">Paid</option>
                                             </select>
                                         </td>
                                     </tr>
-
                                     <!-- Links -->
                                     <tr>
                                         <th>Live Link</th>
-                                        <td colspan="3"><input type="url" class="form-control" name="live_link"
-                                                id="edit-live-link"></td>
-                                    </tr>
-                                    <tr>
+                                        <td><input type="url" class="form-control" name="live_link" id="edit-live-link"
+                                                placeholder="Enter live link URL"></td>
                                         <th>Postman Collection</th>
-                                        <td colspan="3"><input type="url" class="form-control" name="postman_collection"
-                                                id="edit-postman-collection"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Data Folder</th>
-                                        <td colspan="3"><input type="url" class="form-control" name="data_folder"
-                                                id="edit-data-folder"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Other Link</th>
-                                        <td colspan="3"><input type="url" class="form-control" name="other_link"
-                                                id="edit-other-link"></td>
+                                        <td><input type="url" class="form-control" name="postman_collection"
+                                                id="edit-postman-collection" placeholder="Enter Postman collection URL">
+                                        </td>
                                     </tr>
 
+                                    <tr>
+                                        <th>Data Folder</th>
+                                        <td><input type="url" class="form-control" name="data_folder"
+                                                id="edit-data-folder" placeholder="Enter data folder URL"></td>
+                                        <th>Other Link</th>
+                                        <td><input type="url" class="form-control" name="other_link"
+                                                id="edit-other-link" placeholder="Enter other link"></td>
+                                    </tr>
                                     <!-- Financials -->
                                     <tr>
                                         <th>Expense (₹)</th>
                                         <td><input type="number" step="0.01" class="form-control" name="expense"
-                                                id="edit-expense"></td>
+                                                id="edit-expense" placeholder="Enter expense"></td>
                                         <th>Developer Charge (₹)</th>
                                         <td><input type="number" step="0.01" class="form-control"
-                                                name="developer_charge" id="edit-developer-charge"></td>
+                                                name="developer_charge" id="edit-developer-charge"
+                                                placeholder="Enter developer charge"></td>
                                     </tr>
                                     <tr>
                                         <th>Server Charge (₹)</th>
                                         <td><input type="number" step="0.01" class="form-control" name="server_charge"
-                                                id="edit-server-charge"></td>
+                                                id="edit-server-charge" placeholder="Enter server charge"></td>
                                         <th>3rd Party API Charge (₹)</th>
                                         <td><input type="number" step="0.01" class="form-control"
-                                                name="third_party_api_charge" id="edit-third-party-charge"></td>
+                                                name="third_party_api_charge" id="edit-third-party-charge"
+                                                placeholder="Enter API charge"></td>
                                     </tr>
                                     <tr>
                                         <th>Mediator Charge (₹)</th>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control" name="mediator_charge"
-                                                id="edit-mediator-charge" placeholder="Enter mediator charge">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        <th>Income</th>
+                                        <td><input type="number" step="0.01" class="form-control" name="mediator_charge"
+                                                id="edit-mediator-charge" placeholder="Enter mediator charge"></td>
+                                        <th>Income (₹)</th>
                                         <td><input type="number" step="0.01" class="form-control" name="income"
-                                                id="edit-income"></td>
+                                                id="edit-income" placeholder="Enter income"></td>
                                     </tr>
-
                                     <!-- Free Service -->
                                     <tr>
                                         <th>Free Service</th>
                                         <td colspan="3"><textarea class="form-control" name="free_service"
-                                                id="edit-free-service" rows="2"></textarea></td>
+                                                id="edit-free-service" rows="2"
+                                                placeholder="Describe free services if any"></textarea></td>
                                     </tr>
 
-                                    <!-- Sales / Lead Tracking -->
-                                    <tr>
-                                        <th>Inquiry Date</th>
-                                        <td><input type="text" class="form-control flat-date" name="inquiry_date"
-                                                id="edit-inquiry-date" placeholder="Select inquiry date"></td>
-                                        <th>Lead Source</th>
-                                        <td><input type="text" class="form-control" name="lead_source"
-                                                id="edit-lead-source"></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Quotation Sent</th>
-                                        <td>
-                                            <select class="form-select" name="quotation_sent" id="edit-quotation-sent">
-                                                <option value="">-- Select --</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                        </td>
-                                        <th>Demo Given</th>
-                                        <td>
-                                            <select class="form-select" name="demo_given" id="edit-demo-given">
-                                                <option value="">-- Select --</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Quotation Amount (₹)</th>
-                                        <td><input type="number" step="0.01" class="form-control"
-                                                name="quotation_amount" id="edit-quotation-amount"></td>
-                                        <th>Approval Amount (₹)</th>
-                                        <td><input type="number" step="0.01" class="form-control" name="approval_amount"
-                                                id="edit-approval-amount"></td>
-                                    </tr>
 
-                                    <!-- Completion / Client Info -->
+                                    <!-- Completion -->
                                     <tr>
                                         <th>Completed Date</th>
                                         <td><input type="text" class="form-control flat-date" name="completed_date"
                                                 id="edit-completed-date" placeholder="Select completed date"></td>
-                                        <th>Client Industry</th>
-                                        <td><input type="text" class="form-control" name="client_industry"
-                                                id="edit-client-industry"></td>
+                                        <td colspan="2"></td>
                                     </tr>
-                                    <tr>
-                                        <th>Contract Signed</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="contract_signed"
-                                                id="edit-contract-signed">
-                                                <option value="">-- Select --</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                        </td>
-                                    </tr>
+
                                 </tbody>
                             </table>
                         </div>
@@ -1050,10 +1105,10 @@
                         <button type="submit" class="btn btn-primary">Update Project</button>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>
+
 
     <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel"
@@ -1254,58 +1309,99 @@
                 .catch(err => console.error("Error:", err));
         });
 
-        // autofill when quotation select at the time of add
+        // Auto-fill when quotation is selected
         document.getElementById('quotationSelect').addEventListener('change', function () {
             let quotationId = this.value;
-            if (!quotationId) return;
 
-            fetch(`/get_quotation/?id=${quotationId}`)  // create a view that returns JSON
+            // Get input references
+            let leadInput = document.querySelector('input[name="lead_source"]');
+            let quotationInput = document.querySelector('input[name="quotation_amount"]');
+            let inquiryInput = document.querySelector('input[name="inquiry_date"]');
+            let quotationSelect = document.querySelector('select[name="quotation_sent"]');
+            let demoGiven = document.querySelector('select[name="demo_given"]');
+            let clientName = document.querySelector('input[name="client_name"]');
+            let contractSigned = document.querySelector('select[name="contract_signed"]');
+            if (!quotationId) {
+                // If quotation deselected → reset readonly/disabled
+                // Reset values
+                leadInput.value = '';
+                quotationInput.value = '';
+                quotationSelect.value = '';
+                clientName.value = '';
+                if (typeof demoGiven !== "undefined") demoGiven.value = '';
+                if (typeof contractSigned !== "undefined") contractSigned.value = '';
+                if (inquiryInput._flatpickr) {
+                    inquiryInput._flatpickr.clear();
+                    inquiryInput._flatpickr.input.disabled = false;    // enable hidden input
+                    inquiryInput._flatpickr.altInput.disabled = false; // enable visible input
+                } else {
+                    inquiryInput.value = '';
+                    inquiryInput.disabled = false;
+                }
+                // reradonly
+                leadInput.readOnly = false;
+                quotationInput.readOnly = false;
+                quotationSelect.disabled = false;
+                demoGiven.disabled = false;
+                clientName.disabled = false;
+                contractSigned.disabled = false;
+                if (inquiryInput._flatpickr) {
+                    inquiryInput._flatpickr.input.disabled = false;    // hidden input
+                    inquiryInput._flatpickr.altInput.disabled = false; // visible input
+                } else {
+                    inquiryInput.disabled = false;
+                }
+                return;
+            }
+
+            fetch(`/get_quotation/?id=${quotationId}`)  // Django view returning JSON
                 .then(res => res.json())
                 .then(data => {
-                    let leadInput = document.querySelector('input[name="lead_source"]');
-                    let quotationInput = document.querySelector('input[name="quotation_amount"]');
-                    let inquiryInput = document.querySelector('input[name="inquiry_date"]');
-                    let quotationSelect = document.querySelector('select[name="quotation_sent"]');
-
                     // Fill values
                     leadInput.value = data.lead_source || '';
                     quotationInput.value = data.grand_total || '';
                     quotationSelect.value = "Yes";
-
+                    demoGiven.value = "Yes"
+                    clientName.value = data.client_name || '';
+                    contractSigned.value = "Yes"
                     if (data.date) {
-                            let d = new Date(data.date);
-                            // Use Flatpickr API to set date (handles altInput too)
-                            if (inquiryInput._flatpickr) {
-                                inquiryInput._flatpickr.setDate(d, true); 
-                            } else {
-                                // fallback if Flatpickr not loaded
-                                let month = (d.getMonth() + 1).toString().padStart(2, '0');
-                                let day = d.getDate().toString().padStart(2, '0');
-                                inquiryInput.value = `${d.getFullYear()}-${month}-${day}`;
-                            }
+                        let d = new Date(data.date);
+                        // Use Flatpickr API if available
+                        if (inquiryInput._flatpickr) {
+                            inquiryInput._flatpickr.setDate(d, true);
                         } else {
-                            if (inquiryInput._flatpickr) {
-                                inquiryInput._flatpickr.clear();
-                            } else {
-                                inquiryInput.value = '';
-                            }
+                            let month = (d.getMonth() + 1).toString().padStart(2, '0');
+                            let day = d.getDate().toString().padStart(2, '0');
+                            inquiryInput.value = `${d.getFullYear()}-${month}-${day}`;
                         }
-
-
-                    // Make them read-only
-                    leadInput.readOnly = true;
-                    quotationInput.readOnly = true;
-                    if (inquiryInput._flatpickr) {
-                        inquiryInput._flatpickr.input.disabled = true;      // hidden input
-                        inquiryInput._flatpickr.altInput.disabled = true;   // visible input
+                    } else {
+                        if (inquiryInput._flatpickr) {
+                            inquiryInput._flatpickr.clear();
+                        } else {
+                            inquiryInput.value = '';
+                        }
                     }
 
+                    // Make fields readonly/disabled
+                    leadInput.readOnly = true;
+                    quotationInput.readOnly = true;
                     quotationSelect.disabled = true;
+                    demoGiven.disabled = true;
+                    contractSigned.disabled = true;
+                    clientName.disabled = true;
+                    if (inquiryInput._flatpickr) {
+                        inquiryInput._flatpickr.input.disabled = true;
+                        inquiryInput._flatpickr.altInput.disabled = true;
+                    } else {
+                        inquiryInput.disabled = true;
+                    }
                 });
         });
+
+
         // View modal fill
         // Use Django's URL tag so the path is generated correctly
-        
+
         const projectDetailsUrl = "{% url 'get_project_details' %}";
         $(document).on("click", ".project-link", function (e) {
             e.preventDefault();
@@ -1319,16 +1415,48 @@
                 const p = res.project;
                 $("#pd-header-project-name").text(p.project_name);
                 $("#pd-project-id").text(p.project_id);
-                $("#pd-inquiry-date").innerText = formatDate(p.inquiry_date);
+                $("#pd-inquiry-date").text(formatDate(p.inquiry_date));
+
                 $("#pd-project-name").text(p.project_name);
                 $('#pd-project-type').text(p.project_type);
                 $("#pd-technologies").text(p.technologies.join(", ") || "-");
                 $("#pd-app-mode").text(p.app_mode || "-");
 
                 $("#pd-lead-source").text(p.lead_source);
-                $("#pd-status").html(`<span class="badge bg-warning text-dark">${p.status}</span>`);
-                $("#pd-quotation-sent").html(`<span class="badge bg-${p.quotation_sent === 'Yes' ? 'success' : 'danger'} text-dark">${p.quotation_sent}</span>`);
-                $("#pd-demo").html(`<span class="badge bg-${p.demo_given === 'Yes' ? 'success' : 'danger'}">${p.demo_given}</span>`);
+                // Status Badge (same as Django template)
+                let statusBadge = '';
+                if (p.status === "Ongoing") {
+                    statusBadge = `<span class="badge bg-label-primary">${p.status}</span>`;
+                } else if (p.status === "Completed") {
+                    statusBadge = `<span class="badge bg-label-success">${p.status}</span>`;
+                } else if (p.status === "On Hold") {
+                    statusBadge = `<span class="badge bg-label-warning">${p.status}</span>`;
+                } else if (p.status === "Cancelled") {
+                    statusBadge = `<span class="badge bg-label-danger">${p.status}</span>`;
+                } else {
+                    statusBadge = `<span class="badge bg-label-secondary">${p.status}</span>`;
+                }
+                $("#pd-status").html(statusBadge);
+
+                // Quotation Sent
+                let quotationBadge = p.quotation_sent === "Yes"
+                    ? `<span class="badge bg-label-success">${p.quotation_sent}</span>`
+                    : `<span class="badge bg-label-danger">${p.quotation_sent}</span>`;
+                $("#pd-quotation-sent").html(quotationBadge);
+
+                // Demo Given
+                let demoBadge = p.demo_given === "Yes"
+                    ? `<span class="badge bg-label-success">${p.demo_given}</span>`
+                    : `<span class="badge bg-label-danger">${p.demo_given}</span>`;
+                $("#pd-demo").html(demoBadge);
+
+                // Contract Signed
+                let contractBadge = p.contract_signed === "Yes"
+                    ? `<span class="badge bg-label-success">${p.contract_signed}</span>`
+                    : `<span class="badge bg-label-danger">${p.contract_signed}</span>`;
+                $("#pd-contract-signed").html(contractBadge);
+
+
                 // Team members list (display)
                 let tmHtml = "";
                 (p.team_members_display || []).forEach(m => {
@@ -1341,24 +1469,33 @@
                 );
 
                 $("#pd-approval-amount").text(p.approval_amount ? `₹${p.approval_amount}` : "-");
-                // $("#pd-deadline").text(p.deadline);
-                $("#pd-deadline").innerText = formatDate(p.deadline);
-                // $("#pd-completed-date").text(p.completed_date);
-                $("#pd-completed-date").innerText = formatDate(p.completed_date);
+                $("#pd-deadline").text(formatDate(p.deadline));
+                $("#pd-completed-date").text(formatDate(p.completed_date));
                 let statusClass = '';
                 if (p.payment_status === 'Pending') {
-                    statusClass = 'badge bg-warning text-dark';
+                    statusClass = 'badge bg-warning';
                 } else if (p.payment_status === 'Advanced') {
-                    statusClass = 'badge bg-info text-dark';
+                    statusClass = 'badge bg-info';
                 } else if (p.payment_status === 'Paid') {
-                    statusClass = 'badge bg-success text-dark';
+                    statusClass = 'badge bg-success';
                 } else {
-                    statusClass = 'badge bg-secondary text-dark';
+                    statusClass = 'badge bg-secondary';
                 }
 
-                $("#pd-payment-status").html(`<span class="badge ${statusClass}">${p.payment_value} ${p.payment_status}</span>`);
+                let paymentBadge = '';
+                if (p.payment_status === "Pending") {
+                    paymentBadge = "badge bg-label-warning";
+                } else if (p.payment_status === "Advanced") {
+                    paymentBadge = "badge bg-label-info";
+                } else if (p.payment_status === "Paid") {     //make received
+                    paymentBadge = "badge bg-label-success";
+                } else {
+                    paymentBadge = "badge bg-label-secondary";
+                }
+                $("#pd-payment-status").html(`<span class="${paymentBadge}">${p.payment_value} ${p.payment_status}</span>`);
+
                 $("#pd-client-industry").text(p.client_industry);
-                $("#pd-contract-signed").html(`<span class="badge bg-${p.contract_signed === 'Yes' ? 'success' : 'danger'} text-dark">${p.contract_signed}</span>`);
+
                 if (p.live_link) {
                     $("#pd-live-link").html(`<a href="${p.live_link}" target="_blank">${p.live_link}</a>`);
                 } else {
@@ -1387,8 +1524,7 @@
                 } else {
                     $("#pd-other-link").text("");
                 }
-                // $("#pd-start-date").text(p.start_date);
-                $("#pd-start-date").innerText = formatDate(p.start_date);
+                $("#pd-start-date").text(formatDate(p.start_date));
 
 
 
@@ -1397,6 +1533,7 @@
         });
 
 
+        // view user modal
 
         const modalEl = document.getElementById("viewUserModal");
         const viewUserModal = new bootstrap.Modal(modalEl);
@@ -1454,8 +1591,6 @@
             });
         });
 
-
-
         // Edit modal fill
         $(document).on("click", ".edit-project", function (e) {
             e.preventDefault();
@@ -1477,8 +1612,8 @@
                 // populate fields in edit modal
                 $("#edit-project-name").val(p.project_name);
                 $("#edit-project-type").val(p.project_type);
-                $("#edit-start-date").val(p.start_date);
-                $("#edit-deadline").val(p.deadline);
+                if (p.start_date) $("#edit-start-date")[0]._flatpickr.setDate(p.start_date, true);
+                if (p.deadline) $("#edit-deadline")[0]._flatpickr.setDate(p.deadline, true);
                 $("#edit-status").val(p.status);
                 // App Mode
                 $("#edit-app-mode").val(p.app_mode_id ? p.app_mode_id.toString() : "");
@@ -1497,22 +1632,59 @@
                 $("#edit-income").val(p.income);
 
                 $("#edit-free-service").val(p.free_service);
-                $("#edit-inquiry-date").val(p.inquiry_date);
+                if (p.inquiry_date) $("#edit-inquiry-date")[0]._flatpickr.setDate(p.inquiry_date, true);
                 $("#edit-lead-source").val(p.lead_source);
                 $("#edit-quotation-sent").val(p.quotation_sent);
                 $("#edit-demo-given").val(p.demo_given);
                 $("#edit-quotation-amount").val(p.quotation_amount);
                 $("#edit-approval-amount").val(p.approval_amount);
-                $("#edit-completed-date").val(p.completed_date);
+                if (p.completed_date) $("#edit-completed-date")[0]._flatpickr.setDate(p.completed_date, true);
                 $("#edit-client-industry").val(p.client_industry);
                 $("#edit-contract-signed").val(p.contract_signed);
-
+                $("#edit-client-name").val(p.client_name);
                 // For multi-select team members use the numeric ids returned
                 // $("#edit-team-members").val(p.team_members_ids || []);
                 // $("#edit-technologies").val(p.technologies_ids);
                 $("#edit-technologies").val(p.technologies_ids.map(id => id.toString()));
                 $("#edit-team-members").val(p.team_members_ids.map(id => id.toString()));
-                // if using plugins like select2 you might need: $("#edit-team-members").trigger('change');
+
+                // If project has a quotation → lock quotation fields
+                if (p.quotation_id) {
+                    if ($("#edit-inquiry-date")[0]._flatpickr) {
+                        let fp = $("#edit-inquiry-date")[0]._flatpickr;
+                        fp.set('clickOpens', false);              // prevent calendar popup
+                        fp.input.readOnly = true;                 // hidden input
+                        if (fp.altInput) fp.altInput.readOnly = true; // visible input
+                    } else {
+                        $("#edit-inquiry-date").prop("readonly", true);
+                    }
+
+                    $("#edit-lead-source").prop("readonly", true);
+                    $("#edit-quotation-sent").prop("disabled", true);
+                    $("#edit-demo-given").prop("disabled", true);
+                    $("#edit-quotation-amount").prop("readonly", true);
+                   
+                    $("#edit-contract-signed").prop("disabled", true);
+                    $("#edit-client-name").prop("readonly", true);
+                } else {
+                    // unlock if no quotation
+                    if ($("#edit-inquiry-date")[0]._flatpickr) {
+                        let fp = $("#edit-inquiry-date")[0]._flatpickr;
+                        fp.set('clickOpens', true);
+                        fp.input.readOnly = false;
+                        if (fp.altInput) fp.altInput.readOnly = false;
+                    } else {
+                        $("#edit-inquiry-date").prop("readonly", false);
+                    }
+
+                    $("#edit-lead-source").prop("readonly", false);
+                    $("#edit-quotation-sent").prop("disabled", false);
+                    $("#edit-demo-given").prop("disabled", false);
+                    $("#edit-quotation-amount").prop("readonly", false);
+                   
+                    $("#edit-contract-signed").prop("disabled", false);
+                    $("#edit-client-name").prop("readonly", false);
+                }
 
                 $("#editProjectModal").modal("show");
             });
@@ -1576,6 +1748,103 @@
                 .catch(err => {
                     console.error("Error:", err);
                     showToast("Unexpected error while updating project.", "danger");
+                });
+        });
+
+        // Auto-fill when quotation is selected in EDIT modal
+        document.getElementById('edit-quotation').addEventListener('change', function () {
+            let quotationId = this.value;
+
+            // Get input references (EDIT fields)
+            let leadInput = document.getElementById('edit-lead-source');
+            let quotationInput = document.getElementById('edit-quotation-amount');
+            
+            let inquiryInput = document.getElementById('edit-inquiry-date');
+            let quotationSelect = document.getElementById('edit-quotation-sent');
+            let demoGiven = document.getElementById('edit-demo-given');
+            let clientName = document.getElementById('edit-client-name');
+            let contractSigned = document.getElementById('edit-contract-signed');
+
+            if (!quotationId) {
+                // Reset values
+                leadInput.value = '';
+                quotationInput.value = '';
+                
+                quotationSelect.value = '';
+                demoGiven.value = '';
+                clientName.value = '';
+                contractSigned.value = '';
+
+                if (inquiryInput._flatpickr) {
+                    inquiryInput._flatpickr.clear();
+                    inquiryInput._flatpickr.set('clickOpens', true);
+                    inquiryInput._flatpickr.input.readOnly = false;
+                    if (inquiryInput._flatpickr.altInput) {
+                        inquiryInput._flatpickr.altInput.readOnly = false;
+                    }
+                } else {
+                    inquiryInput.value = '';
+                    inquiryInput.readOnly = false;
+                }
+
+                // Reset readonly/disabled
+                leadInput.readOnly = false;
+                quotationInput.readOnly = false;
+              
+                quotationSelect.disabled = false;
+                demoGiven.disabled = false;
+                clientName.readOnly = false;
+                contractSigned.disabled = false;
+                return;
+            }
+
+            fetch(`/get_quotation/?id=${quotationId}`)
+                .then(res => res.json())
+                .then(data => {
+                    // Fill values
+                    leadInput.value = data.lead_source || '';
+                    quotationInput.value = data.grand_total || '';
+                 
+                    quotationSelect.value = "Yes";
+                    demoGiven.value = "Yes";
+                    clientName.value = data.client_name || '';
+                    contractSigned.value = "Yes";
+
+                    if (data.date) {
+                        let d = new Date(data.date);
+                        if (inquiryInput._flatpickr) {
+                            inquiryInput._flatpickr.setDate(d, true);
+                        } else {
+                            let month = (d.getMonth() + 1).toString().padStart(2, '0');
+                            let day = d.getDate().toString().padStart(2, '0');
+                            inquiryInput.value = `${d.getFullYear()}-${month}-${day}`;
+                        }
+                    } else {
+                        if (inquiryInput._flatpickr) {
+                            inquiryInput._flatpickr.clear();
+                        } else {
+                            inquiryInput.value = '';
+                        }
+                    }
+
+                    // Lock fields (readonly/disabled)
+                    leadInput.readOnly = true;
+                    quotationInput.readOnly = true;
+               
+                    quotationSelect.disabled = true;
+                    demoGiven.disabled = true;
+                    clientName.readOnly = true;
+                    contractSigned.disabled = true;
+
+                    if (inquiryInput._flatpickr) {
+                        inquiryInput._flatpickr.set('clickOpens', false);
+                        inquiryInput._flatpickr.input.readOnly = true;
+                        if (inquiryInput._flatpickr.altInput) {
+                            inquiryInput._flatpickr.altInput.readOnly = true;
+                        }
+                    } else {
+                        inquiryInput.readOnly = true;
+                    }
                 });
         });
 

@@ -126,10 +126,10 @@
                             <tr>
                                 <th>Sr No.</th>
                                 <th>Quotation No</th>
+                                <th>Client Name</th>
                                 <th>Company Name</th>
                                 <th>Date</th>
                                 <th>Valid Until</th>
-                                <th>Client Name</th>
 
                                 <th>Grand Total</th>
                                 <th>Status</th>
@@ -142,19 +142,20 @@
                                 <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
                                 <td>{{ q.quotation_no }}</td>
                                 <td>
-                                    
-                                        {{ q.company_name }}
-                                    
-                                </td>
-                                <td>{{ q.date }}</td>
-                                <td>{{ q.valid_until }}</td>
-                                <td>
                                     <a href="#" data-bs-toggle="modal" data-bs-target="#viewQuotationModal"
                                         class="fw-bold quotation-link" data-quotation-id="{{ q.id }}">
-                                    {{ q.client_name }}
+                                        {{ q.client_name }}
                                     </a>
 
                                 </td>
+                                <td>
+
+                                    {{ q.company_name }}
+
+                                </td>
+                                <td>{{ q.date }}</td>
+                                <td>{{ q.valid_until }}</td>
+
 
                                 <td>₹{{ q.grand_total }}</td>
                                 <td>
@@ -279,313 +280,306 @@
 
         </div>
 
-            <!-- add quotation modal -->
-            <div class="modal fade" id="addQuotationModal" tabindex="-1" aria-labelledby="addQuotationModalLabel"
-                aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header table-primary text-white">
-                            <h5 class="modal-title" id="addQuotationModalLabel">
-                                <i class="bx bx-file-plus me-2"></i> Add New Quotation
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                                aria-label="Close"></button>
+        <!-- Add Quotation Modal -->
+        <div class="modal fade" id="addQuotationModal" tabindex="-1" aria-labelledby="addQuotationModalLabel"
+            aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header table-primary text-white">
+                        <h5 class="modal-title" id="addQuotationModalLabel">
+                            <i class="bx bx-plus me-2"></i>Add New Quotation
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+
+                    <form id="addQuotationForm" method="POST" enctype="multipart/form-data"
+                        action="{% url 'add_quotation' %}">
+                        {% csrf_token %}
+                        <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle">
+                                    <tbody>
+
+                                        <!-- Company Details -->
+                                        <tr class="table-light">
+                                            <th colspan="4"><i class="bx bx-buildings me-2"></i> Company Details</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Company Name</th>
+                                            <td colspan="3"><input type="text" class="form-control" name="company_name"
+                                                    value="DigiWave Techlologies" readonly></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Company Address</th>
+                                            <td colspan="3">
+                                                <textarea class="form-control" name="company_address" rows="2"
+                                                    readonly>Ashram Road, Ahmedabad</textarea>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Company Phone</th>
+                                            <td><input type="text" class="form-control" name="company_phone"
+                                                    value="9624185617" readonly></td>
+                                            <th>Company Email</th>
+                                            <td><input type="email" class="form-control" name="company_email"
+                                                    value="hello.digiwave@gmail.com" readonly></td>
+                                        </tr>
+
+                                        <!-- Client Information -->
+                                        <tr class="table-light">
+                                            <th colspan="4"><i class="bx bx-user me-2"></i> Client Information</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Quotation No</th>
+                                            <td><input type="text" class="form-control" name="quotation_no"
+                                                    placeholder="Auto-generated" readonly value="{{ quotation_no }}">
+                                            </td>
+                                            <th>Date</th>
+                                            <td>
+                                                <input type="text" class="form-control flat-date" name="date"
+                                                    placeholder="Select date">
+
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Valid Until</th>
+                                            <td>
+                                                <input type="text" class="form-control flat-date" name="valid_until"
+                                                    placeholder="Valid until">
+
+                                            </td>
+                                            <th>Prepared By</th>
+                                            <td>
+                                                <select class="form-select" name="prepared_by">
+                                                    <option value="">-- Select User --</option>
+                                                    {% for u in users %}
+                                                    <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Client Name</th>
+                                            <td colspan="3"><input type="text" class="form-control" name="client_name"
+                                                    placeholder="Enter client name"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Client Contact</th>
+                                            <td><input type="text" class="form-control" name="client_contact"
+                                                    placeholder="Enter client contact"></td>
+                                            <th>Client Address</th>
+                                            <td>
+                                                <textarea class="form-control" name="client_address" rows="2"
+                                                    placeholder="Enter client address"></textarea>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Lead Source</th>
+                                            <td colspan="3"><input type="text" class="form-control" name="lead_source"
+                                                    placeholder="Enter lead source"></td>
+                                        </tr>
+
+                                        <!-- Service Charges -->
+                                        <tr class="table-light">
+                                            <th colspan="4">
+                                                <i class="bx bx-dollar-circle me-2"></i> Service Charges
+                                                <button type="button" class="btn btn-sm btn-success float-end"
+                                                    id="addServiceRow">
+                                                    <i class="bx bx-plus"></i> Add item
+                                                </button>
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th>Description</th>
+                                            <th>Quantity</th>
+                                            <th>Unit Price (₹)</th>
+                                        </tr>
+                                        <tr class="service-row">
+                                            <td>
+                                                <select class="form-select" name="service[1][category]">
+                                                    <option value="">-- Select --</option>
+                                                    <option value="web">Web Development</option>
+                                                    <option value="mobile">Mobile Development</option>
+                                                    <option value="cloud">Cloud Services</option>
+                                                    <option value="ai_ml">AI/ML Algorithms</option>
+                                                </select>
+                                            </td>
+                                            <td><input type="text" class="form-control" name="service[1][description]"
+                                                    placeholder="Enter description"></td>
+                                            <td><input type="number" class="form-control" name="service[1][quantity]"
+                                                    min="1" placeholder="Qty"></td>
+                                            <td class="d-flex align-items-center gap-2">
+                                                <input type="number" class="form-control" name="service[1][unit_price]"
+                                                    min="0" placeholder="Unit price">
+                                                <button type="button" class="btn btn-sm btn-danger remove-row">
+                                                    <i class="bx bx-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Server & Domain Charges -->
+                                        <tr class="table-light">
+                                            <th colspan="4"><i class="bx bx-server me-2"></i> Server & Domain Charges
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th>Domain Registration</th>
+                                            <td colspan="3">
+                                                <div class="row g-2">
+                                                    <div class="col-md-4">
+                                                        <select class="form-select"
+                                                            name="domain_registration[included]">
+                                                            <option value="false">No</option>
+                                                            <option value="true">Yes</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <input type="text" class="form-control"
+                                                            name="domain_registration[duration]" placeholder="Duration">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <input type="number" class="form-control"
+                                                            name="domain_registration[unit_price]"
+                                                            placeholder="Price (₹)">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Server Hosting</th>
+                                            <td colspan="3">
+                                                <div class="row g-2">
+                                                    <div class="col-md-4">
+                                                        <select class="form-select" name="server_hosting[included]">
+                                                            <option value="false">No</option>
+                                                            <option value="true">Yes</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <input type="text" class="form-control"
+                                                            name="server_hosting[duration]" placeholder="Duration">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <input type="number" class="form-control"
+                                                            name="server_hosting[unit_price]" placeholder="Price (₹)">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>SSL Certificate</th>
+                                            <td colspan="3">
+                                                <div class="row g-2">
+                                                    <div class="col-md-4">
+                                                        <select class="form-select" name="ssl_certificate[included]">
+                                                            <option value="false">No</option>
+                                                            <option value="true">Yes</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <input type="text" class="form-control"
+                                                            name="ssl_certificate[duration]" placeholder="Duration">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <input type="number" class="form-control"
+                                                            name="ssl_certificate[unit_price]" placeholder="Price (₹)">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Email Hosting</th>
+                                            <td colspan="3">
+                                                <div class="row g-2">
+                                                    <div class="col-md-4">
+                                                        <select class="form-select" name="email_hosting[included]">
+                                                            <option value="false">No</option>
+                                                            <option value="true">Yes</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <input type="text" class="form-control"
+                                                            name="email_hosting[duration]" placeholder="Duration">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <input type="number" class="form-control"
+                                                            name="email_hosting[unit_price]" placeholder="Price (₹)">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Summary -->
+                                        <tr class="table-light">
+                                            <th colspan="4"><i class="bx bx-receipt me-2"></i> Summary</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Discount Type</th>
+                                            <td>
+                                                <select name="discount_type" class="form-select">
+                                                    <option value="none">None</option>
+                                                    <option value="flat">Flat</option>
+                                                    <option value="percent">Percent</option>
+                                                </select>
+                                            </td>
+                                            <th>Discount Value</th>
+                                            <td><input type="number" class="form-control" name="discount_value"
+                                                    placeholder="Enter value"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Tax Rate (%)</th>
+                                            <td><input type="number" class="form-control" name="tax_rate"
+                                                    placeholder="Enter tax rate"></td>
+                                            <th>Grand Total</th>
+                                            <td><input type="text" class="form-control" name="grand_total"
+                                                    placeholder="Auto-calculated" readonly></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Payment Terms</th>
+                                            <td colspan="3"><textarea name="payment_terms" class="form-control"
+                                                    placeholder="Enter payment terms"></textarea></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Additional Notes</th>
+                                            <td colspan="3"><textarea name="additional_notes" class="form-control"
+                                                    placeholder="Enter additional notes"></textarea></td>
+                                        </tr>
+
+                                        <!-- Authorized Signatory -->
+                                        <tr class="table-light">
+                                            <th colspan="4"><i class="bx bx-user-check me-2"></i> Authorized Signatory
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <th>Name</th>
+                                            <td><input type="text" class="form-control" name="signatory_name"
+                                                    placeholder="Enter name"></td>
+                                            <th>Designation</th>
+                                            <td><input type="text" class="form-control" name="signatory_designation"
+                                                    placeholder="Enter designation"></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Signature</th>
+                                            <td colspan="3"><input type="file" class="form-control" name="signature">
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
-                        <form id="addQuotationForm" method="POST" enctype="multipart/form-data"
-                            action="{% url 'add_quotation' %}">
-                            {% csrf_token %}
-                            <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered align-middle">
-                                        <tbody>
-                                            <!-- Company & Client Info -->
-                                            <tr class="table-light">
-                                                <th colspan="4">Company Details</th>
-                                            </tr>
-                                            <tr>
-                                                <th>Company Name</th>
-                                                <td colspan="3"><input type="text" class="form-control" name="company_name"
-                                                        value="DigiWave Techlologies" readonly></td>
-
-                                            </tr>
-                                            <tr>
-
-                                                <th>Company Address</th>
-                                                <td colspan="3">
-                                                    <textarea class="form-control" name="company_address"
-                                                        rows="2"readonly>Ashram Road, Ahmedabad</textarea>
-                                                </td>
-
-                                            </tr>
-                                            <tr>
-                                                <th>Company Phone</th>
-                                                <td><input type="text" class="form-control" name="company_phone" value="9624185617" readonly></td>
-                                                <th>Company Email</th>
-                                                <td><input type="email" class="form-control" name="company_email" value="hello.digiwave@gmail.com" readonly></td>
-                                            </tr>
-
-                                            <tr class="table-light">
-                                                <th colspan="4">Client Information</th>
-                                            </tr>
-                                            <tr>
-                                                <th>Quotation No</th>
-                                                <td><input type="text" class="form-control" name="quotation_no"
-                                                        placeholder="Auto-generated" readonly value="{{ quotation_no }}"></td>
-                                                <th>Date</th>
-                                                <td><input type="date" class="form-control" name="date" ></td>
-                                            </tr>
-                                            <tr>
-                                                <th>Valid Until</th>
-                                                <td><input type="date" class="form-control" name="valid_until" >
-                                                </td>
-                                                <th>Prepared By</th>
-                                                <td>
-                                                    <select class="form-select" name="prepared_by" >
-                                                        <option value="">-- Select User --</option>
-                                                        {% for u in users %}
-                                                        <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }}
-                                                        </option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </td>
-
-                                            </tr>
-                                            <tr>
-                                                <th>Client Name</th>
-                                                <td colspan="3"><input type="text" class="form-control" name="client_name"
-                                                        >
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th>Client Contact</th>
-                                                <td><input type="text" class="form-control" name="client_contact"></td>
-                                                <th>Client Address</th>
-                                                <td>
-                                                    <textarea class="form-control" name="client_address"
-                                                        rows="2"></textarea>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th>Lead Source</th>
-                                                <td colspan="3"><input type="text" class="form-control" name="lead_source"></td>
-                                            </tr>
-                                            <!-- Service Charges -->
-                                            <tr class="table-light">
-                                                <th colspan="4">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <span>Service Charges</span>
-                                                        <button type="button" class="btn btn-sm btn-success"
-                                                            id="addServiceRow">
-                                                            <i class="bx bx-plus"></i> Add item
-                                                        </button>
-                                                    </div>
-                                                </th>
-                                            </tr>
-                                            <tr>
-                                                <th>Category</th>
-                                                <th>Description</th>
-                                                <th>Quantity</th>
-                                                <th>Unit Price (₹)</th>
-                                            </tr>
-
-                                            <!-- First service row -->
-                                            <tr class="service-row">
-                                                <td>
-                                                    <select class="form-select" name="service[1][category]">
-                                                        <option value="web">Web Development</option>
-                                                        <option value="mobile">Mobile Development</option>
-                                                        <option value="cloud">Cloud Services</option>
-                                                        <option value="ai_ml">AI/ML Algorithms</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <input type="text" class="form-control" name="service[1][description]">
-                                                </td>
-                                                <td>
-                                                    <input type="number" class="form-control" name="service[1][quantity]"
-                                                        min="1">
-                                                </td>
-                                                <td class="d-flex align-items-center gap-2">
-                                                    <input type="number" class="form-control" name="service[1][unit_price]"
-                                                        min="0">
-                                                    <button type="button" class="btn btn-sm btn-danger remove-row">
-                                                        <i class="bx bx-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-
-
-                                            <!-- Server & Domain Charges -->
-                                            <tr class="table-light">
-                                                <th colspan="4">Server & Domain Charges</th>
-                                            </tr>
-                                            <tr>
-                                                <th>Domain Registration</th>
-                                                <td colspan="3">
-                                                    <div class="row g-2">
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Included</label>
-                                                            <select class="form-select"
-                                                                name="domain_registration[included]">
-                                                                <option value="false">No</option>
-                                                                <option value="true">Yes</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Duration</label>
-                                                            <input type="text" class="form-control"
-                                                                name="domain_registration[duration]">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Unit Price (₹)</label>
-                                                            <input type="number" class="form-control"
-                                                                name="domain_registration[unit_price]">
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th>Server Hosting</th>
-                                                <td colspan="3">
-                                                    <div class="row g-2">
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Included</label>
-                                                            <select class="form-select" name="server_hosting[included]">
-                                                                <option value="false">No</option>
-                                                                <option value="true">Yes</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Duration</label>
-                                                            <input type="text" class="form-control"
-                                                                name="server_hosting[duration]">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Unit Price (₹)</label>
-                                                            <input type="number" class="form-control"
-                                                                name="server_hosting[unit_price]">
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-
-                                            <tr>
-                                                <th>SSL Certificate</th>
-                                                <td colspan="3">
-                                                    <div class="row g-2">
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Included</label>
-                                                            <select class="form-select" name="ssl_certificate[included]">
-                                                                <option value="false">No</option>
-                                                                <option value="true">Yes</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Duration</label>
-                                                            <input type="text" class="form-control"
-                                                                name="ssl_certificate[duration]">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Unit Price (₹)</label>
-                                                            <input type="number" class="form-control"
-                                                                name="ssl_certificate[unit_price]">
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-
-                                            <tr>
-                                                <th>Email Hosting</th>
-                                                <td colspan="3">
-                                                    <div class="row g-2">
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Included</label>
-                                                            <select class="form-select" name="email_hosting[included]">
-                                                                <option value="false">No</option>
-                                                                <option value="true">Yes</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Duration</label>
-                                                            <input type="text" class="form-control"
-                                                                name="email_hosting[duration]">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label">Unit Price (₹)</label>
-                                                            <input type="number" class="form-control"
-                                                                name="email_hosting[unit_price]">
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-
-
-                                            <!-- Summary -->
-                                            <tr class="table-light">
-                                                <th colspan="4">Summary</th>
-                                            </tr>
-                                            <tr>
-                                                <th>Discount Type</th>
-                                                <td>
-                                                    <select name="discount_type" class="form-select">
-                                                        <option value="none">None</option>
-                                                        <option value="flat">Flat</option>
-                                                        <option value="percent">Percent</option>
-                                                    </select>
-                                                </td>
-                                                <th>Discount Value</th>
-                                                <td><input type="number" class="form-control" name="discount_value"></td>
-                                            </tr>
-                                            <tr>
-                                                <th>Tax Rate (%)</th>
-                                                <td><input type="number" class="form-control" name="tax_rate" value="0.00">
-                                                </td>
-                                                <th>Grand Total</th>
-                                                <td><input type="text" class="form-control" name="grand_total" readonly>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th>Payment Terms</th>
-                                                <td colspan="3"><textarea name="payment_terms"
-                                                        class="form-control"></textarea></td>
-                                            </tr>
-                                            <tr>
-                                                <th>Additional Notes</th>
-                                                <td colspan="3"><textarea name="additional_notes"
-                                                        class="form-control"></textarea>
-                                                </td>
-                                            </tr>
-
-                                            <!-- Signatory -->
-                                            <tr class="table-light">
-                                                <th colspan="4">Authorized Signatory</th>
-                                            </tr>
-                                            <tr>
-                                                <th>Name</th>
-                                                <td><input type="text" class="form-control" name="signatory_name"></td>
-                                                <th>Designation</th>
-                                                <td><input type="text" class="form-control" name="signatory_designation">
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th>Signature</th>
-                                                <td colspan="3"><input type="file" class="form-control" name="signature">
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <button type="submit" class="btn btn-primary">Save Quotation</button>
-                            </div>
-                        </form>
-
-                    </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save Quotation</button>
+                        </div>
+                    </form>
                 </div>
             </div>
+        </div>
+
 
 
         <!-- update quotation modal -->
@@ -595,7 +589,8 @@
                 <div class="modal-content">
                     <div class="modal-header table-warning text-dark">
                         <h5 class="modal-title"><i class="bx bx-edit me-2"></i> Update Quotation</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
 
                     <form id="updateQuotationForm" method="POST" enctype="multipart/form-data">
@@ -604,9 +599,10 @@
                             <div class="table-responsive">
                                 <table class="table table-bordered align-middle">
                                     <tbody>
-                                        <!-- Company & Client Info -->
+
+                                        <!-- Company Details -->
                                         <tr class="table-light">
-                                            <th colspan="4">Company Details</th>
+                                            <th colspan="4"><i class="bx bx-buildings me-2"></i> Company Details</th>
                                         </tr>
                                         <tr>
                                             <th>Company Name</th>
@@ -627,25 +623,29 @@
                                                     name="company_email" readonly></td>
                                         </tr>
 
+                                        <!-- Client Information -->
                                         <tr class="table-light">
-                                            <th colspan="4">Client Information</th>
+                                            <th colspan="4"><i class="bx bx-user me-2"></i> Client Information</th>
                                         </tr>
                                         <tr>
                                             <th>Quotation No</th>
                                             <td><input type="text" class="form-control" id="quotation_no"
                                                     name="quotation_no" readonly></td>
                                             <th>Date</th>
-                                            <td><input type="date" class="form-control" id="date" name="date" >
+                                            <td>
+                                                <input type="text" class="form-control flat-date" id="date" name="date"
+                                                    placeholder="Select date">
                                             </td>
                                         </tr>
                                         <tr>
                                             <th>Valid Until</th>
-                                            <td><input type="date" class="form-control" id="valid_until"
-                                                    name="valid_until" ></td>
+                                            <td>
+                                                <input type="text" class="form-control flat-date" id="valid_until"
+                                                    name="valid_until" placeholder="Select valid until date">
+                                            </td>
                                             <th>Prepared By</th>
                                             <td>
-                                                <select class="form-select" id="prepared_by" name="prepared_by"
-                                                    >
+                                                <select class="form-select" id="prepared_by" name="prepared_by">
                                                     <option value="">-- Select User --</option>
                                                     {% for u in users %}
                                                     <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }}
@@ -657,7 +657,7 @@
                                         <tr>
                                             <th>Client Name</th>
                                             <td colspan="3"><input type="text" class="form-control" id="client_name"
-                                                    name="client_name" ></td>
+                                                    name="client_name"></td>
                                         </tr>
                                         <tr>
                                             <th>Client Contact</th>
@@ -665,7 +665,8 @@
                                                     name="client_contact"></td>
                                             <th>Client Email</th>
                                             <td><input type="email" class="form-control" id="client_email"
-                                                    name="client_email"></td>
+                                                    name="client_email">
+                                            </td>
                                         </tr>
                                         <tr>
                                             <th>Client Address</th>
@@ -674,19 +675,18 @@
                                         </tr>
                                         <tr>
                                             <th>Lead Source</th>
-                                            <td><input type="text" class="form-control" id="lead_source"
+                                            <td colspan="3"><input type="text" class="form-control" id="lead_source"
                                                     name="lead_source"></td>
                                         </tr>
-                                        <!-- Services -->
+
+                                        <!-- Service Charges -->
                                         <tr class="table-light">
                                             <th colspan="4">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <span>Service Charges</span>
-                                                    <button type="button" class="btn btn-sm btn-success"
-                                                        id="updateServiceRow">
-                                                        <i class="bx bx-plus"></i> Add item
-                                                    </button>
-                                                </div>
+                                                <i class="bx bx-dollar-circle me-2"></i> Service Charges
+                                                <button type="button" class="btn btn-sm btn-success float-end"
+                                                    id="updateServiceRow">
+                                                    <i class="bx bx-plus"></i> Add item
+                                                </button>
                                             </th>
                                         </tr>
                                         <tr>
@@ -697,16 +697,15 @@
                                         </tr>
                                     <tbody id="update_services_container"></tbody>
 
-                                    <!-- Server & Domain (static like Add) -->
+                                    <!-- Server & Domain Charges -->
                                     <tr class="table-light">
-                                        <th colspan="4">Server & Domain Charges</th>
+                                        <th colspan="4"><i class="bx bx-server me-2"></i> Server & Domain Charges</th>
                                     </tr>
                                     <tr>
                                         <th>Domain Registration</th>
                                         <td colspan="3">
                                             <div class="row g-2">
                                                 <div class="col-md-4">
-                                                    <label>Included</label>
                                                     <select class="form-select" name="domain_registration[included]"
                                                         id="update_domain_included">
                                                         <option value="false">No</option>
@@ -714,15 +713,14 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label>Duration</label>
                                                     <input type="text" class="form-control"
-                                                        name="domain_registration[duration]"
-                                                        id="update_domain_duration">
+                                                        name="domain_registration[duration]" id="update_domain_duration"
+                                                        placeholder="Duration">
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label>Unit Price (₹)</label>
                                                     <input type="number" class="form-control"
-                                                        name="domain_registration[unit_price]" id="update_domain_price">
+                                                        name="domain_registration[unit_price]" id="update_domain_price"
+                                                        placeholder="Price (₹)">
                                                 </div>
                                             </div>
                                         </td>
@@ -732,7 +730,6 @@
                                         <td colspan="3">
                                             <div class="row g-2">
                                                 <div class="col-md-4">
-                                                    <label>Included</label>
                                                     <select class="form-select" name="server_hosting[included]"
                                                         id="update_server_included">
                                                         <option value="false">No</option>
@@ -740,14 +737,14 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label>Duration</label>
                                                     <input type="text" class="form-control"
-                                                        name="server_hosting[duration]" id="update_server_duration">
+                                                        name="server_hosting[duration]" id="update_server_duration"
+                                                        placeholder="Duration">
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label>Unit Price (₹)</label>
                                                     <input type="number" class="form-control"
-                                                        name="server_hosting[unit_price]" id="update_server_price">
+                                                        name="server_hosting[unit_price]" id="update_server_price"
+                                                        placeholder="Price (₹)">
                                                 </div>
                                             </div>
                                         </td>
@@ -757,7 +754,6 @@
                                         <td colspan="3">
                                             <div class="row g-2">
                                                 <div class="col-md-4">
-                                                    <label>Included</label>
                                                     <select class="form-select" name="ssl_certificate[included]"
                                                         id="update_ssl_included">
                                                         <option value="false">No</option>
@@ -765,14 +761,14 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label>Duration</label>
                                                     <input type="text" class="form-control"
-                                                        name="ssl_certificate[duration]" id="update_ssl_duration">
+                                                        name="ssl_certificate[duration]" id="update_ssl_duration"
+                                                        placeholder="Duration">
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label>Unit Price (₹)</label>
                                                     <input type="number" class="form-control"
-                                                        name="ssl_certificate[unit_price]" id="update_ssl_price">
+                                                        name="ssl_certificate[unit_price]" id="update_ssl_price"
+                                                        placeholder="Price (₹)">
                                                 </div>
                                             </div>
                                         </td>
@@ -782,7 +778,6 @@
                                         <td colspan="3">
                                             <div class="row g-2">
                                                 <div class="col-md-4">
-                                                    <label>Included</label>
                                                     <select class="form-select" name="email_hosting[included]"
                                                         id="update_email_included">
                                                         <option value="false">No</option>
@@ -790,14 +785,14 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label>Duration</label>
                                                     <input type="text" class="form-control"
-                                                        name="email_hosting[duration]" id="update_email_duration">
+                                                        name="email_hosting[duration]" id="update_email_duration"
+                                                        placeholder="Duration">
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label>Unit Price (₹)</label>
                                                     <input type="number" class="form-control"
-                                                        name="email_hosting[unit_price]" id="update_email_price">
+                                                        name="email_hosting[unit_price]" id="update_email_price"
+                                                        placeholder="Price (₹)">
                                                 </div>
                                             </div>
                                         </td>
@@ -805,7 +800,7 @@
 
                                     <!-- Summary -->
                                     <tr class="table-light">
-                                        <th colspan="4">Summary</th>
+                                        <th colspan="4"><i class="bx bx-receipt me-2"></i> Summary</th>
                                     </tr>
                                     <tr>
                                         <th>Discount Type</th>
@@ -818,30 +813,31 @@
                                         </td>
                                         <th>Discount Value</th>
                                         <td><input type="number" class="form-control" id="discount_value"
-                                                name="discount_value"></td>
+                                                name="discount_value" placeholder="Enter value"></td>
                                     </tr>
                                     <tr>
                                         <th>Tax Rate (%)</th>
-                                        <td><input type="number" class="form-control" id="tax_rate" name="tax_rate">
-                                        </td>
+                                        <td><input type="number" class="form-control" id="tax_rate" name="tax_rate"
+                                                placeholder="Enter tax rate"></td>
                                         <th>Grand Total</th>
                                         <td><input type="text" class="form-control" id="grand_total" name="grand_total"
-                                                readonly></td>
+                                                placeholder="Auto-calculated" readonly></td>
                                     </tr>
                                     <tr>
                                         <th>Payment Terms</th>
                                         <td colspan="3"><textarea id="payment_terms" name="payment_terms"
-                                                class="form-control"></textarea></td>
+                                                class="form-control" placeholder="Enter payment terms"></textarea></td>
                                     </tr>
                                     <tr>
                                         <th>Additional Notes</th>
                                         <td colspan="3"><textarea id="additional_notes" name="additional_notes"
-                                                class="form-control"></textarea></td>
+                                                class="form-control" placeholder="Enter additional notes"></textarea>
+                                        </td>
                                     </tr>
 
-                                    <!-- Signatory -->
+                                    <!-- Authorized Signatory -->
                                     <tr class="table-light">
-                                        <th colspan="4">Authorized Signatory</th>
+                                        <th colspan="4"><i class="bx bx-user-check me-2"></i> Authorized Signatory</th>
                                     </tr>
                                     <tr>
                                         <th>Name</th>
@@ -859,6 +855,7 @@
                                             <input type="file" class="form-control" id="signature" name="signature">
                                         </td>
                                     </tr>
+
                                     </tbody>
                                 </table>
                             </div>
@@ -872,8 +869,6 @@
                 </div>
             </div>
         </div>
-
-
 
 
         <!-- View Quotation Modal -->
@@ -1141,10 +1136,13 @@
             const firstRow = tableBody.querySelector(".service-row");
             const newRow = firstRow.cloneNode(true);
 
-            // Reset values
-            newRow.querySelectorAll("input").forEach((input) => {
-                input.value = input.type === "number" ? "0" : "";
-                if (input.name.includes("quantity")) input.value = "1";
+            // Reset values (no default values at all)
+            newRow.querySelectorAll("input, select, textarea").forEach((el) => {
+                if (el.tagName === "SELECT") {
+                    el.selectedIndex = 0; // reset dropdown to first option
+                } else {
+                    el.value = ""; // clear input
+                }
             });
 
             // Insert after last service row
@@ -1198,6 +1196,7 @@
         <tr class="service-row">
           <td>
             <select name="service[1][category]" class="form-select">
+                <option value="">-- Select --</option>
               <option value="web">Web Development</option>
               <option value="mobile">Mobile Development</option>
               <option value="cloud">Cloud Services</option>
@@ -1205,10 +1204,10 @@
             </select>
           </td>
           <td><input type="text" name="service[1][description]" class="form-control"></td>
-          <td><input type="number" name="service[1][quantity]" value="1" class="form-control"></td>
+          <td><input type="number" name="service[1][quantity]"  class="form-control"></td>
           <td>
             <div class="input-group">
-              <input type="number" name="service[1][unit_price]" value="0" class="form-control">
+              <input type="number" name="service[1][unit_price]"  class="form-control">
               
              <button type="button" class="btn btn-sm btn-danger remove-row">
                                                      <i class="bx bx-trash"></i>
@@ -1223,8 +1222,6 @@
             newRow.querySelectorAll("input, select").forEach((input) => {
                 if (input.tagName === "SELECT") {
                     input.selectedIndex = 0;
-                } else if (input.type === "number") {
-                    input.value = input.name.includes("quantity") ? "1" : "0";
                 } else {
                     input.value = "";
                 }
@@ -1250,46 +1247,46 @@
 
         // add form
         document.getElementById("addQuotationForm").addEventListener("submit", function (e) {
-        e.preventDefault();
-        let form = this;
-        let formData = new FormData(form);
+            e.preventDefault();
+            let form = this;
+            let formData = new FormData(form);
 
-        fetch("/add_quotation/", {
-            method: "POST",
-            body: formData,
-            headers: { "X-Requested-With": "XMLHttpRequest" }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                //success case
-                bootstrap.Modal.getInstance(document.getElementById("addQuotationModal")).hide();
-                showToast(data.message, "success");
-                setTimeout(() => window.location.reload(), 1000);
+            fetch("/add_quotation/", {
+                method: "POST",
+                body: formData,
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        //success case
+                        bootstrap.Modal.getInstance(document.getElementById("addQuotationModal")).hide();
+                        showToast(data.message, "success");
+                        setTimeout(() => window.location.reload(), 1000);
 
-            } else {
-                //validation errors
-                if (data.flat_errors) {
-                    data.flat_errors.forEach(msg => {
-                        showToast(msg, "danger"); // separate toast per message
-                    });
-                } 
-                //fallback if only message_dict-style errors are returned
-                else if (data.errors) {
-                    Object.entries(data.errors).forEach(([field, msgs]) => {
-                        msgs.forEach(msg => {
-                            showToast(`${field}: ${msg}`, "danger");
-                        });
-                    });
-                } 
-                //generic error
-                else {
-                    showToast("Something went wrong", "danger");
-                }
-            }
-        })
-        .catch(() => showToast("Unexpected error while adding user", "danger"));
-    });
+                    } else {
+                        //validation errors
+                        if (data.flat_errors) {
+                            data.flat_errors.forEach(msg => {
+                                showToast(msg, "danger"); // separate toast per message
+                            });
+                        }
+                        //fallback if only message_dict-style errors are returned
+                        else if (data.errors) {
+                            Object.entries(data.errors).forEach(([field, msgs]) => {
+                                msgs.forEach(msg => {
+                                    showToast(`${field}: ${msg}`, "danger");
+                                });
+                            });
+                        }
+                        //generic error
+                        else {
+                            showToast("Something went wrong", "danger");
+                        }
+                    }
+                })
+                .catch(() => showToast("Unexpected error while adding user", "danger"));
+        });
 
         // --- When edit button is clicked ---
         document.querySelectorAll(".edit-quotation").forEach(btn => {
@@ -1303,14 +1300,27 @@
 
                 // Fill basic fields
                 document.getElementById("quotation_no").value = data.quotation_no;
-                document.getElementById("date").value = data.date;
-                document.getElementById("valid_until").value = data.valid_until;
+                    // Date fields - use flatpickr API
+                if (data.date) {
+                    flatpickr("#date").setDate(data.date, true, "Y-m-d");
+                }
+                if (data.valid_until) {
+                    flatpickr("#valid_until").setDate(data.valid_until, true, "Y-m-d");
+                }
+                console.log("Prepared_by from API:", data.prepared_by);
+
                 document.getElementById("company_name").value = data.company_name;
                 document.getElementById("company_phone").value = data.company_phone;
                 document.getElementById("company_email").value = data.company_email;
                 document.getElementById("company_address").value = data.company_address;
                 // Set Prepared By dropdown
-                document.getElementById("prepared_by").value = data.prepared_by;
+                if (data.prepared_by && data.prepared_by.id) {
+                    document.getElementById("prepared_by").value = String(data.prepared_by.id);
+                } else {
+                    document.getElementById("prepared_by").value = "";
+                    }
+
+
                 document.getElementById("client_name").value = data.client_name;
                 document.getElementById("client_contact").value = data.client_contact;
                 document.getElementById("client_email").value = data.client_email;
@@ -1490,7 +1500,7 @@
                     // --- 4. Summary ---
                     setText("view-sub-services", data.subtotal_services);
                     setText("view-sub-infra", data.subtotal_infra);
-                    setText("view-discount-type", data.discount_type);  
+                    setText("view-discount-type", data.discount_type);
                     setText("view-discount-value", data.discount_value);
                     setText("view-tax-amount", data.tax_amount);
                     setText("view-grand-total", data.grand_total);
@@ -1513,6 +1523,8 @@
                     setTimeout(() => window.location.reload(), 3000);
                 });
         });
+        
+        
         // --- Download Quotation ---
 
         let quotationIdToDownload = null;

@@ -89,4 +89,11 @@ urlpatterns = [
     path('get_technology/', get_technology, name='get_technology'),
     path('update_technology/', update_technology, name='update_technology'),
     path('delete_technology/<int:id>/', delete_technology, name='delete_technology'),
+
+    #app mode
+    path('appmodes/', appmode_list, name='appmode_list'),
+    path('appmodes/add/', add_appmode, name='add_appmode'),
+    path('get_appmode/', get_appmode, name='get_appmode'),
+    path('appmodes/update/', update_appmode, name='update_appmode'),
+    path('delete_appmode/<int:id>/', delete_appmode, name='delete_appmode'),
 ]
