@@ -68,9 +68,8 @@
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
                             <h6>Recent Upload</h6>
-                             {% for file in recent_files %}
-                            <h6 class="fw-bold text-danger">{{ file.name }}({{ file.created_at }})</h6>
-                            {% endfor %}
+                            <p class="fw-bold text-primary">{{ recent_files }}</p>
+
                         </div>
                         <div class="avatar bg-danger text-white rounded-circle p-2"><i class="bx bx-upload fs-4"></i>
                         </div>
@@ -138,122 +137,121 @@
 
                 </div> -->
                 <div class="row g-3">
-    {% for folder in page_obj %}
-    <div class="col-md-2 col-sm-4 col-6">
-        <div class="card folder-card text-center position-relative"
-             style="border-radius: 18px; overflow:hidden; cursor:default;"> <!-- cursor default -->
+                    {% for folder in page_obj %}
+                    <div class="col-md-2 col-sm-4 col-6">
+                        <div class="card folder-card text-center position-relative"
+                            style="border-radius: 18px;" data-folder-id="{{ folder.id }}"> <!-- cursor default -->
 
-            <!-- File Count Badge (Left) -->
-            <span class="position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill"
-                  style="backdrop-filter: blur(8px); background: rgba(99,102,241,0.8); 
+                            <!-- File Count Badge (Left) -->
+                            <span class="position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill" style="backdrop-filter: blur(8px); background: rgba(99,102,241,0.8); 
                          color: white; font-size: 0.7rem; font-weight: 600;">
-                {{ folder.file_count }}
-            </span>
+                                {{ folder.file_count }}
+                            </span>
 
-            <!-- Three-dot menu (Right) -->
-            <span class="position-absolute top-0 end-0 m-1 px-1 py-1 rounded-circle text-dark"
-                  style="cursor:pointer;" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bx bx-dots-vertical-rounded"></i>
-            </span>
-            <ul class="dropdown-menu dropdown-menu-end">
-    <li>
-        <a class="dropdown-item delete-folder-btn" href="javascript:void(0);" 
-           data-folder-id="{{ folder.id }}">
-           Delete Folder
-        </a>
-    </li>
-    <li>
-    <a class="dropdown-item copy-link-btn" href="javascript:void(0);" 
-   data-link="{% url 'view_folder' folder.id %}">
-   Copy Link
-</a>
+                            <!-- Three-dot menu (Right) -->
+                            <span class="position-absolute top-0 end-0 m-1 px-1 py-1 rounded-circle text-dark"
+                                style="cursor:pointer;" data-bs-toggle="dropdown" aria-expanded="false" onclick="event.stopPropagation();">
+                                <i class="bx bx-dots-vertical-rounded"></i>
+                            </span>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item delete-folder-btn" href="javascript:void(0);"
+                                        data-folder-id="{{ folder.id }}">
+                                        Delete Folder
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item copy-link-btn" href="javascript:void(0);"
+                                        data-link="{% url 'view_folder' folder.id %}">
+                                        Copy Link
+                                    </a>
 
-</li>
+                                </li>
 
-</ul>
+                            </ul>
 
 
-            <div class="card-body p-3">
-                <!-- Folder Icon in gradient circle -->
-                <div class="d-flex justify-content-center align-items-center mx-auto mb-2" style="width:75px; height:75px; border-radius:50%;
+                            <div class="card-body p-3">
+                                <!-- Folder Icon in gradient circle -->
+                                <div class="d-flex justify-content-center align-items-center mx-auto mb-2" style="width:75px; height:75px; border-radius:50%;
                                 background: linear-gradient(135deg, #fde68a, #f59e0b20);">
-                    <i class="bx bxs-folder" style="font-size:38px; color:#f59e0b;"></i>
+                                    <i class="bx bxs-folder" style="font-size:38px; color:#f59e0b;"></i>
+                                </div>
+
+                                <!-- Folder Name (only clickable element) -->
+                                <h6 class="mt-2 mb-1 text-truncate" style="max-width:100%;">
+                                    <a href="javascript:void(0);"
+                                        class="text-decoration-none text-dark fw-semibold view-folder"
+                                        data-folder-id="{{ folder.id }}">
+                                        {{ folder.name }}
+                                    </a>
+                                </h6>
+
+                                <!-- Created Date -->
+                                <small class="text-muted d-block">
+                                    {{ folder.created_at|date:"M j, Y" }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center text-muted">No Folders</div>
+                    {% endfor %}
                 </div>
-
-                <!-- Folder Name (only clickable element) -->
-                <h6 class="mt-2 mb-1 text-truncate" style="max-width:100%;">
-                    <a href="javascript:void(0);"
-                       class="text-decoration-none text-dark fw-semibold view-folder"
-                       data-folder-id="{{ folder.id }}">
-                        {{ folder.name }}
-                    </a>
-                </h6>
-
-                <!-- Created Date -->
-                <small class="text-muted d-block">
-                    {{ folder.created_at|date:"M j, Y" }}
-                </small>
-            </div>
-        </div>
-    </div>
-    {% empty %}
-    <div class="col-12 text-center text-muted">No Folders</div>
-    {% endfor %}
-</div>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
                 <script>
                     let folderToDeleteId = null;
 
-// Open modal on Delete Folder click
-$(document).on("click", ".delete-folder-btn", function(e) {
-    e.preventDefault();
-    folderToDeleteId = $(this).data("folder-id");
-    if (!folderToDeleteId) return;
+                    // Open modal on Delete Folder click
+                    $(document).on("click", ".delete-folder-btn", function (e) {
+                        e.preventDefault();
+                        folderToDeleteId = $(this).data("folder-id");
+                        if (!folderToDeleteId) return;
 
-    // Show modal
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteFileModal'));
-    deleteModal.show();
-});
+                        // Show modal
+                        const deleteModal = new bootstrap.Modal(document.getElementById('deleteFileModal'));
+                        deleteModal.show();
+                    });
 
-// Confirm deletion using delegated event
-$(document).on("click", "#confirmDeleteBtn", function() {
-    if (!folderToDeleteId) return;
+                    // Confirm deletion using delegated event
+                    $(document).on("click", "#confirmDeleteBtn", function () {
+                        if (!folderToDeleteId) return;
 
-    $.ajax({
-        url: `/delete_folder/${folderToDeleteId}/`,
-        type: "POST",
-        data: {
-            csrfmiddlewaretoken: '{{ csrf_token }}'
-        },
-        success: function(res) {
-            if (res.success) {
-                showToast(res.message, "success");
-                // remove folder card instead of reload
-                $(`.delete-folder-btn[data-folder-id="${folderToDeleteId}"]`).closest(".col-md-2").remove();
-            } else {
-                showToast(res.message || "Failed to delete folder.","danger");
-            }
-        },
-        error: function(err) {
-            showToast("Error deleting folder.");
-            console.error(err);
-        },
-        complete: function() {
-            folderToDeleteId = null;
-            const deleteModalEl = document.getElementById('deleteFileModal');
-            const modalInstance = bootstrap.Modal.getInstance(deleteModalEl);
-            if (modalInstance) modalInstance.hide();
-        }
-    });
-});
+                        $.ajax({
+                            url: `/delete_folder/${folderToDeleteId}/`,
+                            type: "POST",
+                            data: {
+                                csrfmiddlewaretoken: '{{ csrf_token }}'
+                            },
+                            success: function (res) {
+                                if (res.success) {
+                                    showToast(res.message, "success");
+                                    // remove folder card instead of reload
+                                    $(`.delete-folder-btn[data-folder-id="${folderToDeleteId}"]`).closest(".col-md-2").remove();
+                                } else {
+                                    showToast(res.message || "Failed to delete folder.", "danger");
+                                }
+                            },
+                            error: function (err) {
+                                showToast("Error deleting folder.");
+                                console.error(err);
+                            },
+                            complete: function () {
+                                folderToDeleteId = null;
+                                const deleteModalEl = document.getElementById('deleteFileModal');
+                                const modalInstance = bootstrap.Modal.getInstance(deleteModalEl);
+                                if (modalInstance) modalInstance.hide();
+                            }
+                        });
+                    });
 
-// copy link
-$(document).on("click", ".copy-link-btn", function() {
-    const link = window.location.origin + $(this).data("link");
-    navigator.clipboard.writeText(link).then(() => {
-        showToast("Link copied ","success");
-    });
-});
+                    // copy link
+                    $(document).on("click", ".copy-link-btn", function () {
+                        const link = window.location.origin + $(this).data("link");
+                        navigator.clipboard.writeText(link).then(() => {
+                            showToast("Link copied ", "success");
+                        });
+                    });
 
 
                 </script>
@@ -547,9 +545,9 @@ $(document).on("click", ".copy-link-btn", function() {
                                         setTimeout(() => window.location.reload(), 1000);
                                     } else { showToast(data.error || "Upload failed!", "danger"); }
                                 }).catch(() => {
-            loader.style.display = "none";  // Hide loader
-            showToast("Error uploading files", "danger");
-        });
+                                    loader.style.display = "none";  // Hide loader
+                                    showToast("Error uploading files", "danger");
+                                });
                         });
                     </script>
                     <div id="fileUploadLoader" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%;
@@ -733,13 +731,16 @@ $(document).on("click", ".copy-link-btn", function() {
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header table-info text-white">
-                        <h5 class="modal-title"><i class="bx bx-folder me-2"></i> Folder Details</h5>
+                        <h5 class="modal-title">
+                             <i class="bx bx-folder-open"></i>
+                            <span id="projectTitle"class="fw-bold text-primary text-uppercase">
+                        </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                             aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
 
-                        <p><b>Folder Name :</b> <span id="projectTitle"></span></p>
+                        <!-- <p><b>Folder Name :</b> <span id="projectTitle"></span></p> -->
                         <p><b>Project Name :</b> <span id="projectId"></span></p>
 
 
@@ -788,182 +789,76 @@ $(document).on("click", ".copy-link-btn", function() {
                         }
 
                         document.addEventListener("click", function (e) {
-                            if (e.target.classList.contains("view-folder")) {
-                                const folderId = e.target.getAttribute("data-folder-id");
+    // 🔹 Ignore clicks inside the dropdown menu entirely
+    if (e.target.closest(".dropdown-menu")) return;
 
-                                fetch(`/get_files/?id=${folderId}`)
-                                    .then(res => res.json())
-                                    .then(data => {
-                                        document.getElementById("projectTitle").innerText = data.name;
+    // 🔹 Name click
+    if (e.target.classList.contains("view-folder")) {
+        openFolderModal(e.target.dataset.folderId);
+        return; // stop further handling
+    }
 
-                                        document.getElementById("projectId").innerText = data.project;
+    // 🔹 Click anywhere on card (except dropdown)
+    const card = e.target.closest(".folder-card");
+    if (card) {
+        const folderId = card.querySelector(".view-folder")?.dataset.folderId;
+        if (folderId) openFolderModal(folderId);
+    }
 
+});
 
-                                        const container = document.getElementById("projectFolders");
-                                        container.innerHTML = "";
-                                        if (data.files.length) {
-                                            container.innerHTML = `
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <div>
-                                                        <input type="checkbox" id="selectAll" class="form-check-input me-2">
-                                                        <label for="selectAll" class="fw-bold">Select All</label>
-                                                    </div>
-                                                    <button id="deleteSelectedBtn" class="btn btn-danger btn-sm" disabled>
-                                                        <i class="bx bx-trash"></i> Delete Selected
-                                                    </button>
-                                                </div>
-                                                <ul class="list-group">
-                                                    ${data.files.map(f => `
-                                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                            <div class="d-flex align-items-center">
-                                                                <input type="checkbox" class="form-check-input me-2 file-checkbox" value="${f.id}">
-                                                                <div class="d-flex flex-column">
-                                                                    <span class="fw-bold">${f.name}</span>
-                                                                    <small class="text-muted">Added: ${f.created_at}</small>
-                                                                </div>
-                                                            </div>
-                                                            <div class="btn-group">
-                                                                ${f.file_url ? `<button class="btn btn-sm btn-primary view-file" data-url="${f.file_url}" title="View"><i class="bx bx-show"></i></button>` : ''}
-                                                                <button class="btn btn-danger delete-file" data-file-id="${f.id}">
-                                                                    <i class="bx bx-trash"></i>
-                                                                </button>
-                                                            </div>
-                                                        </li>
-                                                    `).join("")}
-                                                </ul>
-                                            `;
+// Extract your folder modal logic into a function for reuse
+function openFolderModal(folderId) {
+    if (!folderId) return;
 
-                                        } else {
-                                            container.innerHTML = "<p class='text-muted text-center'>No files</p>";
-                                        }
+    fetch(`/get_files/?id=${folderId}`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("projectTitle").innerText = data.name;
+            document.getElementById("projectId").innerText = data.project;
 
-                                        new bootstrap.Modal(document.getElementById("viewProjectModal")).show();
-                                    })
-                                    .catch(() => showToast("Error loading folder details"));
-                            }
-                            // Open file preview modal dynamically
-                            if (e.target.closest(".view-file")) {
-                                const url = e.target.closest(".view-file").dataset.url;
-                                const filename = url.split('/').pop();
-                                console.log(url, filename);
-                                const ext = getFileExtension(url);
-                                const container = document.getElementById("filePreview");
-                                document.getElementById("fileTitle").innerText = "Preview: " + filename;
+            const container = document.getElementById("projectFolders");
+            container.innerHTML = "";
 
-                                container.innerHTML = ""; // reset
+            if (data.files.length) {
+                container.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <input type="checkbox" id="selectAll" class="form-check-input me-2">
+                            <label for="selectAll" class="fw-bold">Select All</label>
+                        </div>
+                        <button id="deleteSelectedBtn" class="btn btn-danger btn-sm" disabled>
+                            <i class="bx bx-trash"></i> Delete Selected
+                        </button>
+                    </div>
+                    <ul class="list-group">
+                        ${data.files.map(f => `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <input type="checkbox" class="form-check-input me-2 file-checkbox" value="${f.id}">
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold">${f.name}</span>
+                                        <small class="text-muted">Added: ${f.created_at}</small>
+                                    </div>
+                                </div>
+                                <div class="btn-group">
+                                    ${f.file_url ? `<button class="btn btn-sm btn-primary view-file" data-url="${f.file_url}" title="View"><i class="bx bx-show"></i></button>` : ''}
+                                    <button class="btn btn-danger delete-file" data-file-id="${f.id}">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
+                                </div>
+                            </li>
+                        `).join("")}
+                    </ul>
+                `;
+            } else {
+                container.innerHTML = "<p class='text-muted text-center'>No files</p>";
+            }
 
-                                if (["txt"].includes(ext)) {
-                                    fetch(url)
-                                        .then(res => res.text())
-                                        .then(text => {
-                                            container.innerHTML = `<h5>Preview: ${filename}</h5><pre>${text}</pre>`;
-                                        })
-                                        .catch(() => {
-                                            container.innerHTML = `<p class="text-center">Cannot preview this file. <a href="${url}" download>Download</a></p>`;
-                                        });
-                                }
-                                else if (["pdf"].includes(ext)) {
-                                    container.innerHTML = `<iframe src="${url}" style="width:100%;height:70vh;border:none;"></iframe>`;
-                                }
-                                else if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
-                                    container.innerHTML = `<img src="${url}" style="width:100%;height:auto;">`;
-                                }
-                                else if (["mp4", "webm", "ogg"].includes(ext)) {
-                                    container.innerHTML = `<video controls style="width:100%;height:auto;"><source src="${url}" type="video/${ext}"></video>`;
-                                }
-                                else if (["html", "htm"].includes(ext)) {
-                                    container.innerHTML = `<iframe src="${url}" style="width:100%;height:70vh;border:none;"></iframe>`;
-                                }
-                                else {
-                                    container.innerHTML = `<p class="text-center">Preview not available. <a href="${url}" target="_blank" download>Download</a> to view the file.</p>`;
-                                }
-
-                                new bootstrap.Modal(document.getElementById("viewFileModal")).show();
-                            }
-
-
-                            let selectedToDelete = [];  // store ids globally
-
-                            document.addEventListener("click", function (e) {
-                                // Delete Selected → open confirmation modal
-                                if (e.target.id === "deleteSelectedBtn") {
-                                    selectedToDelete = Array.from(document.querySelectorAll(".file-checkbox:checked"))
-                                        .map(cb => cb.value);
-
-                                    if (!selectedToDelete.length) return;
-
-                                    // Update modal text dynamically
-                                    document.querySelector("#deleteFileModal .modal-body").innerText =
-                                        `Are you sure you want to delete ${selectedToDelete.length} file(s)?`;
-
-                                    // Show modal
-
-
-                                    new bootstrap.Modal(document.getElementById("deleteFileModal")).show();
-                                }
-                            });
-
-                            // Confirm delete button inside modal
-                            // document.getElementById("confirmDeleteFileBtn").addEventListener("click", function () {
-                            //     if (!selectedToDelete.length) return;
-
-                            //     fetch(`/delete_files/`, {
-                            //         method: "POST",
-                            //         headers: { "Content-Type": "application/json", "X-CSRFToken": getCSRFToken() },
-                            //         body: JSON.stringify({ ids: selectedToDelete })
-                            //     })
-                            //     .then(res => res.json())
-                            //     .then(() => {
-
-                            //         // Remove them from UI
-                            //         selectedToDelete.forEach(id => {
-                            //             const cb = document.querySelector(`.file-checkbox[value="${id}"]`);
-                            //             if (cb) cb.closest("li").remove();
-                            //         });
-
-                            //         showToast("Selected files deleted successfully");
-                            //         // Reset UI
-                            //         selectedToDelete = [];
-                            //         document.getElementById("deleteSelectedBtn").disabled = true;
-                            //         document.getElementById("selectAll").checked = false;
-
-                            //         if (!document.querySelector(".file-checkbox")) {
-                            //             document.getElementById("projectFolders").innerHTML = "<p class='text-muted text-center'>No files</p>";
-                            //         }
-
-                            //         bootstrap.Modal.getInstance(document.getElementById("deleteFileModal")).hide();
-                            //         bootstrap.Modal.getInstance(document.getElementById("viewProjectModal")).hide();
-                            //     })
-                            //     .catch(() => showToast("Error deleting selected files"));
-                            // });
-
-                            // Checkbox change events
-                            document.addEventListener("change", function (e) {
-                                if (e.target.id === "selectAll") {
-                                    const all = document.querySelectorAll(".file-checkbox");
-                                    all.forEach(cb => cb.checked = e.target.checked);
-                                    document.getElementById("deleteSelectedBtn").disabled = !e.target.checked;
-                                }
-
-                                if (e.target.classList.contains("file-checkbox")) {
-                                    const all = document.querySelectorAll(".file-checkbox");
-                                    const checked = document.querySelectorAll(".file-checkbox:checked");
-                                    document.getElementById("selectAll").checked = (all.length === checked.length);
-                                    document.getElementById("deleteSelectedBtn").disabled = checked.length === 0;
-                                    // Disable row delete buttons if multiple selected
-                                    document.querySelectorAll(".delete-file").forEach(btn => {
-                                        btn.disabled = checked.length > 1 || document.getElementById("selectAll").checked;
-                                    });
-                                }
-                            });
-
-                            // CSRF helper
-                            function getCSRFToken() {
-                                return document.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
-                            }
-
-
-                        });
+            new bootstrap.Modal(document.getElementById("viewProjectModal")).show();
+        })
+        .catch(() => showToast("Error loading folder details"));
+}
 
                     </script>
                 </div>

@@ -27,6 +27,7 @@ import asyncio
 from playwright.async_api import async_playwright
 from django.template.loader import render_to_string
 
+from collections import OrderedDict
 
 def parse_date(val):
     try:
@@ -187,7 +188,7 @@ def save_project(request):
                 server_charge=data.get("server_charge") or None,
                 third_party_api_charge=data.get("third_party_api_charge") or None,
                 mediator_charge=data.get("mediator_charge") or None,
-                income=data.get("income") or None,
+                income=Decimal(data.get("income")) if data.get("income") else None,
                 free_service=data.get("free_service"),
                 postman_collection=data.get("postman_collection"),
                 data_folder=data.get("data_folder"),
@@ -208,6 +209,7 @@ def save_project(request):
 
                 client_industry=data.get("client_industry"),
                 contract_signed=data.get("contract_signed"),
+                notes=data.get("notes"),
                 quotation=quotation
             )
 
@@ -275,7 +277,7 @@ def get_project_details(request):
         }
         for m in project.team_members.all()
     ]
-    print(team_members_display)
+    print(project.notes)
     data = {
 
         "id": project.id,   # numeric id (important)
@@ -324,6 +326,7 @@ def get_project_details(request):
         "completed_date": project.completed_date.strftime('%Y-%m-%d') if project.completed_date else None,
         "client_industry": project.client_industry,
         "contract_signed": project.contract_signed,
+        "notes":project.notes,
         "team_members_display": team_members_display,
         "team_members_ids": list(project.team_members.values_list('id', flat=True)),
         # ManyToMany IDs
@@ -393,7 +396,7 @@ def update_project(request, id):
             project.completed_date = parse_date(request.POST.get('completed_date'))
             project.client_industry = data.get("client_industry")
             project.contract_signed = data.get("contract_signed")
-
+            project.notes = data.get("notes")
             # Save project first before updating many-to-many
             project.full_clean()
 
@@ -458,12 +461,11 @@ def host_list(request):
     running_servers = host_data_list.filter(status="Active").count()
     down_servers = host_data_list.filter(status="Inactive").count()
 
-    # High CPU Load -> assume > 80% 
-    # high_cpu_servers = host_data_list.filter(
-    #     cpu_usage__regex=r'^\d+%'  # ensure valid percentage
-    # ).filter(
-    #     cpu_usage__gte="80%"  # adjust based on how you store cpu_usage
-    # ).count()
+     # Days left to expiry
+    expiring_soon = host_data_list.filter(
+        expiry_date__isnull=False,
+        expiry_date__lte=date.today() + timedelta(days=30)
+    ).count()  # optional card
 
     paginator = Paginator(host_data_list, records_per_page)
     page_obj = paginator.get_page(page_number)
@@ -476,7 +478,7 @@ def host_list(request):
         'total_servers': total_servers,
         'running_servers': running_servers,
         'down_servers': down_servers,
-        # 'high_cpu_servers': high_cpu_servers,
+        'expiring_soon': expiring_soon,
     })
 
 
@@ -506,8 +508,8 @@ def add_host_data(request):
                 database_name=request.POST.get("database_name"),
                 db_username=request.POST.get("db_username"),
                 db_password=request.POST.get("db_password"),
-                purchase_date=request.POST.get("purchase_date") or None,
-                expiry_date=request.POST.get("expiry_date") or None,
+                purchase_date=parse_date(request.POST.get("purchase_date")),
+                expiry_date=parse_date(request.POST.get("expiry_date")),
                 server_cost=request.POST.get("server_cost") or None,
                 memory=request.POST.get("memory_usage"),
                 RAM=request.POST.get("disk_space"),
@@ -572,8 +574,8 @@ def get_host_details(request):
         "database_name": host.database_name,
         "db_username": host.db_username,
         "db_password": host.db_password,
-        "purchase_date": host.purchase_date.strftime("%Y-%m-%d") if host.purchase_date else None,
-        "expiry_date": host.expiry_date.strftime("%Y-%m-%d") if host.expiry_date else None,
+        "purchase_date": host.purchase_date.strftime("%Y-%m-%d") if host.purchase_date else "",
+        "expiry_date": host.expiry_date.strftime("%Y-%m-%d") if host.expiry_date else "",
         "server_cost": str(host.server_cost) if host.server_cost else None,
         "status": host.status,
        "memory": host.memory,
@@ -717,88 +719,103 @@ def domain_list(request):
         "expiring_soon_domains": expiring_soon_domains,
     })
 
+
 def add_domain(request):
-    """
-    Create and save a new domain record.
-    """
-    if request.method == "POST":
-        try:
-            # Multiple projects allowed (can also be none)
-            project_ids = request.POST.getlist('projects')  # <-- multiple
-            projects = Project.objects.filter(id__in=project_ids)
-            # Convert date strings to date objects
-            purchase_date_str = request.POST.get('purchaseDate')
-            expiry_date_str = request.POST.get('expiryDate')
-            ssl_expiry_str = request.POST.get('sslExpiry')
+    if request.method != "POST":
+        return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}}, status=405)
 
-            purchase_date = datetime.strptime(purchase_date_str, "%Y-%m-%d").date() if purchase_date_str else None
-            expiry_date = datetime.strptime(expiry_date_str, "%Y-%m-%d").date() if expiry_date_str else None
-            ssl_expiry = datetime.strptime(ssl_expiry_str, "%Y-%m-%d").date() if ssl_expiry_str else None
+    try:
+        # Projects (ManyToMany)
+        project_ids = request.POST.getlist('projects')
+        projects = Project.objects.filter(id__in=project_ids) if project_ids else Project.objects.none()
 
-             # Build payment details JSON dynamically
-            payment_method = request.POST.get('paymentMethod')
-            payment_details = {}
+        # Dates (optional)
+        purchase_date = parse_date(request.POST.get("purchaseDate")) or None
+        expiry_date = parse_date(request.POST.get("expiryDate")) or None
+        ssl_expiry = parse_date(request.POST.get("sslExpiry")) or None
 
-            if payment_method == "Bank Transfer":
-                payment_details = {
-                    "bank_name": request.POST.get("bank_name"),
-                    "account_no": request.POST.get("account_no"),
-                    "ifsc_code": request.POST.get("ifsc_code"),
-                }
-            elif payment_method == "UPI":
-                payment_details = {"upi_id": request.POST.get("upi_id")}
-            elif payment_method == "Cheque":
-                payment_details = {
-                    "cheque_no": request.POST.get("cheque_no"),
-                    "cheque_name": request.POST.get("cheque_name"),
-                }
-            elif payment_method == "Other":
-                payment_details = {"other_details": request.POST.get("other_details")}
+        # Payment details (optional)
+        payment_method = request.POST.get('paymentMethod') or None
+        payment_details = {}
+        if payment_method == "Bank Transfer":
+            payment_details = {
+                "bank_name": request.POST.get("bank_name") or "",
+                "account_no": request.POST.get("account_no") or "",
+                "ifsc_code": request.POST.get("ifsc_code") or "",
+            }
+        elif payment_method == "UPI":
+            payment_details = {"upi_id": request.POST.get("upi_id") or ""}
+        elif payment_method == "Cheque":
+            payment_details = {
+                "cheque_no": request.POST.get("cheque_no") or "",
+                "cheque_name": request.POST.get("cheque_name") or "",
+            }
+        elif payment_method == "Other":
+            payment_details = {"other_details": request.POST.get("other_details") or ""}
 
-            domain = Domain(
-                domain_name=request.POST.get('domainName'),
-                sub_domain1=request.POST.get('subDomain1'),
-                sub_domain2=request.POST.get('subDomain2'),
-                purchase_date=purchase_date,
-                expiry_date=expiry_date,
-                registrar=request.POST.get('registrar'),
-                renewal_status=request.POST.get('renewalStatus'),
-                auto_renewal=request.POST.get('autoRenewal'),
-                dns_configured=True if request.POST.get('dnsConfigured') == "True" else False,
-                nameservers=request.POST.get('nameservers'),
-                ssl_installed=True if request.POST.get('sslInstalled') == "True" else False,
-                ssl_expiry=ssl_expiry,
-                credentials_user=request.POST.get('credentialsUser'),
-                credentials_pass=request.POST.get('credentialsPass'),
-                linked_services=request.POST.get('linkedServices'),
-                notes=request.POST.get('notes'),
-                domain_charge=request.POST.get('domainCharge') or None,
-                client_payment_status=request.POST.get('clientPaymentStatus'),
-                payment_method=payment_method,
-                payment_mode=request.POST.get('paymentMode'),
-                payment_details=payment_details or None
-            )
+        # Numeric field (optional)
+        domain_charge = request.POST.get("domainCharge")
+        if domain_charge:
+            try:
+                domain_charge = float(domain_charge)
+            except ValueError:
+                domain_charge = None
+        else:
+            domain_charge = None
 
-            # Calculate left_days
-            if expiry_date:
-                today = timezone.now().date()
-                domain.left_days = max((expiry_date - today).days, 0)
-            domain.full_clean()
-            domain.save()
-           # Attach selected projects (can be empty also)
-            if projects.exists():
-                domain.project.set(projects)   # ✅ correct, matches model field
+        # Boolean fields
+        dns_configured = request.POST.get('dnsConfigured') == "True"
+        ssl_installed = request.POST.get('sslInstalled') == "True"
 
+        # Create domain instance
+        domain = Domain(
+            domain_name=request.POST.get('domainName') or "",
+            sub_domain1=request.POST.get('subDomain1') or "",
+            sub_domain2=request.POST.get('subDomain2') or "",
+            purchase_date=purchase_date,
+            expiry_date=expiry_date,
+            registrar=request.POST.get('registrar') or "",
+            renewal_status=request.POST.get('renewalStatus') or "",
+            auto_renewal=request.POST.get('autoRenewal') or "",
+            dns_configured=dns_configured,
+            nameservers=request.POST.get('nameservers') or "",
+            ssl_installed=ssl_installed,
+            ssl_expiry=ssl_expiry,
+            credentials_user=request.POST.get('credentialsUser') or "",
+            credentials_pass=request.POST.get('credentialsPass') or "",
+            linked_services=request.POST.get('linkedServices') or "",
+            notes=request.POST.get('notes') or "",
+            domain_charge=domain_charge,
+            client_payment_status=request.POST.get('clientPaymentStatus') or "",
+            payment_method=payment_method,
+            payment_mode=request.POST.get('paymentMode') or "",
+            payment_details=payment_details or None
+        )
 
-            messages.success(request, f"Domain '{domain.domain_name}' added successfully!")
+        # Optional left_days calculation
+        if expiry_date:
+            today = timezone.now().date()
+            domain.left_days = max((expiry_date - today).days, 0)
 
-        except Exception as e:
-            messages.error(request, f"Error saving domain: {str(e)}")
+        domain.full_clean()  # still validate model fields
+        domain.save()
 
-        return redirect('domain_list')
+        # Set ManyToMany
+        domain.project.set(projects)
 
-    messages.warning(request, "Invalid request method.")
-    return redirect('domain_list')
+        return JsonResponse({
+            "success": True,
+            "message": f"Domain '{domain.domain_name}' added successfully!",
+            "domain_id": domain.id
+        })
+
+    except ValidationError as ve:
+        errors = ve.message_dict if hasattr(ve, "message_dict") else {"__all__": ve.messages}
+        return JsonResponse({"success": False, "errors": errors}, status=400)
+
+    except Exception as e:
+        return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
+
 
 def get_domain_details(request):
     """
@@ -983,7 +1000,6 @@ def user_list(request):
     if page_number < 1:
         page_number = 1
     users = User.objects.all().order_by('id')
-
      # Paginate
     paginator = Paginator(users, records_per_page)
     page_obj = paginator.get_page(page_number)
@@ -1000,6 +1016,7 @@ def user_list(request):
     technologies = Technology.objects.all().order_by("name") 
     context = {
         "page_obj": page_obj,  # paginated domains
+        'users':users,
         "records_per_page": records_per_page,
         "records_options": [20, 50, 100, 200, 300],
         'total_users': total_users,
@@ -1023,10 +1040,9 @@ def add_user(request):
                 phone=request.POST.get("phone") or None,
                 password=request.POST.get("password"),
                 amount=request.POST.get("amount") or None,
-                joining_date=request.POST.get("joining_date") or None,
-                
-                last_date=request.POST.get("last_date") or None,
-                birth_date=request.POST.get("birth_date") or None,
+                joining_date=parse_date(request.POST.get("joining_date")),
+                last_date=parse_date(request.POST.get("last_date")),
+                birth_date=parse_date(request.POST.get("birth_date")),
                 gender=request.POST.get("gender") or None,
                 marital_status=request.POST.get("marital_status") or None,
                 employee_type=request.POST.get("employee_type") or None,
@@ -1132,6 +1148,74 @@ def add_fixed_details(request):
             "errors": {"__all__": [str(e)]}
         }, status=500)
     
+
+def add_hourly_details(request):
+    if request.method != "POST":
+        return JsonResponse({
+            "success": False,
+            "errors": {"__all__": ["Invalid request method"]}
+        }, status=405)
+
+    try:
+        user_id = request.POST.get("user_id")
+        user = get_object_or_404(User, pk=user_id)
+
+        if user.employee_type != "hourly":
+            return JsonResponse({
+                "success": False,
+                "errors": {"__all__": ["Details can only be added for hourly employees."]}
+            }, status=400)
+
+        # Collect data from form
+        amount = float(request.POST.get("amount") or 0)
+        total_hours = float(request.POST.get("working_hours") or 0)
+        date = request.POST.get("date")
+        description = request.POST.get("description") or ""
+
+        if amount <= 0 or total_hours <= 0:
+            return JsonResponse({
+                "success": False,
+                "errors": {"__all__": ["Amount and working hours must be greater than zero."]}
+            }, status=400)
+
+        if not date:
+            return JsonResponse({
+                "success": False,
+                "errors": {"__all__": ["Date is required."]}
+            }, status=400)
+
+        final_total = round(amount * total_hours, 2)
+
+        # Get existing entries or initialize empty list
+        existing_details = user.hourly_employee_details or []
+        if not isinstance(existing_details, list):
+            existing_details = [existing_details]
+
+        # Append new entry
+        new_entry = {
+            "amount": amount,
+            "date": date,
+            "description": description,
+            "total_hours": total_hours,
+            "final_total": final_total
+        }
+        existing_details.append(new_entry)
+
+        # Save back to JSONField
+        user.hourly_employee_details = existing_details
+        user.save()
+
+        return JsonResponse({
+            "success": True,
+            "message": "Hourly employee details saved successfully!"
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "errors": {"__all__": [str(e)]}
+        }, status=500)
+
 def get_user(request, id):
     """
     Return JSON details of a user for editing in modal.
@@ -1153,6 +1237,30 @@ def get_user(request, id):
             details = [details]
         total_paid = sum(d.get("amount", 0) for d in details)
         fixed_details = details 
+
+    # Hourly: combine by date
+    hourly_details = []
+    if user.employee_type == "hourly" and user.hourly_employee_details:
+        combined = defaultdict(lambda: {"total_hours": 0, "final_total": 0, "descriptions": []})
+        for d in user.hourly_employee_details:
+            date_key = d["date"]
+            combined[date_key]["total_hours"] += d.get("total_hours", 0)
+            combined[date_key]["final_total"] += d.get("final_total", 0)
+            combined[date_key]["descriptions"].append(d.get("description", "-"))
+
+        # Convert to list for JSON
+        for date_key, info in combined.items():
+            hourly_details.append({
+                "date": date_key,
+                "total_hours": info["total_hours"],
+                "final_total": info["final_total"],
+                "description": " | ".join(info["descriptions"]),  # optional: join all descriptions
+            })
+            # single row
+    hourwise = []
+    if user.employee_type == "hourly" and user.hourly_employee_details:
+        hourwise = user.hourly_employee_details
+    print(hourwise)
     return JsonResponse({
         "id": user.id,
         "first_name": user.first_name,
@@ -1183,6 +1291,8 @@ def get_user(request, id):
         "projects": [p.project_name for p in getattr(user, "projects").all()] if hasattr(user, "projects") else [],
         "profile_picture_url": request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None,
          "fixed_employee_details": fixed_details,
+        "hourly_employee_details": hourly_details,
+        "hourwise":hourwise
 
     })
 
@@ -1211,13 +1321,11 @@ def update_user(request, id):
             user.employee_type = request.POST.get("employee_type") or None
             amount = request.POST.get("amount")
             user.amount = amount if amount else None
-            user.joining_date = request.POST.get("joining_date") or None
-            
-            user.last_date = request.POST.get("last_date") or None
-
+            user.joining_date = parse_date(request.POST.get("joining_date"))
+            user.last_date = parse_date(request.POST.get("last_date"))
             # Personal details
             user.gender = request.POST.get("gender") or None
-            user.birth_date = request.POST.get("birth_date") or None
+            user.birth_date = parse_date(request.POST.get("birth_date"))
             user.marital_status = request.POST.get("marital_status") or None
 
             # Addresses and document link
@@ -1964,14 +2072,9 @@ def file_docs(request):
     paginator = Paginator(folder_rows, records_per_page)
     page_obj = paginator.get_page(page_number)
 
-    # Last 3 recent files
-    recent_files = FileDoc.objects.order_by("-created_at")[:3]
-    recent_files_list = [
-        {
-            "name": f.name,
-            "created_at": f.created_at.strftime("%Y-%m-%d %H:%M:%S")
-        } for f in recent_files
-    ]
+    recent_file = FileDoc.objects.order_by("-created_at").first()  # returns single object or None
+    print(recent_file)
+    
 
     context = {
         "all_projects": all_projects,
@@ -1982,7 +2085,7 @@ def file_docs(request):
         "total_projects": all_projects.count(),
         "total_folders": all_folders.count(),
         "total_files": FileDoc.objects.count(),
-        "recent_files": recent_files_list,
+        "recent_files": recent_file,
     }
     return render(request, 'file_docs.html', context)
 

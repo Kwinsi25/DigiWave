@@ -134,7 +134,8 @@
     <div class="modal-content">
       <div class="modal-header table-primary text-white">
         <h5 class="modal-title"><i class="bx bx-cog me-2"></i> Add App Mode</h5>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
       </div>
       <form id="addAppModeForm" method="POST" action="{% url 'add_appmode' %}">
         {% csrf_token %}
@@ -162,7 +163,8 @@
     <div class="modal-content">
       <div class="modal-header table-warning text-dark">
         <h5 class="modal-title"><i class="bx bx-edit-alt me-2"></i> Edit App Mode</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
       </div>
       <form id="editAppModeForm" method="POST" action="{% url 'update_appmode' %}">
         {% csrf_token %}

@@ -177,7 +177,8 @@
     <div class="modal-content">
       <div class="modal-header table-primary text-white">
         <h5 class="modal-title"><i class="bx bx-briefcase me-2"></i> Add Designation</h5>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
       </div>
       <form id="addDesignationForm" method="POST" action="{% url 'add_designation' %}">
         {% csrf_token %}
@@ -205,7 +206,8 @@
     <div class="modal-content">
       <div class="modal-header table-warning text-dark">
         <h5 class="modal-title"><i class="bx bx-edit-alt me-2"></i> Edit Designation</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
       </div>
       <form id="editDesignationForm" method="POST" action="{% url 'update_designation' %}">
         {% csrf_token %}

@@ -6,6 +6,7 @@ import os,re
 from django.core.validators import RegexValidator, MinLengthValidator, EmailValidator,MinValueValidator
 from django.db.models import *
 from decimal import Decimal
+from datetime import date
 
 # -----------------------------
 # User table for team members
@@ -25,6 +26,7 @@ class User(models.Model):
         ("widowed", "Widowed"),
     ]
     EMPLOYEE_TYPE_CHOICES = [
+        ("hourly","Hourly"),
         ("fixed", "Fixed"),
         ("salary", "Salary"),
     ]
@@ -35,13 +37,11 @@ class User(models.Model):
     ]
     first_name = models.CharField(
         max_length=50,
-        blank=True,
-        validators=[MinLengthValidator(2, "First name must be at least 2 characters.")]
+        blank=True
     )
     last_name = models.CharField(
         max_length=50,
-         blank=True,
-        validators=[MinLengthValidator(2, "Last name must be at least 2 characters.")]
+         blank=True
     )
     username = models.CharField(
         max_length=30,
@@ -79,10 +79,14 @@ class User(models.Model):
         null=True,
         help_text="Stores amount, date, description for fixed employees in JSON format"
     )
+    hourly_employee_details = models.JSONField(
+        blank=True,
+        null=True,
+        help_text="Stores amount, date, description for hourly employees in JSON format"
+    )
     amount = models.DecimalField(
         max_digits=12,
         decimal_places=2,
-        validators=[MinValueValidator(0)],
         blank=True,
         null=True
     )
@@ -219,7 +223,7 @@ class Project(models.Model):
         blank=True,
         null=True,
     )
-    project_name = models.CharField(max_length=255,  unique=True,blank=False, null=False)
+    project_name = models.CharField(max_length=255,  unique=True,blank=True, null=False)
     project_type = models.CharField(max_length=20, choices=PROJECT_TYPE_CHOICES, default="Fixed")
     start_date = models.DateField(blank=True, null=True)
     technologies = models.ManyToManyField(Technology, blank=True)
@@ -260,31 +264,31 @@ class Project(models.Model):
     completed_date = models.DateField(blank=True, null=True)
     client_industry = models.CharField(max_length=255, blank=True, null=True)
     contract_signed = models.CharField(max_length=3, choices=YES_NO_CHOICES, blank=True, null=True)
-
+    notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def clean(self):
-        if self.start_date and self.deadline:
-            if self.deadline < self.start_date:
-                raise ValidationError("Deadline cannot be before the start date.")
+    # def clean(self):
+    #     if self.start_date and self.deadline:
+    #         if self.deadline < self.start_date:
+    #             raise ValidationError("Deadline cannot be before the start date.")
             
-        if self.status == "Completed" and not self.completed_date:
-            raise ValidationError("Completed projects must have a completion date.")
+    #     if self.status == "Completed" and not self.completed_date:
+    #         raise ValidationError("Completed projects must have a completion date.")
 
-        if self.contract_signed == "Yes" and not self.approval_amount:
-            raise ValidationError("Approval amount is required when contract is signed.")
+    #     if self.contract_signed == "Yes" and not self.approval_amount:
+    #         raise ValidationError("Approval amount is required when contract is signed.")
 
-        if self.quotation_sent == "Yes" and not self.quotation_amount:
-            raise ValidationError("Quotation amount is required when quotation is sent.")
+    #     if self.quotation_sent == "Yes" and not self.quotation_amount:
+    #         raise ValidationError("Quotation amount is required when quotation is sent.")
         
-        if self.payment_value is not None and (self.payment_value < 0):
-            raise ValidationError("Payment value not in negative.")
+    #     if self.payment_value is not None and (self.payment_value < 0):
+    #         raise ValidationError("Payment value not in negative.")
     
-        if self.project_name:
-            qs = Project.objects.filter(project_name__iexact=self.project_name).exclude(pk=self.pk)
-            if qs.exists():
-                raise ValidationError("A project with this name already exists.")
+    #     if self.project_name:
+    #         qs = Project.objects.filter(project_name__iexact=self.project_name).exclude(pk=self.pk)
+    #         if qs.exists():
+    #             raise ValidationError("A project with this name already exists.")
 
     def save(self, *args, **kwargs):
         if not self.project_id:
@@ -311,10 +315,12 @@ class Project(models.Model):
 
             if not self.quotation_sent:
                 self.quotation_sent = "Yes"
+       
         super().save(*args, **kwargs)
         # ===== Update income with total_paid =====
-        self.income = self.total_paid
-        super().save(update_fields=["income"])
+        if self.income is None:
+            self.income = self.total_paid
+            super().save(update_fields=["income"])
     
     # ==== Payment Helpers ====
     @property
@@ -445,6 +451,16 @@ class HostData(models.Model):
     def __str__(self):
         return f"{self.hosting_provider or 'No Provider'} - {self.server_ip}"
 
+    @property
+    def left_days(self):
+        """
+        Returns number of days left until expiry_date.
+        If already expired or expiry_date not set, returns 0.
+        """
+        if self.expiry_date:
+            delta = (self.expiry_date - date.today()).days
+            return max(delta, 0)  # return 0 if negative
+        return None  # or 0, depending on your preference
 
 # -----------------------------
 # Domain model

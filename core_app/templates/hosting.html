@@ -101,13 +101,13 @@
                 </div>
             </div>
 
-            <!-- High CPU Load -->
+            <!-- Expiring Soon -->
             <div class="col-md-3 col-sm-6 mb-3">
                 <div class="card h-100 shadow-sm border-0">
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
-                            <h6 class="mb-1">High CPU Load</h6>
-                            <h4 class="fw-bold text-warning">{{high_cpu_servers}}</h4>
+                            <h6 class="mb-1">Expiring Soon</h6>
+                            <h4 class="fw-bold text-warning">{{expiring_soon}}</h4>
                         </div>
                         <div class="avatar bg-warning text-white rounded-circle p-2">
                             <i class="bx bx-line-chart fs-4"></i>
@@ -147,20 +147,9 @@
                                 <th>Hosting Provider</th>
                                 <th>Project ID</th>
                                 <th>Project Name</th>
-                                <th>Server Type</th>
-                                <th>Plan / Package</th>
-                                <th>Server IP</th>
                                 <th>Login URL</th>
-                                <th>Username</th>
-                                <th>Password</th>
-                                <th>SSH / FTP Access</th>
-                                <th>Database Name</th>
-                                <th>DB User / Pass</th>
-                                <th>Purchase Date</th>
-                                <th>Expiry Date</th>
-                                <th>Server Cost</th>
                                 <th>Status</th>
-                                <th>Notes</th>
+                                <th>Left Days</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -179,31 +168,21 @@
                                     <span class="text-muted"> - </span>
                                     {% endif %}
                                 </td>
-                                
+
                                 <td>
                                     {% if host.project.exists %}
                                     {% for p in host.project.all %}
-                                    
-                                        {{ p.project_name }}
-                                     <br>
+
+                                    {{ p.project_name }}
+                                    <br>
                                     {% endfor %}
                                     {% else %}
                                     <span class="text-muted">No Project</span>
                                     {% endif %}
                                 </td>
-                                
-                                <td>{{ host.server_type }}</td>
-                                <td>{{ host.plan_package }}</td>
-                                <td>{{ host.server_ip }}</td>
+
                                 <td><a href="{{ host.login_url }}" target="_blank">{{ host.login_url }}</a></td>
-                                <td>{{ host.username }}</td>
-                                <td>{{ host.password }}</td>
-                                <td>{{ host.ssh_ftp_access }}</td>
-                                <td>{{ host.database_name }}</td>
-                                <td>{{ host.db_username }} / {{ host.db_password }}</td>
-                                <td>{{ host.purchase_date }}</td>
-                                <td>{{ host.expiry_date }}</td>
-                                <td>₹{{ host.server_cost }}</td>
+
                                 <td><span class="badge 
                                         {% if host.status == 'Active' %}bg-label-success
                                         {% elif host.status == 'Inactive' %}bg-label-warning
@@ -215,7 +194,7 @@
                                     </span>
                                 </td>
 
-                                <td>{{ host.notes }}</td>
+                                <td>{{ host.left_days }}</td>
                                 <td>
                                     <a href="#" class="text-primary me-2 action-icon edit-host" title="Edit"
                                         data-host-id="{{ host.id }}">
@@ -234,7 +213,7 @@
                                 <td colspan="21" class="text-center">No Host found.</td>
                             </tr>
                             {% endfor %}
-                          
+
 
                         </tbody>
                     </table>
@@ -341,14 +320,15 @@
 
     </div>
 
-    <!-- host Details Modal -->
+    <!-- Host Details Modal -->
     <div class="modal fade" id="hostDetailsModal" tabindex="-1" aria-labelledby="hostDetailsModalLabel"
         aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header table-primary text-white">
                     <h5 class="modal-title" id="hostDetailsModalLabel">
-                        <i class="bx bx-folder-open me-2"></i> Hosting Details :
+                        <i class="bx bx-folder-open"></i>
+                        <span id="hd-header-hosting-provider" class="fw-bold text-primary text-uppercase"></span>
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
@@ -357,55 +337,133 @@
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped align-middle">
                             <tbody>
+                                <!-- Project Info -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Info</th>
+                                </tr>
+                                <tr>
+                                    <th>Project(s)</th>
+                                    <td colspan="3" id="hd-projects"></td>
+                                </tr>
+                                <tr>
+                                    <th>Hosting Provider</th>
+                                    <td colspan="3" id="hd-hosting-provider"></td>
+                                </tr>
                                 <tr>
                                     <th>Server Name</th>
                                     <td colspan="3" id="hd-server-name"></td>
                                 </tr>
                                 <tr>
-                                    <th>IP Address</th>
-                                    <td id="hd-server-ip"></td>
-                                    
-                                </tr>
-                                <tr>
-                                    <th>Operating System</th>
-                                    <td id="hd-operating-system"></td>
                                     <th>Server Type</th>
                                     <td id="hd-server-type"></td>
+                                    <th>Plan / Package</th>
+                                    <td id="hd-plan-package"></td>
+                                </tr>
+
+                                <!-- Network & OS -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-server me-2"></i> Network & OS</th>
                                 </tr>
                                 <tr>
-                                    <th>Status</th>
+                                    <th>Server IP</th>
+                                    <td id="hd-server-ip"></td>
+                                    <th>Operating System</th>
+                                    <td id="hd-operating-system"></td>
+                                </tr>
+                                <tr>
+                                    <th>Login URL</th>
+                                    <td colspan="3" id="hd-login-url"></td>
+                                </tr>
+                                <tr>
+                                    <th>Username</th>
+                                    <td id="hd-username"></td>
+                                    <th>Password</th>
                                     <td>
-                                        <span id="hd-status" class="badge"></span>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="hd-password" readonly>
+                                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                                <i class="bx bx-show"></i>
+                                            </button>
+                                        </div>
                                     </td>
+                                </tr>
+                                <tr>
+                                    <th>SSH Username</th>
+                                    <td id="hd-ssh-username"></td>
+                                    <th>SSH / FTP Access</th>
+                                    <td id="hd-ssh-ftp-access"></td>
+                                </tr>
+
+                                <!-- Database -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-cloud me-2"></i> Database</th>
+                                </tr>
+                                <tr>
+                                    <th>Database Name</th>
+                                    <td id="hd-database-name"></td>
+                                    <th>DB Username</th>
+                                    <td id="hd-db-username"></td>
+                                </tr>
+                                <tr>
+                                    <th>DB Password</th>
+                                    <td>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="hd-db-password" readonly>
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                id="toggleDbPassword">
+                                                <i class="bx bx-show"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Dates & Cost -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-calendar me-2"></i> Dates & Cost</th>
+                                </tr>
+                                <tr>
+                                    <th>Purchase Date</th>
+                                    <td id="hd-purchase-date"></td>
+                                    <th>Expiry Date</th>
+                                    <td id="hd-expiry-date"></td>
+                                </tr>
+                                <tr>
+                                    <th>Server Cost (₹)</th>
+                                    <td colspan="3" id="hd-server-cost"></td>
+                                </tr>
+
+                                <!-- Metrics -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-bar-chart-alt-2 me-2"></i> Metrics</th>
+                                </tr>
+                                <tr>
                                     <th>Memory</th>
-                                    <td id="hd-memory-usage"></td>
-                                    
+                                    <td colspan="3" id="hd-memory-usage"></td>
                                 </tr>
                                 <tr>
                                     <th>RAM</th>
-                                    <td id="hd-disk-space"></td>
-                                    <th>Backup Status</th>
-                                    <td>
-                                        <span id="hd-backup-status" class="badge"></span>
-                                    </td>
+                                    <td colspan="3" id="hd-ram"></td>
                                 </tr>
                                 <tr>
-                                    <th>Credentials</th>
-                                    <td colspan="3">
-                                        <strong>User:</strong> <span id="hd-ssh-username"></span><br>
-                                        <strong>SSH Key / Password:</strong> <span id="hd-ssh-ftp-access"></span>
-                                    </td>
+                                    <th>Backup Status</th>
+                                    <td colspan="3" id="hd-backup-status"></td>
                                 </tr>
 
-
+                                <!-- Services & Notes -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-link me-2"></i> Services & Notes</th>
+                                </tr>
                                 <tr>
                                     <th>Linked Services</th>
-                                    <td id="hd-linked-services" colspan="3"></td>
+                                    <td colspan="3" id="hd-linked-services"></td>
                                 </tr>
-
+                                <tr>
+                                    <th>Status</th>
+                                    <td colspan="3" id="hd-status"></td>
+                                </tr>
                                 <tr>
                                     <th>Notes</th>
-                                    <td id="hd-notes" colspan="3"></td>
+                                    <td colspan="3" id="hd-notes"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -415,6 +473,7 @@
         </div>
     </div>
 
+
     <!-- Add Host Data Modal -->
     <div class="modal fade" id="addHostDataModal" tabindex="-1" aria-labelledby="addHostDataModalLabel"
         aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -422,7 +481,7 @@
             <div class="modal-content">
                 <div class="modal-header table-primary text-white">
                     <h5 class="modal-title" id="addHostDataModalLabel">
-                        <i class="bx bx-plus me-2"></i> Add New Server / Host Data
+                        <i class="bx bx-plus me-2"></i> Add New Host Data
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
@@ -434,7 +493,11 @@
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle">
                                 <tbody>
-                                    <!-- Project(s) -->
+
+                                    <!-- ==================== Project Info ==================== -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Info</th>
+                                    </tr>
                                     <tr>
                                         <th>Project(s)</th>
                                         <td colspan="3">
@@ -445,153 +508,140 @@
                                             </select>
                                             <small class="text-muted">Hold Ctrl (Windows) or Command (Mac) to select
                                                 multiple</small>
-                                            <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
-
-                                    <!-- Hosting Provider -->
                                     <tr>
                                         <th>Hosting Provider</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="hosting_provider" required>
-                                            <div class="invalid-feedback"></div>
+                                            <input type="text" class="form-control" name="hosting_provider"
+                                                placeholder="Enter hosting provider">
                                         </td>
                                     </tr>
-
-                                    <!-- Server Name -->
                                     <tr>
                                         <th>Server Name</th>
                                         <td colspan="3">
-                                            <input type="text" class="form-control" name="server_name" required>
-                                            <div class="invalid-feedback"></div>
+                                            <input type="text" class="form-control" name="server_name"
+                                                placeholder="Enter server name">
                                         </td>
                                     </tr>
-
-                                    <!-- Server Type & Plan -->
                                     <tr>
                                         <th>Server Type</th>
                                         <td>
-                                            <input type="text" class="form-control" name="server_type" required>
-                                            <div class="invalid-feedback"></div>
+                                            <input type="text" class="form-control" name="server_type"
+                                                placeholder="Enter server type">
                                         </td>
                                         <th>Plan / Package</th>
                                         <td>
-                                            <input type="text" class="form-control" name="plan_package" required>
-                                            <div class="invalid-feedback"></div>
+                                            <input type="text" class="form-control" name="plan_package"
+                                                placeholder="Enter plan/package">
                                         </td>
                                     </tr>
 
-                                    <!-- Server IP & Location -->
+                                    <!-- ==================== Network & OS ==================== -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-server me-2"></i> Network & OS</th>
+                                    </tr>
                                     <tr>
                                         <th>Server IP</th>
                                         <td>
-                                            <input type="text" class="form-control" name="server_ip" required>
-                                            <div class="invalid-feedback"></div>
+                                            <input type="text" class="form-control" name="server_ip"
+                                                placeholder="Enter server IP">
                                         </td>
-                                    </tr>
-
-                                    <!-- Operating System -->
-                                    <tr>
                                         <th>Operating System</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="operating_system" required>
-                                            <div class="invalid-feedback"></div>
+                                        <td>
+                                            <input type="text" class="form-control" name="operating_system"
+                                                placeholder="Enter operating system">
                                         </td>
                                     </tr>
-
-                                    <!-- Control Panel & Login URL -->
                                     <tr>
-                                        
                                         <th>Login URL</th>
                                         <td>
-                                            <input type="url" class="form-control" name="login_url">
-                                            <div class="invalid-feedback"></div>
+                                            <input type="url" class="form-control" name="login_url"
+                                                placeholder="Enter login URL">
                                         </td>
                                     </tr>
-
-                                    <!-- Username & Password -->
                                     <tr>
                                         <th>Username</th>
                                         <td>
-                                            <input type="text" class="form-control" name="username">
-                                            <div class="invalid-feedback"></div>
+                                            <input type="text" class="form-control" name="username"
+                                                placeholder="Enter hosting username">
                                         </td>
                                         <th>Password</th>
                                         <td>
-                                            <input type="password" class="form-control" name="password">
-                                            <div class="invalid-feedback"></div>
+                                            <input type="password" class="form-control" name="password"
+                                                placeholder="Enter hosting password">
                                         </td>
                                     </tr>
-
-                                    <!-- SSH Username & Access -->
                                     <tr>
                                         <th>SSH Username</th>
                                         <td>
-                                            <input type="text" class="form-control" name="ssh_username">
-                                            <div class="invalid-feedback"></div>
+                                            <input type="text" class="form-control" name="ssh_username"
+                                                placeholder="Enter SSH username">
                                         </td>
-                                    </tr>
-                                    <tr>
                                         <th>SSH / FTP Access</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="ssh_ftp_access">
-                                            <div class="invalid-feedback"></div>
+                                        <td>
+                                            <input type="text" class="form-control" name="ssh_ftp_access"
+                                                placeholder="Enter SSH/FTP access">
                                         </td>
                                     </tr>
 
-                                    <!-- Database Fields -->
+                                    <!-- ==================== Database ==================== -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-cloud me-2"></i> Database</th>
+                                    </tr>
                                     <tr>
                                         <th>Database Name</th>
                                         <td>
-                                            <input type="text" class="form-control" name="database_name">
-                                            <div class="invalid-feedback"></div>
+                                            <input type="text" class="form-control" name="database_name"
+                                                placeholder="Enter database name">
                                         </td>
                                         <th>DB Username</th>
                                         <td>
-                                            <input type="text" class="form-control" name="db_username">
-                                            <div class="invalid-feedback"></div>
+                                            <input type="text" class="form-control" name="db_username"
+                                                placeholder="Enter DB username">
                                         </td>
                                     </tr>
                                     <tr>
                                         <th>DB Password</th>
                                         <td colspan="3">
-                                            <input type="password" class="form-control" name="db_password">
-                                            <div class="invalid-feedback"></div>
+                                            <input type="password" class="form-control" name="db_password"
+                                                placeholder="Enter DB password">
                                         </td>
                                     </tr>
 
-                                    <!-- Purchase & Expiry Date -->
+                                    <!-- ==================== Dates & Cost ==================== -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-calendar me-2"></i> Dates & Cost</th>
+                                    </tr>
                                     <tr>
                                         <th>Purchase Date</th>
                                         <td>
-                                            <input type="date" class="form-control" name="purchase_date" required>
-                                            <div class="invalid-feedback"></div>
+                                            <input type="text" class="form-control flat-date" name="purchase_date"
+                                                placeholder="Select purchase date">
                                         </td>
                                         <th>Expiry Date</th>
                                         <td>
-                                            <input type="date" class="form-control" name="expiry_date" required>
-                                            <div class="invalid-feedback"></div>
+                                            <input type="text" class="form-control flat-date" name="expiry_date"
+                                                placeholder="Select expiry date">
                                         </td>
                                     </tr>
-
-                                    <!-- Server Cost -->
                                     <tr>
-                                        <th>Server Cost</th>
+                                        <th>Server Cost (₹)</th>
                                         <td colspan="3">
                                             <input type="number" step="0.01" class="form-control" name="server_cost"
-                                                required>
-                                            <div class="invalid-feedback"></div>
+                                                placeholder="Enter server cost">
                                         </td>
                                     </tr>
 
-                                    <!-- Other Metrics -->
-                                
+                                    <!-- ==================== Metrics ==================== -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-bar-chart-alt-2 me-2"></i> Metrics</th>
+                                    </tr>
                                     <tr>
                                         <th>Memory</th>
                                         <td colspan="3">
                                             <input type="text" class="form-control" name="memory_usage"
                                                 placeholder="e.g. 5.6 GB / 8 GB">
-                                            <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
                                     <tr>
@@ -599,56 +649,50 @@
                                         <td colspan="3">
                                             <input type="text" class="form-control" name="disk_space"
                                                 placeholder="e.g. 120 GB / 150 GB">
-                                            <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
-
-                                    <!-- Backup Status -->
                                     <tr>
                                         <th>Backup Status</th>
                                         <td colspan="3">
                                             <select class="form-select" name="backup_status">
-                                                <option value="">-- Select --</option>
+                                                <option value="">-- Select Backup Status --</option>
                                                 <option value="Scheduled">Scheduled</option>
                                                 <option value="Completed">Completed</option>
                                                 <option value="Failed">Failed</option>
                                             </select>
-                                            <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
 
-                                    <!-- Linked Services -->
+                                    <!-- ==================== Services & Notes ==================== -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-link me-2"></i> Services & Notes</th>
+                                    </tr>
                                     <tr>
                                         <th>Linked Services</th>
                                         <td colspan="3">
                                             <textarea class="form-control" name="linked_services" rows="2"
                                                 placeholder="e.g. Nginx, MySQL, Docker"></textarea>
-                                            <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
-
-                                    <!-- Status -->
                                     <tr>
                                         <th>Status</th>
                                         <td colspan="3">
-                                            <select class="form-select" name="status" required>
-                                                <option value="">-- Select --</option>
+                                            <select class="form-select" name="status">
+                                                <option value="">-- Select Status --</option>
                                                 <option value="Active">Active</option>
                                                 <option value="Inactive">Inactive</option>
                                                 <option value="Expired">Expired</option>
                                             </select>
-                                            <div class="invalid-feedback"></div>
                                         </td>
                                     </tr>
-
-                                    <!-- Notes -->
                                     <tr>
                                         <th>Notes</th>
                                         <td colspan="3">
-                                            <textarea class="form-control" name="notes" rows="2"></textarea>
-                                            <div class="invalid-feedback"></div>
+                                            <textarea class="form-control" name="notes" rows="2"
+                                                placeholder="Enter additional notes"></textarea>
                                         </td>
                                     </tr>
+
                                 </tbody>
                             </table>
                         </div>
@@ -658,279 +702,231 @@
                         <button type="submit" class="btn btn-primary">Save Server</button>
                     </div>
                 </form>
-
-
             </div>
         </div>
     </div>
 
 
-    <!-- update host data modal -->
-    <div class="modal fade" id="editHostModal" tabindex="-1" aria-labelledby="editHostModalLabel" aria-hidden="true"
-        data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header table-primary text-white">
-                    <h5 class="modal-title" id="editHostModalLabel">
-                        <i class="bx bx-edit-alt me-2"></i> Edit Server / Host Data
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+
+<!-- Edit Host Data Modal -->
+<div class="modal fade" id="editHostModal" tabindex="-1" aria-labelledby="editHostModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header table-primary text-white">
+                <h5 class="modal-title" id="editHostModalLabel">
+                    <i class="bx bx-edit-alt me-2"></i> Edit Server / Host Data
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form id="editHostForm" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="host_id" id="edit-host-id">
+
+                <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <tbody>
+                                <!-- Project Info -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Info</th>
+                                </tr>
+                                <tr>
+                                    <th>Project(s)</th>
+                                    <td colspan="3">
+                                        <select class="form-select" name="project" id="edit-project" multiple>
+                                            {% for project in projects %}
+                                            <option value="{{ project.id }}">{{ project.project_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="text-muted">Hold Ctrl (Windows) or Command (Mac) to select multiple</small>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Hosting Provider</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="hosting_provider" id="edit-hosting-provider" placeholder="Enter hosting provider">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Server Name</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="server_name" id="edit-server-name" placeholder="Enter server name">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Server Type</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="server_type" id="edit-server-type" placeholder="Enter server type">
+                                    </td>
+                                    <th>Plan / Package</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="plan_package" id="edit-plan-package" placeholder="Enter plan/package">
+                                    </td>
+                                </tr>
+
+                                <!-- Network & OS -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-server me-2"></i> Network & OS</th>
+                                </tr>
+                                <tr>
+                                    <th>Server IP</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="server_ip" id="edit-server-ip" placeholder="Enter server IP">
+                                    </td>
+                                    <th>Operating System</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="operating_system" id="edit-operating-system" placeholder="Enter operating system">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Login URL</th>
+                                    <td colspan="3">
+                                        <input type="url" class="form-control" name="login_url" id="edit-login-url" placeholder="Enter login URL">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Username</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="username" id="edit-username" placeholder="Enter hosting username">
+                                    </td>
+                                    <th>Password</th>
+                                    <td>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" name="password" id="edit-password" placeholder="Enter hosting password">
+                                            <button class="btn btn-outline-secondary" type="button" id="edit-toggle-password">
+                                                <i class="bx bx-show"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>SSH Username</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="ssh_username" id="edit-ssh-username" placeholder="Enter SSH username">
+                                    </td>
+                                    <th>SSH / FTP Access</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="ssh_ftp_access" id="edit-ssh-ftp-access" placeholder="Enter SSH/FTP access">
+                                    </td>
+                                </tr>
+
+                                <!-- Database -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-cloud me-2"></i> Database</th>
+                                </tr>
+                                <tr>
+                                    <th>Database Name</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="database_name" id="edit-database-name" placeholder="Enter database name">
+                                    </td>
+                                    <th>DB Username</th>
+                                    <td>
+                                        <input type="text" class="form-control" name="db_username" id="edit-db-username" placeholder="Enter DB username">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>DB Password</th>
+                                    <td colspan="3">
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" name="db_password" id="edit-db-password" placeholder="Enter DB password">
+                                            <button class="btn btn-outline-secondary" type="button" id="edit-toggle-db-password">
+                                                <i class="bx bx-show"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Dates & Cost -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-calendar me-2"></i> Dates & Cost</th>
+                                </tr>
+                                <tr>
+                                    <th>Purchase Date</th>
+                                    <td>
+                                        <input type="text" class="form-control flat-date" name="purchase_date" id="edit-purchase-date" placeholder="Select purchase date">
+                                    </td>
+                                    <th>Expiry Date</th>
+                                    <td>
+                                        <input type="text" class="form-control flat-date" name="expiry_date" id="edit-expiry-date" placeholder="Select expiry date">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Server Cost (₹)</th>
+                                    <td colspan="3">
+                                        <input type="number" step="0.01" class="form-control" name="server_cost" id="edit-server-cost" placeholder="Enter server cost">
+                                    </td>
+                                </tr>
+
+                                <!-- Metrics -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-bar-chart-alt-2 me-2"></i> Metrics</th>
+                                </tr>
+                                <tr>
+                                    <th>Memory</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="memory_usage" id="edit-memory-usage" placeholder="e.g. 5.6 GB / 8 GB">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>RAM</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="disk_space" id="edit-disk-space" placeholder="e.g. 120 GB / 150 GB">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Backup Status</th>
+                                    <td colspan="3">
+                                        <select class="form-select" name="backup_status" id="edit-backup-status">
+                                            <option value="">-- Select Backup Status --</option>
+                                            <option value="Scheduled">Scheduled</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="Failed">Failed</option>
+                                        </select>
+                                    </td>
+                                </tr>
+
+                                <!-- Services & Notes -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-link me-2"></i> Services & Notes</th>
+                                </tr>
+                                <tr>
+                                    <th>Linked Services</th>
+                                    <td colspan="3">
+                                        <textarea class="form-control" name="linked_services" id="edit-linked-services" rows="2" placeholder="e.g. Nginx, MySQL, Docker"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Status</th>
+                                    <td colspan="3">
+                                        <select class="form-select" name="status" id="edit-status">
+                                            <option value="">-- Select Status --</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Inactive">Inactive</option>
+                                            <option value="Expired">Expired</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Notes</th>
+                                    <td colspan="3">
+                                        <textarea class="form-control" name="notes" id="edit-notes" rows="2" placeholder="Enter additional notes"></textarea>
+                                    </td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <form id="editHostForm" method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="host_id" id="edit-host-id">
-                    <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle">
-                                <tbody>
-                                    <!-- Project(s) -->
-                                    <tr>
-                                        <th>Project</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="project" id="edit-project" multiple>
-                                                {% for project in projects %}
-                                                <option value="{{ project.id }}">{{ project.project_name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    
-                                    <!-- Hosting Provider -->
-                                    <tr>
-                                        <th>Hosting Provider</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="hosting_provider"
-                                                id="edit-hosting-provider">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Server Name -->
-                                    <tr>
-                                        <th>Server Name</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="server_name"
-                                                id="edit-server-name">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Server Type & Plan -->
-                                    <tr>
-                                        <th>Server Type</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="server_type"
-                                                id="edit-server-type">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        <th>Plan / Package</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="plan_package"
-                                                id="edit-plan-package">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Server IP  -->
-                                    <tr>
-                                        <th>Server IP</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="server_ip"
-                                                id="edit-server-ip">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        
-                                    </tr>
-
-                                    <!-- Operating System -->
-                                    <tr>
-                                        <th>Operating System</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="operating_system"
-                                                id="edit-operating-system">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Control Panel & Login URL -->
-                                    <tr>
-                                        
-                                        <th>Login URL</th>
-                                        <td>
-                                            <input type="url" class="form-control" name="login_url" id="edit-login-url">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Username & Password -->
-                                    <tr>
-                                        <th>Username</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="username" id="edit-username">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        <th>Password</th>
-                                        <td>
-                                            <input type="password" class="form-control" name="password"
-                                                id="edit-password">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- SSH Username & Access -->
-                                    <tr>
-                                        <th>SSH Username</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="ssh_username"
-                                                id="edit-ssh-username">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>SSH / FTP Access</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="ssh_ftp_access"
-                                                id="edit-ssh-ftp-access">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Database Fields -->
-                                    <tr>
-                                        <th>Database Name</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="database_name"
-                                                id="edit-database-name">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        <th>DB Username</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="db_username"
-                                                id="edit-db-username">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>DB Password</th>
-                                        <td colspan="3">
-                                            <input type="password" class="form-control" name="db_password"
-                                                id="edit-db-password">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Purchase & Expiry Date -->
-                                    <tr>
-                                        <th>Purchase Date</th>
-                                        <td>
-                                            <input type="date" class="form-control" name="purchase_date"
-                                                id="edit-purchase-date">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                        <th>Expiry Date</th>
-                                        <td>
-                                            <input type="date" class="form-control" name="expiry_date"
-                                                id="edit-expiry-date">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Server Cost -->
-                                    <tr>
-                                        <th>Server Cost</th>
-                                        <td colspan="3">
-                                            <input type="number" step="0.01" class="form-control" name="server_cost"
-                                                id="edit-server-cost">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Other Metrics -->
-                                    
-                                    <tr>
-                                        <th>Memory</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="memory_usage"
-                                                id="edit-memory-usage" placeholder="e.g. 5.6 GB / 8 GB">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>RAM</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="disk_space"
-                                                id="edit-disk-space" placeholder="e.g. 120 GB / 150 GB">
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Backup Status -->
-                                    <tr>
-                                        <th>Backup Status</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="backup_status" id="edit-backup-status">
-                                                <option value="">-- Select --</option>
-                                                <option value="Scheduled">Scheduled</option>
-                                                <option value="Completed">Completed</option>
-                                                <option value="Failed">Failed</option>
-                                            </select>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Linked Services -->
-                                    <tr>
-                                        <th>Linked Services</th>
-                                        <td colspan="3">
-                                            <textarea class="form-control" name="linked_services" rows="2"
-                                                id="edit-linked-services"
-                                                placeholder="e.g. Nginx, MySQL, Docker"></textarea>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Status -->
-                                    <tr>
-                                        <th>Status</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="status" id="edit-status">
-                                                <option value="">-- Select --</option>
-                                                <option value="Active">Active</option>
-                                                <option value="Inactive">Inactive</option>
-                                                <option value="Expired">Expired</option>
-                                            </select>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Notes -->
-                                    <tr>
-                                        <th>Notes</th>
-                                        <td colspan="3">
-                                            <textarea class="form-control" name="notes" rows="2"
-                                                id="edit-notes"></textarea>
-                                            <div class="invalid-feedback"></div>
-                                        </td>
-                                    </tr>
-
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Update Server</button>
-                    </div>
-                </form>
-
-
-            </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Update Server</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
+
 
 
     <!-- Delete Host Confirmation Modal -->
@@ -1019,49 +1015,134 @@
         $(document).ready(function () {
             const hostDetailsUrl = "{% url 'get_host_details' %}";
 
+
+
             // VIEW modal
             $(document).on("click", ".host-link", function (e) {
                 e.preventDefault();
                 const hostId = $(this).data("host-id");
                 if (!hostId) return console.error("Host ID missing!");
+                // Toggle Hosting Password
+                $("#togglePassword").on("click", function () {
+                    const passwordField = $("#hd-password");
+                    const type = passwordField.attr("type") === "password" ? "text" : "password";
+                    passwordField.attr("type", type);
+                    $(this).find("i").toggleClass("bx-show bx-hide");
+                });
+
+                // Toggle DB Password
+                $("#toggleDbPassword").on("click", function () {
+                    const passwordField = $("#hd-db-password");
+                    const type = passwordField.attr("type") === "password" ? "text" : "password";
+                    passwordField.attr("type", type);
+                    $(this).find("i").toggleClass("bx-show bx-hide");
+                });
 
                 $.get(hostDetailsUrl, { id: hostId, mode: "view" }, function (res) {
                     if (!res.success) return console.error(res.error);
                     const h = res.host;
-                    console.log(h)
-                    // Fill VIEW modal fields
+                    $("#hd-header-hosting-provider").text(h.hosting_provider);
+                    // Projects (ManyToMany)
+                    if (h.projects && h.projects.length > 0) {
+                        const projectNames = h.projects.map(p => p.name).join(", ");
+                        $("#hd-projects").text(projectNames);
+                    } else {
+                        $("#hd-projects").text("-");
+                    }
+
+                    // Project Info
+                    $("#hd-hosting-provider").text(h.hosting_provider || '-');
                     $("#hd-server-name").text(h.server_name || '-');
+                    $("#hd-server-type").text(h.server_type || '-');
+                    $("#hd-plan-package").text(h.plan_package || '-');
+
+                    // Network & OS
                     $("#hd-server-ip").text(h.server_ip || '-');
                     $("#hd-operating-system").text(h.operating_system || '-');
-                    $("#hd-server-type").text(h.server_type || '-');
-
-                    // Status badge
-                    $("#hd-status").text(h.status || '-')
-                        .removeClass()
-                        .addClass('badge ' + (h.status === "Active" ? 'bg-label-success' :
-                            h.status === "Inactive" ? 'bg-label-warning' : 'bg-label-danger'));
-
-                    // Backup badge
-                    $("#hd-backup-status").text(h.backup_status || '-')
-                        .removeClass()
-                        .addClass('badge ' + (h.backup_status === "Scheduled" ? 'bg-label-info' :
-                            h.backup_status === "Completed" ? 'bg-label-success' : 'bg-label-danger'));
-
-                    
-                    $("#hd-memory-usage").text(h.memory || '-');
-                    $("#hd-disk-space").text(h.ram || '-');  // use h.ram now
-
+                    $("#hd-login-url").text(h.login_url || '-');
+                    $("#hd-username").text(h.username || '-');
+                    $("#hd-password").val(h.password || '-');
                     $("#hd-ssh-username").text(h.ssh_username || '-');
                     $("#hd-ssh-ftp-access").text(h.ssh_ftp_access || '-');
+
+                    // Database
+                    $("#hd-database-name").text(h.database_name || '-');
+                    $("#hd-db-username").text(h.db_username || '-');
+                    $("#hd-db-password").val(h.db_password || '-');
+
+                    // Dates & Cost
+                    $("#hd-purchase-date").text(formatDate(h.purchase_date || '-'));
+                    $("#hd-expiry-date").text(formatDate(h.expiry_date || '-'));
+                    $("#hd-server-cost").text(h.server_cost || '-');
+
+                    // Metrics
+                    $("#hd-memory-usage").text(h.memory || '-');
+                    $("#hd-ram").text(h.ram || '-');
+
+                    // Backup Status badge
+                    let backupBadge = '';
+                    if (h.backup_status === "Scheduled") {
+                        backupBadge = `<span class="badge bg-label-info">${h.backup_status}</span>`;
+                    } else if (h.backup_status === "Completed") {
+                        backupBadge = `<span class="badge bg-label-success">${h.backup_status}</span>`;
+                    } else if (h.backup_status === "Failed") {
+                        backupBadge = `<span class="badge bg-label-danger">${h.backup_status}</span>`;
+                    } else {
+                        backupBadge = `<span class="badge bg-label-secondary">${h.backup_status || '-'}</span>`;
+                    }
+                    $("#hd-backup-status").html(backupBadge);
+
+                    // Services & Notes
                     $("#hd-linked-services").text(h.linked_services || '-');
+
+                    // Status badge
+                    let statusBadge = '';
+                    if (h.status === "Active") {
+                        statusBadge = `<span class="badge bg-label-success">${h.status}</span>`;
+                    } else if (h.status === "Inactive") {
+                        statusBadge = `<span class="badge bg-label-warning">${h.status}</span>`;
+                    } else if (h.status === "Expired") {
+                        statusBadge = `<span class="badge bg-label-danger">${h.status}</span>`;
+                    } else {
+                        statusBadge = `<span class="badge bg-label-secondary">${h.status || '-'}</span>`;
+                    }
+                    $("#hd-status").html(statusBadge);
+
                     $("#hd-notes").text(h.notes || '-');
 
+                    // Show modal
                     $("#hostDetailsModal").modal("show");
                 });
             });
 
             // EDIT modal
+
             $(document).on("click", ".edit-host", function (e) {
+                // Password toggle
+                $("#edit-toggle-password").click(function() {
+                    const input = $("#edit-password");
+                    const icon = $(this).find("i");
+                    if (input.attr("type") === "password") {
+                        input.attr("type", "text");
+                        icon.removeClass("bx-show").addClass("bx-hide");
+                    } else {
+                        input.attr("type", "password");
+                        icon.removeClass("bx-hide").addClass("bx-show");
+                    }
+                });
+
+                $("#edit-toggle-db-password").click(function() {
+                    const input = $("#edit-db-password");
+                    const icon = $(this).find("i");
+                    if (input.attr("type") === "password") {
+                        input.attr("type", "text");
+                        icon.removeClass("bx-show").addClass("bx-hide");
+                    } else {
+                        input.attr("type", "password");
+                        icon.removeClass("bx-hide").addClass("bx-show");
+                    }
+                });
+
                 e.preventDefault();
                 const hostId = $(this).data("host-id");
                 if (!hostId) return console.error("Host ID missing on Edit button!");
@@ -1082,7 +1163,7 @@
                         const ids = h.projects.map(p => p.id.toString());
                         $("#edit-project").val(ids).trigger("change");  // works with normal select or select2
                     }
-                    
+
                     $("#edit-server-name").val(h.server_name || '');
                     $("#edit-hosting-provider").val(h.hosting_provider || '');
                     $("#edit-server-type").val(h.server_type || '');
@@ -1097,8 +1178,18 @@
                     $("#edit-database-name").val(h.database_name || '');
                     $("#edit-db-username").val(h.db_username || '');
                     $("#edit-db-password").val(h.db_password || '');
-                    $("#edit-purchase-date").val(h.purchase_date || '');
-                    $("#edit-expiry-date").val(h.expiry_date || '');
+                   // When populating edit modal
+                    if (h.purchase_date) {
+                        $("#edit-purchase-date")[0]._flatpickr.setDate(h.purchase_date);
+                    } else {
+                        $("#edit-purchase-date").val('');
+                    }
+
+                    if (h.expiry_date) {
+                        $("#edit-expiry-date")[0]._flatpickr.setDate(h.expiry_date);
+                    } else {
+                        $("#edit-expiry-date").val('');
+                    }
                     $("#edit-server-cost").val(h.server_cost || '');
                     $("#edit-memory-usage").val(h.memory || '');
                     $("#edit-disk-space").val(h.ram || '');

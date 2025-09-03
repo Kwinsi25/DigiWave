@@ -32,7 +32,7 @@ urlpatterns = [
 
     #domain
     path('domain/', domain_list, name='domain_list'),
-    path('add-domain/', add_domain, name='add_domain'),
+    path('add_domain/', add_domain, name='add_domain'),
     path('get_domain_details/', get_domain_details, name='get_domain_details'),
     path("update_domain/<int:id>/", update_domain, name="update_domain"),
     path('delete_domain/<int:id>/', delete_domain, name='delete_domain'),
@@ -41,6 +41,7 @@ urlpatterns = [
     path('employees/', user_list, name='user_list'),
     path('add_user/', add_user, name='add_user'),
     path('add_fixed_details/', add_fixed_details, name='add_fixed_details'),
+    path('add_hourly_details/',add_hourly_details,name='add_hourly_details'),
     path("get_user/<int:id>/", get_user, name="get_user"),
     path('update_user/<int:id>/', update_user, name='update_user'),
     path('delete_user/<int:id>/', delete_user, name='delete_user'),

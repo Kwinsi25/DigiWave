@@ -196,6 +196,14 @@
                                         <i class="bx bx-plus"></i>
                                     </a>
                                     {% endif %}
+
+                                    {% if user.employee_type == "hourly" %}
+                                    <a href="#" class="text-warning action-icon add-hourly-user"
+                                        title="Add Hourly Details" data-user-id="{{ user.id }}">
+                                        <i class="bx bx-plus-circle"></i>
+                                    </a>
+                                    {% endif %}
+
                                 </td>
                             </tr>
                             {% empty %}
@@ -299,7 +307,39 @@
                         </ul>
                     </nav>
                 </div>
-
+                        <!-- view hourly summary -->
+                 <div class="modal fade" id="hourlyModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header table-info text-white">
+        <h5 class="modal-title">Hourly Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-bordered" id="hourly-modal-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Working Hour</th>
+                <th>Description</th>
+                <th>Total</th>
+                <th>Final Total</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+              <tr>
+                <th colspan="4">Grand Total</th>
+                <th id="hourly-modal-grand-total"></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
                 <!-- display user data -->
                 <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel"
                     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -452,40 +492,81 @@
                                     </div>
                                 </div>
                                 <!-- =================== ROW 3: FIXED EMPLOYEE DETAILS =================== -->
-<div class="card border-0 shadow-sm mb-4" id="fixed-employee-section" style="display:none;">
-    <div class="card-body">
-        <h6 class="fw-bold mb-3 border-bottom pb-2">
-            <i class="bx bx-briefcase me-1"></i> Job Details
-        </h6>
+                                <div class="card border-0 shadow-sm mb-4" id="fixed-employee-section"
+                                    style="display:none;">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold mb-3 border-bottom pb-2">
+                                            <i class="bx bx-briefcase me-1"></i> Job Details
+                                        </h6>
 
-        <!-- Top row: Type | Joining | Last -->
-        <div class="row mb-3 text-center fw-semibold">
-            <div class="col-md-4"><span id="fixed-type"></span></div>
-            <div class="col-md-4"><span id="fixed-joining-date"></span></div>
-            <div class="col-md-4"><span id="fixed-last-date"></span></div>
-        </div>
+                                        <!-- Top row: Type | Joining | Last -->
+                                        <div class="row mb-3 text-center fw-semibold">
+                                            <div class="col-md-4"><span id="fixed-type"></span></div>
+                                            <div class="col-md-4"><span id="fixed-joining-date"></span></div>
+                                            <div class="col-md-4"><span id="fixed-last-date"></span></div>
+                                        </div>
 
-        <!-- Table: Amount | Date | Description -->
-        <div class="table-responsive">
-            <table class="table table-bordered" id="fixed-details-table">
-                <thead class="table-light">
-                    <tr>
-                        <th>Amount</th>
-                        <th>Date</th>
-                        <th>Description</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-                <tfoot>
-                    <tr>
-                        <th colspan="2">Total</th>
-                        <th id="fixed-total-amount"></th>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-    </div>
-</div>
+                                        <!-- Table: Amount | Date | Description -->
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered" id="fixed-details-table">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Amount</th>
+                                                        <th>Date</th>
+                                                        <th>Description</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <th colspan="2">Total</th>
+                                                        <th id="fixed-total-amount"></th>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- =================== HOURLY EMPLOYEE DETAILS =================== -->
+
+                                <div class="card border-0 shadow-sm mb-4" id="hourly-employee-section"
+                                    style="display: none;">
+                                    <div class="card-body">
+                                        <h6 class="fw-bold mb-3 border-bottom pb-2">
+                                            <i class="bx bx-briefcase me-1"></i> Hourly Job Details
+                                        </h6>
+
+                                        <!-- Top row: Type | Joining | Last -->
+                                        <div class="row mb-3 text-center fw-semibold">
+                                            <div class="col-md-4"><span id="hourly-type"></span></div>
+                                            <div class="col-md-4"><span id="hourly-joining-date"></span></div>
+                                            <div class="col-md-4"><span id="hourly-last-date"></span></div>
+                                        </div>
+
+                                        <!-- Table: Date | Working Hour | Rate | Total | Description -->
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered" id="hourly-details-table">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Working Hour</th>
+                                                        
+                                                        <th>Total</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <th colspan="2">Total</th>
+                                                        <th id="hourly-total-amount"></th>
+                                                        
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <!-- =================== ROW 4: OTHER =================== -->
                                 <div class="card border-0 shadow-sm">
@@ -508,185 +589,288 @@
                         </div>
 
                         <script>
-document.addEventListener("DOMContentLoaded", function () {
+                            document.addEventListener("DOMContentLoaded", function () {
+                               
     const modalEl = document.getElementById("viewUserModal");
-    const viewUserModal = new bootstrap.Modal(modalEl);
+                                const viewUserModal = new bootstrap.Modal(modalEl);
 
-    document.querySelectorAll(".view-user").forEach(btn => {
-        btn.addEventListener("click", function (e) {
-            e.preventDefault();
-            const userId = this.dataset.userId;
+                                document.querySelectorAll(".view-user").forEach(btn => {
+                                    btn.addEventListener("click", function (e) {
+                                        e.preventDefault();
+                                        const userId = this.dataset.userId;
 
-            fetch(`/get_user/${userId}/`, {
-                headers: { "X-Requested-With": "XMLHttpRequest" }
-            })
-            .then(res => res.json())
-            .then(data => {
-                // ================= Profile Picture & Status =================
-                const picLink = document.getElementById("view-profile-picture-link");
-                const picImg = document.getElementById("view-profile-picture-img");
-                picLink.href = data.profile_picture_url || "#";
-                picImg.src = data.profile_picture_url || "{% static 'img/avatars/default-avatar.png' %}";
-                document.getElementById("view-status").innerHTML = data.is_active
-                    ? `<span class="badge bg-label-success">Active</span>`
-                    : `<span class="badge bg-label-danger">Inactive</span>`;
+                                        fetch(`/get_user/${userId}/`, {
+                                            headers: { "X-Requested-With": "XMLHttpRequest" }
+                                        })
+                                            .then(res => res.json())
+                                            .then(data => {
+                                                // ================= Profile Picture & Status =================
+                                                const picLink = document.getElementById("view-profile-picture-link");
+                                                const picImg = document.getElementById("view-profile-picture-img");
+                                                picLink.href = data.profile_picture_url || "#";
+                                                picImg.src = data.profile_picture_url || "{% static 'img/avatars/default-avatar.png' %}";
+                                                document.getElementById("view-status").innerHTML = data.is_active
+                                                    ? `<span class="badge bg-label-success">Active</span>`
+                                                    : `<span class="badge bg-label-danger">Inactive</span>`;
 
-                // ================= Personal Details =================
-                document.getElementById("view-employee-id").textContent = data.id || "-";
-                document.getElementById("view-firstname").textContent = data.first_name || "-";
-                document.getElementById("view-lastname").textContent = data.last_name || "-";
-                document.getElementById("view-username").textContent = data.username || "-";
+                                                // ================= Personal Details =================
+                                                document.getElementById("view-employee-id").textContent = data.id || "-";
+                                                document.getElementById("view-firstname").textContent = data.first_name || "-";
+                                                document.getElementById("view-lastname").textContent = data.last_name || "-";
+                                                document.getElementById("view-username").textContent = data.username || "-";
 
-                // Password toggle
-                const passwordSpan = document.getElementById("view-password-dots");
-                const toggleBtn = document.getElementById("toggle-view-password");
-                passwordSpan.dataset.password = data.password || "Not Set";
-                toggleBtn.onclick = () => {
-                    if (passwordSpan.textContent === "••••••••") {
-                        passwordSpan.textContent = passwordSpan.dataset.password;
-                        toggleBtn.querySelector("i").className = "bx bx-hide";
-                    } else {
-                        passwordSpan.textContent = "••••••••";
-                        toggleBtn.querySelector("i").className = "bx bx-show";
-                    }
-                };
+                                                // Password toggle
+                                                const passwordSpan = document.getElementById("view-password-dots");
+                                                const toggleBtn = document.getElementById("toggle-view-password");
+                                                passwordSpan.dataset.password = data.password || "Not Set";
+                                                toggleBtn.onclick = () => {
+                                                    if (passwordSpan.textContent === "••••••••") {
+                                                        passwordSpan.textContent = passwordSpan.dataset.password;
+                                                        toggleBtn.querySelector("i").className = "bx bx-hide";
+                                                    } else {
+                                                        passwordSpan.textContent = "••••••••";
+                                                        toggleBtn.querySelector("i").className = "bx bx-show";
+                                                    }
+                                                };
 
-                document.getElementById("view-gender").textContent = data.gender || "-";
-                document.getElementById("view-birth-date").textContent = data.birth_date || "-";
-                document.getElementById("view-marital-status").textContent = data.marital_status || "-";
+                                                document.getElementById("view-gender").textContent = data.gender || "-";
+                                                document.getElementById("view-birth-date").textContent = data.birth_date || "-";
+                                                document.getElementById("view-marital-status").textContent = data.marital_status || "-";
 
-                // ================= Designations & Technologies =================
-                document.getElementById("view-designations").textContent = (data.designations && data.designations.length)
-                    ? data.designations.map(d => d.title).join(" | ")
-                    : "—";
+                                                // ================= Designations & Technologies =================
+                                                document.getElementById("view-designations").textContent = (data.designations && data.designations.length)
+                                                    ? data.designations.map(d => d.title).join(" | ")
+                                                    : "—";
 
-                document.getElementById("view-technologies").textContent = (data.technologies && data.technologies.length)
-                    ? data.technologies.map(t => t.name).join(" | ")
-                    : "—";
+                                                document.getElementById("view-technologies").textContent = (data.technologies && data.technologies.length)
+                                                    ? data.technologies.map(t => t.name).join(" | ")
+                                                    : "—";
 
-                // ================= Contact Details =================
-                document.getElementById("view-phone").textContent = data.phone || "-";
-                document.getElementById("view-email").textContent = data.email || "-";
-                document.getElementById("view-current-address").textContent = data.current_address || "-";
-                document.getElementById("view-permanent-address").textContent = data.permanent_address || "-";
+                                                // ================= Contact Details =================
+                                                document.getElementById("view-phone").textContent = data.phone || "-";
+                                                document.getElementById("view-email").textContent = data.email || "-";
+                                                document.getElementById("view-current-address").textContent = data.current_address || "-";
+                                                document.getElementById("view-permanent-address").textContent = data.permanent_address || "-";
 
-                // ================= Bank Details =================
-                document.getElementById("view-account-holder").textContent = data.account_holder || "-";
-                document.getElementById("view-account-number").textContent = data.account_number || "-";
-                document.getElementById("view-ifsc-code").textContent = data.ifsc_code || "-";
-                document.getElementById("view-branch").textContent = data.branch || "-";
+                                                // ================= Bank Details =================
+                                                document.getElementById("view-account-holder").textContent = data.account_holder || "-";
+                                                document.getElementById("view-account-number").textContent = data.account_number || "-";
+                                                document.getElementById("view-ifsc-code").textContent = data.ifsc_code || "-";
+                                                document.getElementById("view-branch").textContent = data.branch || "-";
 
-                // ================= Projects & Document =================
-                const projectList = document.getElementById("view-projects");
-                projectList.innerHTML = "";
-                if (data.projects && data.projects.length) {
-                    data.projects.forEach(p => {
-                        const li = document.createElement("li");
-                        li.textContent = p;
-                        projectList.appendChild(li);
-                    });
-                } else {
-                    projectList.innerHTML = "<li>No projects assigned</li>";
-                }
+                                                // ================= Projects & Document =================
+                                                const projectList = document.getElementById("view-projects");
+                                                projectList.innerHTML = "";
+                                                if (data.projects && data.projects.length) {
+                                                    data.projects.forEach(p => {
+                                                        const li = document.createElement("li");
+                                                        li.textContent = p;
+                                                        projectList.appendChild(li);
+                                                    });
+                                                } else {
+                                                    projectList.innerHTML = "<li>No projects assigned</li>";
+                                                }
 
-                const docCell = document.getElementById("view-document-link");
-                docCell.innerHTML = data.document_link
-                    ? `<a href="${data.document_link}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                const docCell = document.getElementById("view-document-link");
+                                                docCell.innerHTML = data.document_link
+                                                    ? `<a href="${data.document_link}" target="_blank" class="btn btn-sm btn-outline-primary">
                             <i class="bx bx-link"></i> View Document
                        </a>`
-                    : "No document provided";
+                                                    : "No document provided";
 
-                // ================= Job vs Fixed Employee Details =================
-                // ✅ Select correct sections
-                const jobSection = document.querySelector(".col-md-6.ps-4 > .row > .col-md-6.border-end");
-                const personalSections = document.querySelectorAll(".col-md-6.border-end");
-                const personalSection = personalSections[1]; // the second personal section
-                const bankSection = personalSection ? personalSection.nextElementSibling : null;
+                                                // ================= Job vs Fixed Employee Details =================
+                                                // ✅ Select correct sections
+                                                const jobSection = document.querySelector(".col-md-6.ps-4 > .row > .col-md-6.border-end");
+                                                const personalSections = document.querySelectorAll(".col-md-6.border-end");
+                                                const personalSection = personalSections[1]; // the second personal section
+                                                const bankSection = personalSection ? personalSection.nextElementSibling : null;
 
-                console.log("Job:", jobSection);
-                console.log("Personal:", personalSection);
-                console.log("Bank:", bankSection);
+                                                console.log("Job:", jobSection);
+                                                console.log("Personal:", personalSection);
+                                                console.log("Bank:", bankSection);
 
-                if (personalSection && bankSection) {
-                    // Expand personal
-                    personalSection.classList.remove("col-md-6");
-                    personalSection.classList.add("col-md-8");
+                                                if (personalSection && bankSection) {
+                                                    // Expand personal
+                                                    personalSection.classList.remove("col-md-6");
+                                                    personalSection.classList.add("col-md-8");
 
-                    // Shrink bank
-                    bankSection.classList.remove("col-md-6");
-                    bankSection.classList.add("col-md-4");
+                                                    // Shrink bank
+                                                    bankSection.classList.remove("col-md-6");
+                                                    bankSection.classList.add("col-md-4");
 
-                    bankSection.querySelectorAll("p").forEach(p => {
-    p.classList.add("d-flex", "flex-nowrap");
-    p.querySelector("strong").classList.add("me-2");
-    const span = p.querySelector("span");
-    if (span) {
-        span.classList.add("text-nowrap"); // prevent breaking into multiple lines
-    }
-});
+                                                    bankSection.querySelectorAll("p").forEach(p => {
+                                                        p.classList.add("d-flex", "flex-nowrap");
+                                                        p.querySelector("strong").classList.add("me-2");
+                                                        const span = p.querySelector("span");
+                                                        if (span) {
+                                                            span.classList.add("text-nowrap"); // prevent breaking into multiple lines
+                                                        }
+                                                    });
 
-                }
-                const fixedSection = document.getElementById("fixed-employee-section");
-
-                if (data.employee_type && data.employee_type.toLowerCase() === "fixed") {
-                    // Hide Salary job section
-                    jobSection.style.display = "none";
-                   
-                   
-
-                    
-                    // Show Fixed section
-                    fixedSection.style.display = "block";
-
-                    // Top row: Type | Joining | Last
-                    document.getElementById("fixed-type").textContent = "Type: " + (data.employee_type || "-");
-                    document.getElementById("fixed-joining-date").textContent = "Joining Date: " + (data.joining_date || "-");
-                    document.getElementById("fixed-last-date").textContent = "Last Date: " + (data.last_date || "-");
+                                                }
 
 
-                    // Table body
-                    const tbody = document.querySelector("#fixed-details-table tbody");
-                    tbody.innerHTML = "";
-                    let total = 0;
-                    if (data.fixed_employee_details && data.fixed_employee_details.length) {
-                        data.fixed_employee_details.forEach(item => {
-                            const tr = document.createElement("tr");
-                            tr.innerHTML = `
+                                                const fixedSection = document.getElementById("fixed-employee-section");
+
+                                                if (data.employee_type && data.employee_type.toLowerCase() === "fixed") {
+                                                    // Hide Salary job section
+                                                    jobSection.style.display = "none";
+
+
+
+
+                                                    // Show Fixed section
+                                                    fixedSection.style.display = "block";
+
+                                                    // Top row: Type | Joining | Last
+                                                    document.getElementById("fixed-type").textContent = "Type: " + (data.employee_type || "-");
+                                                    document.getElementById("fixed-joining-date").textContent = "Joining Date: " + (data.joining_date || "-");
+                                                    document.getElementById("fixed-last-date").textContent = "Last Date: " + (data.last_date || "-");
+
+
+                                                    // Table body
+                                                    const tbody = document.querySelector("#fixed-details-table tbody");
+                                                    tbody.innerHTML = "";
+                                                    let total = 0;
+                                                    if (data.fixed_employee_details && data.fixed_employee_details.length) {
+                                                        data.fixed_employee_details.forEach(item => {
+                                                            const tr = document.createElement("tr");
+                                                            tr.innerHTML = `
                                 <td>${item.date || "-"}</td>
                                 <td>${item.description || "-"}</td>
                                 <td>${item.amount || "-"}</td>
                             `;
-                            tbody.appendChild(tr);
-                            total += parseFloat(item.amount || 0);
-                        });
-                    } else {
-                        tbody.innerHTML = `<tr><td colspan="3" class="text-center">No details available</td></tr>`;
-                    }
-                    document.getElementById("fixed-total-amount").textContent = total.toFixed(2);
+                                                            tbody.appendChild(tr);
+                                                            total += parseFloat(item.amount || 0);
+                                                        });
+                                                    } else {
+                                                        tbody.innerHTML = `<tr><td colspan="3" class="text-center">No details available</td></tr>`;
+                                                    }
+                                                    document.getElementById("fixed-total-amount").textContent = total.toFixed(2);
 
-                } else {
-                    // Show Salary job section
-                    jobSection.style.display = "block";
-                    fixedSection.style.display = "none";
-                    // Restore bank width
-                    const bankSection = jobSection.nextElementSibling;
-                    bankSection.classList.remove("col-12");
-                    bankSection.classList.add("col-md-6");
-                    document.getElementById("view-employee-type").textContent = data.employee_type || "-";
-                    document.getElementById("view-amount").textContent = data.amount || "-";
-                    document.getElementById("view-joining-date").textContent = data.joining_date || "-";
-                    document.getElementById("view-last-date").textContent = data.last_date || "-";
-                }
+                                                } else {
+                                                    // Show Salary job section
+                                                    jobSection.style.display = "block";
+                                                    fixedSection.style.display = "none";
+                                                    // Reset widths
+                                                    if (personalSection && bankSection) {
+                                                        personalSection.classList.remove("col-md-8");
+                                                        personalSection.classList.add("col-md-6");
 
-                // ================= Show Modal =================
+                                                        bankSection.classList.remove("col-md-4");
+                                                        bankSection.classList.add("col-md-6");
+                                                    }
+                                                    document.getElementById("view-employee-type").textContent = data.employee_type || "-";
+                                                    document.getElementById("view-amount").textContent = data.amount || "-";
+                                                    document.getElementById("view-joining-date").textContent = data.joining_date || "-";
+                                                    document.getElementById("view-last-date").textContent = data.last_date || "-";
+                                                }
+
+                                                if (data.employee_type && data.employee_type.toLowerCase() === "hourly") {
+                                                     // Hide Salary job section
+                                                    jobSection.style.display = "none";
+
+
+                                                    // Show hourly section
+                                                    document.getElementById("hourly-employee-section").style.display = "block";
+
+                                                    // Fill the top row
+                                                    document.getElementById("hourly-type").textContent = "Type: " + (data.employee_type || "-");
+                                                    document.getElementById("hourly-joining-date").textContent = "Joining: " + (data.joining_date || "-");
+                                                    document.getElementById("hourly-last-date").textContent = "Last: " + (data.last_date || "-");
+
+                                                    // Populate table
+                                                    const tbody = document.querySelector("#hourly-details-table tbody");
+                                                    tbody.innerHTML = "";
+
+                                                    if (data.hourly_employee_details && data.hourly_employee_details.length) {
+                                                        let totalSum = 0;
+                                                        data.hourly_employee_details.forEach(item => {
+                                                            const hours = parseFloat(item.total_hours || 0);
+                                                            const rate = parseFloat(item.final_total || 0);
+                                                            const total = hours * rate;
+                                                            totalSum += total;
+
+                                                            const tr = document.createElement("tr");
+                                                            tr.innerHTML = `
+                                                                            <td>${item.date || "-"}</td>
+                                                                            <td>${hours}</td>
+                                                                            <td>${total.toFixed(2)}</td>
+                                                                            <td><button type="button" class="btn btn-sm btn-primary view-hourly-btn" data-user-id="${data.id}">
+            <i class="bx bx-time-five"></i>
+        </button></td>
+                                                                        `;
+                                                            tbody.appendChild(tr);
+                                                        });
+                                                        
+                                                        document.getElementById("hourly-total-amount").textContent = totalSum.toFixed(2);
+                                                    }else {
+                                                        tbody.innerHTML = `<tr><td colspan="3" class="text-center">No details available</td></tr>`;
+                                                    }
+
+                                                } else {
+                                                    // Hide if not hourly
+                                                    document.getElementById("hourly-employee-section").style.display = "none";
+                                                }
+
+                                                // ================= Show Modal =================
+                                                viewUserModal.show();
+                                            })
+                                            .catch(() => showToast("Error loading user details", "danger"));
+                                    });
+                                });
+                                 document.addEventListener("click", function(e) {
+    if (e.target.closest(".view-hourly-btn")) {
+        // Hide the main user modal
+        viewUserModal.hide();
+
+        const btn = e.target.closest(".view-hourly-btn");
+        const userId = btn.dataset.userId;
+
+        const tbody = document.querySelector("#hourly-modal-table tbody");
+        tbody.innerHTML = "";
+
+        fetch(`/get_user/${userId}/`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(res => res.json())
+        .then(data => {
+            let grandTotal = 0;
+
+            if (data.hourwise && data.hourwise.length) {
+                data.hourwise.forEach(item => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${item.date || "-"}</td>
+                        <td>${item.total_hours || 0}</td>
+                        <td>${item.description || "-"}</td>
+                        <td>${item.amount || 0}</td>
+                        <td>${item.final_total || 0}</td>
+                    `;
+                    grandTotal += parseFloat(item.final_total || 0);
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center">No records</td></tr>`;
+            }
+
+            document.getElementById("hourly-modal-grand-total").textContent = grandTotal.toFixed(2);
+
+            // Show the hourly modal
+            const hourlyModalEl = document.getElementById("hourlyModal");
+            const hourlyModal = new bootstrap.Modal(hourlyModalEl);
+            hourlyModal.show();
+
+            // Restore the viewUserModal after hourly modal is closed
+            hourlyModalEl.addEventListener('hidden.bs.modal', () => {
                 viewUserModal.show();
-            })
-            .catch(() => showToast("Error loading user details", "danger"));
+            });
         });
-    });
-
+    }
 });
-</script>
+
+                            });
+                        </script>
 
 
 
@@ -695,9 +879,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
                 </div>
 
+        
 
 
-                <!-- add user modal -->
+                <!-- Add User Modal -->
                 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel"
                     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -717,9 +902,10 @@ document.addEventListener("DOMContentLoaded", function () {
                                     <div class="table-responsive">
                                         <table class="table table-bordered align-middle">
                                             <tbody>
-                                                <!-- Personal Details Section -->
+                                                <!-- Personal Details -->
                                                 <tr class="table-light">
-                                                    <th colspan="4">Personal Details</th>
+                                                    <th colspan="4"><i class="bx bx-user me-2"></i> Personal Details
+                                                    </th>
                                                 </tr>
                                                 <tr>
                                                     <th>First Name</th>
@@ -772,24 +958,25 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     </td>
                                                 </tr>
 
-                                                <!-- Job Details Section -->
+                                                <!-- Job Details -->
                                                 <tr class="table-light">
-                                                    <th colspan="4">Job Details</th>
+                                                    <th colspan="4"><i class="bx bx-briefcase me-2"></i> Job Details
+                                                    </th>
                                                 </tr>
                                                 <tr>
                                                     <th>Employee Type</th>
                                                     <td>
                                                         <select class="form-control" name="employee_type">
                                                             <option value="">-- Select --</option>
+                                                            <option value="hourly">Hourly</option>
                                                             <option value="fixed">Fixed</option>
                                                             <option value="salary">Salary</option>
                                                         </select>
                                                     </td>
                                                     <th>Amount</th>
-                                                    <td><input type="number" class="form-control"
-                                                            name="amount" placeholder="Enter salary"></td>
+                                                    <td><input type="number" class="form-control" name="amount"
+                                                            placeholder="Enter salary"></td>
                                                 </tr>
-
                                                 <tr>
                                                     <th>Joining Date</th>
                                                     <td><input type="text" class="form-control flat-date"
@@ -822,9 +1009,10 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     </td>
                                                 </tr>
 
-                                                <!-- Contact Details Section -->
+                                                <!-- Contact Details -->
                                                 <tr class="table-light">
-                                                    <th colspan="4">Contact Details</th>
+                                                    <th colspan="4"><i class="bx bx-phone me-2"></i> Contact Details
+                                                    </th>
                                                 </tr>
                                                 <tr>
                                                     <th>Current Address</th>
@@ -853,31 +1041,33 @@ document.addEventListener("DOMContentLoaded", function () {
                                                             placeholder="https://example.com/document"></td>
                                                 </tr>
 
-                                                <!-- Bank Details Section -->
+                                                <!-- Bank Details -->
                                                 <tr class="table-light">
-                                                    <th colspan="4">Bank Details</th>
+                                                    <th colspan="4"><i class="bx bx-buildings me-2"></i> Bank Details
+                                                    </th>
                                                 </tr>
                                                 <tr>
                                                     <th>Account Holder Name</th>
-                                                    <td><input type="text" class="form-control text-uppercase" name="account_holder"
+                                                    <td><input type="text" class="form-control text-uppercase"
+                                                            name="account_holder"
                                                             placeholder="Enter account holder name"></td>
                                                     <th>Account Number</th>
-                                                    <td><input type="text" class="form-control text-uppercase" name="account_number"
-                                                            placeholder="Enter account number"></td>
+                                                    <td><input type="text" class="form-control text-uppercase"
+                                                            name="account_number" placeholder="Enter account number">
+                                                    </td>
                                                 </tr>
                                                 <tr>
                                                     <th>IFSC Code</th>
-                                                    <td><input type="text" class="form-control text-uppercase" name="ifsc_code"
-                                                            placeholder="Enter IFSC code"></td>
+                                                    <td><input type="text" class="form-control text-uppercase"
+                                                            name="ifsc_code" placeholder="Enter IFSC code"></td>
                                                     <th>Branch</th>
-                                                    <td><input type="text" class="form-control text-uppercase" name="branch"
-                                                            placeholder="Enter branch"></td>
+                                                    <td><input type="text" class="form-control text-uppercase"
+                                                            name="branch" placeholder="Enter branch"></td>
                                                 </tr>
 
-
-                                                <!-- Other Section -->
+                                                <!-- Other -->
                                                 <tr class="table-light">
-                                                    <th colspan="4">Other</th>
+                                                    <th colspan="4"><i class="bx bx-image me-2"></i> Other</th>
                                                 </tr>
                                                 <tr>
                                                     <th>Profile Picture</th>
@@ -904,12 +1094,12 @@ document.addEventListener("DOMContentLoaded", function () {
                                     <button type="submit" class="btn btn-primary">Save Employee</button>
                                 </div>
                             </form>
-
                         </div>
                     </div>
                 </div>
 
-                <!-- Add Amount Modal -->
+
+                <!-- Add fixed Amount Modal -->
                 <div class="modal fade" id="addAmountModal" tabindex="-1" aria-labelledby="addAmountModalLabel"
                     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                     <div class="modal-dialog modal-md modal-dialog-scrollable">
@@ -957,7 +1147,72 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
                 </div>
 
-                <!-- update user modal -->
+                <!-- Add Hourly Amount Modal -->
+                <div class="modal fade" id="addHourlyAmountModal" tabindex="-1"
+                    aria-labelledby="addHourlyAmountModalLabel" aria-hidden="true" data-bs-backdrop="static"
+                    data-bs-keyboard="false">
+                    <div class="modal-dialog modal-md modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header table-primary text-white">
+                                <h5 class="modal-title" id="addHourlyAmountModalLabel">
+                                    <i class="bx bx-plus me-2"></i> Add Hourly Details
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+
+                            <form id="addHourlyAmountForm" method="POST" action="{% url 'add_hourly_details' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="user_id" id="hourly_user_id">
+                                <div class="modal-body px-4 py-3">
+                                    <div class="mb-3">
+                                        <label for="hourly_employee_name" class="form-label">Employee Name</label>
+                                        <input type="text" class="form-control" name="employee_name"
+                                            id="hourly_employee_name" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="hourly_amount" class="form-label">Amount per Hour</label>
+                                        <input type="number" step="0.01" class="form-control" name="amount"
+                                            id="hourly_amount" placeholder="Enter amount per hour">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="hourly_date" class="form-label">Date</label>
+                                        <input type="text" class="form-control flat-date" name="date" id="hourly_date"
+                                            placeholder="Select date">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="working_hours" class="form-label">Total Working Hours</label>
+                                        <input type="number" step="0.1" class="form-control" name="working_hours"
+                                            id="working_hours" placeholder="Enter total working hours">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="hourly_description" class="form-label">Description</label>
+                                        <textarea class="form-control" name="description" id="hourly_description"
+                                            rows="3" placeholder="Enter description"></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="hourly_total" class="form-label">Final Total</label>
+                                        <input type="text" class="form-control" name="total" id="hourly_total" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary">Save</button>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    document.addEventListener("DOMContentLoaded", () => {
+
+                    });
+
+                </script>
+
+                <!-- Update User Modal -->
                 <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel"
                     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
                     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -980,20 +1235,21 @@ document.addEventListener("DOMContentLoaded", function () {
                                             <tbody>
                                                 <!-- Personal Details -->
                                                 <tr class="table-light">
-                                                    <th colspan="4">Personal Details</th>
+                                                    <th colspan="4"><i class="bx bx-user me-2"></i> Personal Details
+                                                    </th>
                                                 </tr>
                                                 <tr>
                                                     <th>First Name</th>
                                                     <td><input type="text" class="form-control" name="first_name"
-                                                            id="edit-first-name"></td>
+                                                            id="edit-first-name" placeholder="Enter first name"></td>
                                                     <th>Last Name</th>
                                                     <td><input type="text" class="form-control" name="last_name"
-                                                            id="edit-last-name"></td>
+                                                            id="edit-last-name" placeholder="Enter last name"></td>
                                                 </tr>
                                                 <tr>
                                                     <th>Username</th>
                                                     <td><input type="text" class="form-control" name="username"
-                                                            id="edit-username"></td>
+                                                            id="edit-username" placeholder="Choose a username"></td>
                                                     <th>Password</th>
                                                     <td>
                                                         <div class="input-group">
@@ -1002,7 +1258,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                                                 placeholder="Leave blank to keep current password">
                                                             <button type="button" class="btn btn-outline-secondary"
                                                                 id="toggle-edit-password">
-                                                                <i class="bx bx-show"></i>
+                                                                <i class="bx bx-show" id="toggle-edit-icon"></i>
                                                             </button>
                                                         </div>
                                                     </td>
@@ -1019,7 +1275,8 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     </td>
                                                     <th>Birth Date</th>
                                                     <td><input type="text" class="form-control flat-date"
-                                                            name="birth_date" id="edit-birth-date"></td>
+                                                            name="birth_date" id="edit-birth-date"
+                                                            placeholder="Select birth date"></td>
                                                 </tr>
                                                 <tr>
                                                     <th>Marital Status</th>
@@ -1037,7 +1294,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
                                                 <!-- Job Details -->
                                                 <tr class="table-light">
-                                                    <th colspan="4">Job Details</th>
+                                                    <th colspan="4"><i class="bx bx-briefcase me-2"></i> Job Details
+                                                    </th>
                                                 </tr>
                                                 <tr>
                                                     <th>Employee Type</th>
@@ -1045,21 +1303,24 @@ document.addEventListener("DOMContentLoaded", function () {
                                                         <select class="form-control" name="employee_type"
                                                             id="edit-employee-type">
                                                             <option value="">-- Select --</option>
+                                                            <option value="hourly">Hourly</option>
                                                             <option value="fixed">Fixed</option>
                                                             <option value="salary">Salary</option>
                                                         </select>
                                                     </td>
                                                     <th>Amount</th>
-                                                    <td><input type="number" step="0.01" class="form-control"
-                                                            name="amount" id="edit-amount"></td>
+                                                    <td><input type="number" class="form-control" name="amount"
+                                                            id="edit-amount" placeholder="Enter salary"></td>
                                                 </tr>
                                                 <tr>
                                                     <th>Joining Date</th>
                                                     <td><input type="text" class="form-control flat-date"
-                                                            name="joining_date" id="edit-joining-date"></td>
+                                                            name="joining_date" id="edit-joining-date"
+                                                            placeholder="Select joining date"></td>
                                                     <th>Last Date</th>
                                                     <td><input type="text" class="form-control flat-date"
-                                                            name="last_date" id="edit-last-date"></td>
+                                                            name="last_date" id="edit-last-date"
+                                                            placeholder="Select last date (if any)"></td>
                                                 </tr>
                                                 <tr>
                                                     <th>Designations</th>
@@ -1088,58 +1349,66 @@ document.addEventListener("DOMContentLoaded", function () {
 
                                                 <!-- Contact Details -->
                                                 <tr class="table-light">
-                                                    <th colspan="4">Contact Details</th>
+                                                    <th colspan="4"><i class="bx bx-phone me-2"></i> Contact Details
+                                                    </th>
                                                 </tr>
                                                 <tr>
                                                     <th>Current Address</th>
                                                     <td colspan="3"><textarea class="form-control"
-                                                            name="current_address" id="edit-current-address"
-                                                            rows="2"></textarea></td>
+                                                            name="current_address" id="edit-current-address" rows="2"
+                                                            placeholder="Enter current address"></textarea></td>
                                                 </tr>
                                                 <tr>
                                                     <th>Permanent Address</th>
                                                     <td colspan="3"><textarea class="form-control"
                                                             name="permanent_address" id="edit-permanent-address"
-                                                            rows="2"></textarea></td>
+                                                            rows="2" placeholder="Enter permanent address"></textarea>
+                                                    </td>
                                                 </tr>
                                                 <tr>
                                                     <th>Phone</th>
                                                     <td><input type="text" class="form-control" name="phone"
-                                                            id="edit-phone"></td>
+                                                            id="edit-phone" placeholder="Enter phone number"></td>
                                                     <th>Email</th>
                                                     <td><input type="email" class="form-control" name="email"
-                                                            id="edit-email"></td>
+                                                            id="edit-email" placeholder="Enter email address"></td>
                                                 </tr>
                                                 <tr>
                                                     <th>Document Link</th>
                                                     <td colspan="3"><input type="url" class="form-control"
-                                                            name="document_link" id="edit-document-link"></td>
+                                                            name="document_link" id="edit-document-link"
+                                                            placeholder="https://example.com/document"></td>
                                                 </tr>
 
                                                 <!-- Bank Details -->
                                                 <tr class="table-light">
-                                                    <th colspan="4">Bank Details</th>
+                                                    <th colspan="4"><i class="bx bx-buildings me-2"></i> Bank Details
+                                                    </th>
                                                 </tr>
                                                 <tr>
                                                     <th>Account Holder Name</th>
-                                                    <td><input type="text" class="form-control text-uppercase" name="account_holder"
-                                                            id="edit-account-holder"></td>
+                                                    <td><input type="text" class="form-control text-uppercase"
+                                                            name="account_holder" id="edit-account-holder"
+                                                            placeholder="Enter account holder name"></td>
                                                     <th>Account Number</th>
-                                                    <td><input type="text" class="form-control text-uppercase" name="account_number"
-                                                            id="edit-account-number"></td>
+                                                    <td><input type="text" class="form-control text-uppercase"
+                                                            name="account_number" id="edit-account-number"
+                                                            placeholder="Enter account number"></td>
                                                 </tr>
                                                 <tr>
                                                     <th>IFSC Code</th>
-                                                    <td><input type="text" class="form-control text-uppercase" name="ifsc_code"
-                                                            id="edit-ifsc-code"></td>
+                                                    <td><input type="text" class="form-control text-uppercase"
+                                                            name="ifsc_code" id="edit-ifsc-code"
+                                                            placeholder="Enter IFSC code"></td>
                                                     <th>Branch</th>
-                                                    <td><input type="text" class="form-control text-uppercase" name="branch"
-                                                            id="edit-branch"></td>
+                                                    <td><input type="text" class="form-control text-uppercase"
+                                                            name="branch" id="edit-branch" placeholder="Enter branch">
+                                                    </td>
                                                 </tr>
 
                                                 <!-- Other Details -->
                                                 <tr class="table-light">
-                                                    <th colspan="4">Other</th>
+                                                    <th colspan="4"><i class="bx bx-image me-2"></i> Other</th>
                                                 </tr>
                                                 <tr>
                                                     <th>Profile Picture</th>
@@ -1160,7 +1429,6 @@ document.addEventListener("DOMContentLoaded", function () {
                                                 </tr>
                                             </tbody>
                                         </table>
-
                                     </div>
                                 </div>
 
@@ -1168,10 +1436,10 @@ document.addEventListener("DOMContentLoaded", function () {
                                     <button type="submit" class="btn btn-primary">Update Employee</button>
                                 </div>
                             </form>
-
                         </div>
                     </div>
                 </div>
+
 
                 <!-- delete usere modal -->
                 <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteConfirmLabel"
@@ -1306,22 +1574,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // amount field readonly when fixed
         const employeeType = document.querySelector('select[name="employee_type"]');
-    const amountField = document.querySelector('input[name="amount"]');
+        const amountField = document.querySelector('input[name="amount"]');
 
-    function toggleAmountField() {
-        if (employeeType.value.toLowerCase() === "fixed") {
-            amountField.readOnly = true;
-            amountField.value = ""; // optional: clear field
-        } else {
-            amountField.readOnly = false;
+        function toggleAmountField() {
+            if (employeeType.value.toLowerCase() === "fixed") {
+                amountField.readOnly = true;
+                amountField.value = ""; // optional: clear field
+            } else {
+                amountField.readOnly = false;
+            }
         }
-    }
 
-    // Initial check
-    toggleAmountField();
+        // Initial check
+        toggleAmountField();
 
-    // Listen for changes
-    employeeType.addEventListener("change", toggleAmountField);
+        // Listen for changes
+        employeeType.addEventListener("change", toggleAmountField);
         document.getElementById("addUserForm").addEventListener("submit", function (e) {
             e.preventDefault();
             let form = this;
@@ -1369,38 +1637,77 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        // return format for add fixed data
-    const addAmountForm = document.getElementById("addAmountForm");
 
-    addAmountForm.addEventListener("submit", function (e) {
-        e.preventDefault();
-        let form = this;
-        let formData = new FormData(form);
+        // add hourly data
+        // Modal & form elements
+        const hourlyModalEl = document.getElementById("addHourlyAmountModal");
+        const hourlyModal = new bootstrap.Modal(hourlyModalEl);
+        const addHourlyForm = document.getElementById("addHourlyAmountForm");
 
-        fetch(form.action, {
-            method: "POST",
-            body: formData,
-            headers: { "X-Requested-With": "XMLHttpRequest" }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                bootstrap.Modal.getInstance(document.getElementById("addAmountModal")).hide();
-                showToast(data.message, "success");
-                // Optionally reload or update table dynamically
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                if (data.flat_errors) {
-                    data.flat_errors.forEach(msg => showToast(msg, "danger"));
-                } else if (data.errors) {
-                    Object.entries(data.errors).forEach(([field, msgs]) => {
-                        msgs.forEach(msg => showToast(`${field}: ${msg}`, "danger"));
-                    });
-                }
-            }
-        })
-        .catch(() => showToast("Unexpected error while saving details", "danger"));
-    });
+        const employeeNameField = document.getElementById("hourly_employee_name");
+        const userIdField = document.getElementById("hourly_user_id");
+        const hourlyamountField = document.getElementById("hourly_amount");
+        const hoursField = document.getElementById("working_hours");
+        const totalField = document.getElementById("hourly_total");
+
+        // Function to calculate total
+        const updateTotal = () => {
+            const amount = parseFloat(hourlyamountField.value) || 0;
+            const hours = parseFloat(hoursField.value) || 0;
+            totalField.value = (amount * hours).toFixed(2);
+        };
+
+        hourlyamountField.addEventListener("input", updateTotal);
+        hoursField.addEventListener("input", updateTotal);
+
+        // Open modal and prefill fields
+        document.querySelectorAll(".add-hourly-user").forEach(btn => {
+            btn.addEventListener("click", e => {
+                e.preventDefault();
+                const tr = btn.closest("tr");
+                const userName = tr.querySelector("td:nth-child(3)").innerText;
+                const userId = btn.dataset.userId;
+
+                employeeNameField.value = userName;
+                userIdField.value = userId;
+
+                // Reset inputs
+                hourlyamountField.value = "";
+                hoursField.value = "";
+                totalField.value = "";
+
+                hourlyModal.show();
+            });
+        });
+
+        // AJAX submit
+        addHourlyForm.addEventListener("submit", e => {
+            e.preventDefault();
+            const formData = new FormData(addHourlyForm);
+
+            fetch(addHourlyForm.action, {
+                method: "POST",
+                body: formData,
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        hourlyModal.hide();
+                        showToast(data.message, "success");
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        if (data.flat_errors) {
+                            data.flat_errors.forEach(msg => showToast(msg, "danger"));
+                        } else if (data.errors) {
+                            Object.entries(data.errors).forEach(([field, msgs]) => {
+                                msgs.forEach(msg => showToast(`${field}: ${msg}`, "danger"));
+                            });
+                        }
+                    }
+                })
+                .catch(() => showToast("Unexpected error while saving hourly details", "danger"));
+        });
 
         $(document).on("submit", "#editUserForm", function (e) {
             e.preventDefault();

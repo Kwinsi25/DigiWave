@@ -2,11 +2,31 @@
 
 <!DOCTYPE html>
 <html lang="en" class="light-style layout-menu-fixed" dir="ltr"
-  data-theme="theme-default"
-  data-assets-path="{% static '' %}"
-  data-template="vertical-menu-template-free">
+data-theme="theme-default"
+data-assets-path="{% static '' %}"
+data-template="vertical-menu-template-free">
+
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- Boxicons CSS -->
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
 <head>
+<style>
+
+.flatpickr-calendar .flatpickr-monthDropdown-months {
+    width: 100px;
+    font-size: 0.9rem;
+}
+
+.flatpickr-year-dropdown {
+    width: 80px;
+    font-size: 0.9rem;
+    border: none;
+}
+</style>
+  
   {% include 'head.html' %}
 </head>
 
@@ -52,8 +72,6 @@
 
   <script async defer src="https://buttons.github.io/buttons.js"></script>
 
-  <!-- Flatpickr CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
   <!-- Flatpickr JS -->
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
