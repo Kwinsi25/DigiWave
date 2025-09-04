@@ -347,7 +347,10 @@
                         <div class="modal-content">
                             <div class="modal-header table-info text-white">
                                 <h5 class="modal-title" id="viewUserModalLabel">
-                                    <i class="bx bx-user me-2"></i> Employee Details
+                                    
+                                    <i class="bx bx-folder-open"></i>
+                                    <span id="view-header-emp-name" class="fw-bold text-primary text-uppercase"></span>
+                    
                                 </h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
@@ -615,6 +618,7 @@
 
                                                 // ================= Personal Details =================
                                                 document.getElementById("view-employee-id").textContent = data.id || "-";
+                                                document.getElementById("view-header-emp-name").textContent = data.username || "-";
                                                 document.getElementById("view-firstname").textContent = data.first_name || "-";
                                                 document.getElementById("view-lastname").textContent = data.last_name || "-";
                                                 document.getElementById("view-username").textContent = data.username || "-";
@@ -788,15 +792,15 @@
                                                         data.hourly_employee_details.forEach(item => {
                                                             const hours = parseFloat(item.total_hours || 0);
                                                             const rate = parseFloat(item.final_total || 0);
-                                                            const total = hours * rate;
+                                                            const total = parseFloat(item.final_total || 0);
                                                             totalSum += total;
 
                                                             const tr = document.createElement("tr");
                                                             tr.innerHTML = `
-                                                                            <td>${item.date || "-"}</td>
+                                                                            <td>${item.month || "-"}</td>
                                                                             <td>${hours}</td>
                                                                             <td>${total.toFixed(2)}</td>
-                                                                            <td><button type="button" class="btn btn-sm btn-primary view-hourly-btn" data-user-id="${data.id}">
+                                                                            <td><button type="button" class="btn btn-sm btn-primary view-hourly-btn" data-user-id="${data.id}"  data-month="${item.month}">
             <i class="bx bx-time-five"></i>
         </button></td>
                                                                         `;
@@ -826,11 +830,12 @@
 
         const btn = e.target.closest(".view-hourly-btn");
         const userId = btn.dataset.userId;
-
+        const month = btn.dataset.month;
+        console.log("month",month)
         const tbody = document.querySelector("#hourly-modal-table tbody");
         tbody.innerHTML = "";
 
-        fetch(`/get_user/${userId}/`, {
+        fetch(`/get_user/${userId}/?month=${month}`, {
             headers: { "X-Requested-With": "XMLHttpRequest" }
         })
         .then(res => res.json())
@@ -1099,118 +1104,170 @@
                 </div>
 
 
-                <!-- Add fixed Amount Modal -->
-                <div class="modal fade" id="addAmountModal" tabindex="-1" aria-labelledby="addAmountModalLabel"
-                    aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-                    <div class="modal-dialog modal-md modal-dialog-scrollable">
-                        <div class="modal-content">
-                            <div class="modal-header table-primary text-white">
-                                <h5 class="modal-title" id="addAmountModalLabel">
-                                    <i class="bx bx-plus me-2"></i> Add Details
-                                </h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
+               <!-- Add Fixed Amount Modal -->
+<div class="modal fade" id="addAmountModal" tabindex="-1" aria-labelledby="addAmountModalLabel"
+    aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header table-primary text-white">
+                <h5 class="modal-title" id="addAmountModalLabel">
+                    <i class="bx bx-plus me-2"></i> Add Fixed Amount Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
 
-                            <form id="addAmountForm" method="POST" action="{% url 'add_fixed_details' %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="user_id" id="user_id">
-                                <div class="modal-body px-4 py-3">
-                                    <div class="mb-3">
-                                        <label for="employee_name" class="form-label">Employee Name</label>
+            <form id="addAmountForm" method="POST" action="{% url 'add_fixed_details' %}">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" id="user_id">
+
+                <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <tbody>
+                                <!-- Employee Info -->
+                                <tr class="table-light">
+                                    <th colspan="2"><i class="bx bx-user me-2"></i> Employee Info</th>
+                                </tr>
+                                <tr>
+                                    <th style="width: 35%;">Employee Name</th>
+                                    <td>
                                         <input type="text" class="form-control" name="employee_name" id="employee_name"
                                             readonly>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="amount" class="form-label">Amount</label>
+                                    </td>
+                                </tr>
+
+                                <!-- Amount Details -->
+                                <tr class="table-light">
+                                    <th colspan="2"><i class="bx bx-rupee me-2"></i> Amount Details</th>
+                                </tr>
+                                <tr>
+                                    <th>Amount</th>
+                                    <td>
                                         <input type="number" step="0.01" class="form-control" name="amount" id="amount"
                                             placeholder="Enter amount">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="date" class="form-label">Date</label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Date</th>
+                                    <td>
                                         <input type="text" class="form-control flat-date" name="date" id="date"
                                             placeholder="Select date">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="description" class="form-label">Description</label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Description</th>
+                                    <td>
                                         <textarea class="form-control" name="description" id="description" rows="3"
                                             placeholder="Enter description"></textarea>
-                                    </div>
-                                </div>
-
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn-primary">Save</button>
-                                </div>
-                            </form>
-
-                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <!-- Add Hourly Amount Modal -->
-                <div class="modal fade" id="addHourlyAmountModal" tabindex="-1"
-                    aria-labelledby="addHourlyAmountModalLabel" aria-hidden="true" data-bs-backdrop="static"
-                    data-bs-keyboard="false">
-                    <div class="modal-dialog modal-md modal-dialog-scrollable">
-                        <div class="modal-content">
-                            <div class="modal-header table-primary text-white">
-                                <h5 class="modal-title" id="addHourlyAmountModalLabel">
-                                    <i class="bx bx-plus me-2"></i> Add Hourly Details
-                                </h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-                            <form id="addHourlyAmountForm" method="POST" action="{% url 'add_hourly_details' %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="user_id" id="hourly_user_id">
-                                <div class="modal-body px-4 py-3">
-                                    <div class="mb-3">
-                                        <label for="hourly_employee_name" class="form-label">Employee Name</label>
+
+               <!-- Add Hourly Amount Modal -->
+<div class="modal fade" id="addHourlyAmountModal" tabindex="-1"
+    aria-labelledby="addHourlyAmountModalLabel" aria-hidden="true"
+    data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header table-primary text-white">
+                <h5 class="modal-title" id="addHourlyAmountModalLabel">
+                    <i class="bx bx-plus me-2"></i> Add Hourly Amount Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+
+            <form id="addHourlyAmountForm" method="POST" action="{% url 'add_hourly_details' %}">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" id="hourly_user_id">
+
+                <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <tbody>
+                                <!-- Employee Info -->
+                                <tr class="table-light">
+                                    <th colspan="2"><i class="bx bx-user me-2"></i> Employee Info</th>
+                                </tr>
+                                <tr>
+                                    <th style="width: 30%;">Employee Name</th>
+                                    <td>
                                         <input type="text" class="form-control" name="employee_name"
                                             id="hourly_employee_name" readonly>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="hourly_amount" class="form-label">Amount per Hour</label>
+                                    </td>
+                                </tr>
+
+                                <!-- Hourly Details -->
+                                <tr class="table-light">
+                                    <th colspan="2"><i class="bx bx-time me-2"></i> Hourly Details</th>
+                                </tr>
+                                <tr>
+                                    <th>Amount per Hour</th>
+                                    <td>
                                         <input type="number" step="0.01" class="form-control" name="amount"
                                             id="hourly_amount" placeholder="Enter amount per hour">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="hourly_date" class="form-label">Date</label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Date</th>
+                                    <td>
                                         <input type="text" class="form-control flat-date" name="date" id="hourly_date"
                                             placeholder="Select date">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="working_hours" class="form-label">Total Working Hours</label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Total Working Hours</th>
+                                    <td>
                                         <input type="number" step="0.1" class="form-control" name="working_hours"
                                             id="working_hours" placeholder="Enter total working hours">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="hourly_description" class="form-label">Description</label>
+                                    </td>
+                                </tr>
+
+                                <!-- Extra -->
+                                <tr class="table-light">
+                                    <th colspan="2"><i class="bx bx-detail me-2"></i> Additional Info</th>
+                                </tr>
+                                <tr>
+                                    <th>Description</th>
+                                    <td>
                                         <textarea class="form-control" name="description" id="hourly_description"
                                             rows="3" placeholder="Enter description"></textarea>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="hourly_total" class="form-label">Final Total</label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Final Total</th>
+                                    <td>
                                         <input type="text" class="form-control" name="total" id="hourly_total" readonly>
-                                    </div>
-                                </div>
-
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn-primary">Save</button>
-                                </div>
-                            </form>
-
-                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <script>
-                    document.addEventListener("DOMContentLoaded", () => {
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-                    });
 
-                </script>
+               
 
                 <!-- Update User Modal -->
                 <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel"
@@ -1636,6 +1693,37 @@
                 new bootstrap.Modal(document.getElementById('addAmountModal')).show();
             });
         });
+        // retur message in add fixed modal
+        const addAmountForm = document.getElementById("addAmountForm");
+const fixedModal = new bootstrap.Modal(document.getElementById("addAmountModal"));
+
+addAmountForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const formData = new FormData(addAmountForm);
+
+    fetch(addAmountForm.action, {
+        method: "POST",
+        body: formData,
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                fixedModal.hide();
+                showToast(data.message, "success");
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                if (data.flat_errors) {
+                    data.flat_errors.forEach(msg => showToast(msg, "danger"));
+                } else if (data.errors) {
+                    Object.entries(data.errors).forEach(([field, msgs]) => {
+                        msgs.forEach(msg => showToast(`${field}: ${msg}`, "danger"));
+                    });
+                }
+            }
+        })
+        .catch(() => showToast("Unexpected error while saving fixed amount", "danger"));
+});
 
 
         // add hourly data

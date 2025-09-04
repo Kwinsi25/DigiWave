@@ -151,11 +151,9 @@
                 <th>Domain Name</th>
                 <th>Project ID</th>
                 <th>Project Name</th>
-                <th>Purchase Date</th>
-                <th>Expiry Date</th>
+                
                 <th>Left Days</th>
                 <th>Registrar</th>
-                <th>Notes</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -181,16 +179,15 @@
                 <td>
                   {% if domain.project.exists %}
                   {% for p in domain.project.all %}
-                  
-                    {{ p.project_name }}
+
+                  {{ p.project_name }}
                   <br>
                   {% endfor %}
                   {% else %}
                   <span class="text-muted">No Project</span>
                   {% endif %}
                 </td>
-                <td>{{ domain.purchase_date|date:"Y-m-d" }}</td>
-                <td>{{ domain.expiry_date|date:"Y-m-d" }}</td>
+               
                 <td>
                   {% if domain.left_days is not None %}
                   {{ domain.left_days }} days
@@ -199,7 +196,6 @@
                   {% endif %}
                 </td>
                 <td>{{ domain.registrar }}</td>
-                <td>{{ domain.notes }}</td>
                 <td>
                   <a href="#" class="text-primary me-2 edit-domain" data-domain-id="{{ domain.id }}" title="Edit">
                     <i class="bx bx-edit"></i>
@@ -223,98 +219,134 @@
           {% block extra_js %}
           <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
           <!-- Flatpickr CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
-<!-- Flatpickr JS -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+          <!-- Flatpickr JS -->
+          <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
           <script>
             // Reusable Flatpickr with Year Dropdown (no arrows)
-function initFlatpickrWithYearDropdown(selector, defaultDate = null) {
-    const fp = flatpickr(selector, {
-        dateFormat: "Y-m-d",
-        allowInput: true,
-        altInput: true,
-        altFormat: "F j, Y",
-        monthSelectorType: "dropdown",
-        onReady: function(selectedDates, dateStr, instance) {
-            const yearSelect = document.createElement("select");
-            yearSelect.classList.add("flatpickr-year-dropdown");
+            function initFlatpickrWithYearDropdown(selector, defaultDate = null) {
+              const fp = flatpickr(selector, {
+                dateFormat: "Y-m-d",
+                allowInput: true,
+                altInput: true,
+                altFormat: "F j, Y",
+                monthSelectorType: "dropdown",
+                onReady: function (selectedDates, dateStr, instance) {
+                  const yearSelect = document.createElement("select");
+                  yearSelect.classList.add("flatpickr-year-dropdown");
 
-            // Generate year options (1900 → 2099)
-            for (let y = 1900; y <= 2099; y++) {
-                let opt = document.createElement("option");
-                opt.value = y;
-                opt.textContent = y;
-                if (y === instance.currentYear) opt.selected = true;
-                yearSelect.appendChild(opt);
+                  // Generate year options (1900 → 2099)
+                  for (let y = 1900; y <= 2099; y++) {
+                    let opt = document.createElement("option");
+                    opt.value = y;
+                    opt.textContent = y;
+                    if (y === instance.currentYear) opt.selected = true;
+                    yearSelect.appendChild(opt);
+                  }
+
+                  // Replace year input with dropdown
+                  const yearInput = instance.currentYearElement;
+                  yearInput.parentNode.replaceChild(yearSelect, yearInput);
+
+                  // Remove arrows ↑ ↓
+                  const container = yearSelect.parentNode;
+                  const upBtn = container.querySelector(".arrowUp");
+                  const downBtn = container.querySelector(".arrowDown");
+                  if (upBtn) upBtn.remove();
+                  if (downBtn) downBtn.remove();
+
+                  // Update Flatpickr on change
+                  yearSelect.addEventListener("change", function () {
+                    instance.changeYear(parseInt(this.value));
+                  });
+                }
+              });
+
+              if (defaultDate) {
+                fp.setDate(defaultDate, true);
+              }
+
+              return fp;
             }
 
-            // Replace year input with dropdown
-            const yearInput = instance.currentYearElement;
-            yearInput.parentNode.replaceChild(yearSelect, yearInput);
-
-            // Remove arrows ↑ ↓
-            const container = yearSelect.parentNode;
-            const upBtn = container.querySelector(".arrowUp");
-            const downBtn = container.querySelector(".arrowDown");
-            if (upBtn) upBtn.remove();
-            if (downBtn) downBtn.remove();
-
-            // Update Flatpickr on change
-            yearSelect.addEventListener("change", function () {
-                instance.changeYear(parseInt(this.value));
-            });
-        }
-    });
-
-    if (defaultDate) {
-        fp.setDate(defaultDate, true);
-    }
-
-    return fp;
-}
-
             document.addEventListener("DOMContentLoaded", function () {
-              // CALANDER
-              flatpickr(".flat-date", {
-    dateFormat: "Y-m-d",
-    allowInput: true,
-    altInput: true,
-    altFormat: "F j, Y",
-    monthSelectorType: "dropdown",   // ✅ Month dropdown
-    onReady: function(selectedDates, dateStr, instance) {
-        const yearSelect = document.createElement("select");
-        yearSelect.classList.add("flatpickr-year-dropdown");
 
-        // Generate year options (1900 → 2099)
-        for (let y = 1900; y <= 2099; y++) {
-            let opt = document.createElement("option");
-            opt.value = y;
-            opt.textContent = y;
-            if (y === instance.currentYear) opt.selected = true;
-            yearSelect.appendChild(opt);
-        }
+              
+              document.getElementById("domainDataForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                const form = this;
+                const formData = new FormData(form);
 
-        // Replace year input with dropdown
-        const yearInput = instance.currentYearElement;
-        yearInput.parentNode.replaceChild(yearSelect, yearInput);
+                fetch("{% url 'add_domain' %}", {
+                  method: "POST",
+                  body: formData,
+                  headers: { "X-Requested-With": "XMLHttpRequest" }
+                })
+                  .then(res => res.json())
+                  .then(data => {
+                    if (data.success) {
+                      // Close modal
+                      const modalEl = document.getElementById("addDomainDataModal");
+                      bootstrap.Modal.getInstance(modalEl).hide();
 
-        // Remove ↑ ↓ buttons
-        if (instance.yearElements) {
-            instance.yearElements.forEach(el => el.style.display = "none");
-        }
-        const container = yearSelect.parentNode;
-        const upBtn = container.querySelector(".arrowUp");
-        const downBtn = container.querySelector(".arrowDown");
-        if (upBtn) upBtn.remove();
-        if (downBtn) downBtn.remove();
+                      // Show success toast
+                      showToast(data.message, "success");
 
-        // Update Flatpickr when year changes
-        yearSelect.addEventListener("change", function () {
-            instance.changeYear(parseInt(this.value));
-        });
-    }
-});
+                      // Optional: reload page or update table
+                      setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                      // Show validation errors
+                      if (data.flat_errors) {
+                        data.flat_errors.forEach(msg => showToast(msg, "danger"));
+                      } else if (data.errors) {
+                        Object.entries(data.errors).forEach(([field, msgs]) => {
+                          msgs.forEach(msg => showToast(`${msg}`, "danger"));
+                        });
+                      } else {
+                        showToast("Something went wrong", "danger");
+                      }
+                    }
+                  })
+                  .catch(() => showToast("Unexpected error while adding domain", "danger"));
+              });
+
+
+
+              function showToast(message, type = "info") {
+                const container = document.getElementById("toast-container") || (() => {
+                  const div = document.createElement("div");
+                  div.id = "toast-container";
+                  div.style.position = "fixed";
+                  div.style.top = "20px";
+                  div.style.right = "20px";
+                  div.style.zIndex = "3000";
+                  div.style.display = "flex";
+                  div.style.flexDirection = "column";
+                  div.style.gap = "10px";
+                  document.body.appendChild(div);
+                  return div;
+                })();
+
+                const toast = document.createElement("div");
+                toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+                toast.style.minWidth = "250px";
+                toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
+
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                  toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                  toast.style.opacity = "0";
+                  toast.style.transform = "translateX(100%)";
+                  setTimeout(() => toast.remove(), 500);
+                }, 3000);
+              }
 
 
               const toasts = document.querySelectorAll('#toast-container .toast');
@@ -326,131 +358,226 @@ function initFlatpickrWithYearDropdown(selector, defaultDate = null) {
                   setTimeout(() => toast.remove(), 500);
                 }, 3000); // Auto-hide after 3 seconds
               });
+              // CALANDER
+              flatpickr(".flat-date", {
+                dateFormat: "Y-m-d",
+                allowInput: true,
+                altInput: true,
+                altFormat: "F j, Y",
+                monthSelectorType: "dropdown",   // ✅ Month dropdown
+                onReady: function (selectedDates, dateStr, instance) {
+                  const yearSelect = document.createElement("select");
+                  yearSelect.classList.add("flatpickr-year-dropdown");
+
+                  // Generate year options (1900 → 2099)
+                  for (let y = 1900; y <= 2099; y++) {
+                    let opt = document.createElement("option");
+                    opt.value = y;
+                    opt.textContent = y;
+                    if (y === instance.currentYear) opt.selected = true;
+                    yearSelect.appendChild(opt);
+                  }
+
+                  // Replace year input with dropdown
+                  const yearInput = instance.currentYearElement;
+                  yearInput.parentNode.replaceChild(yearSelect, yearInput);
+
+                  // Remove ↑ ↓ buttons
+                  if (instance.yearElements) {
+                    instance.yearElements.forEach(el => el.style.display = "none");
+                  }
+                  const container = yearSelect.parentNode;
+                  const upBtn = container.querySelector(".arrowUp");
+                  const downBtn = container.querySelector(".arrowDown");
+                  if (upBtn) upBtn.remove();
+                  if (downBtn) downBtn.remove();
+
+                  // Update Flatpickr when year changes
+                  yearSelect.addEventListener("change", function () {
+                    instance.changeYear(parseInt(this.value));
+                  });
+                }
+              });
+
+
+
             });
             function formatDate(dateStr) {
-    if (!dateStr) return "-"; // show dash if null
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-GB", {  // "01 Sep 2025"
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-    });
-}
+              if (!dateStr) return "-"; // show dash if null
+              const d = new Date(dateStr);
+              return d.toLocaleDateString("en-GB", {  // "01 Sep 2025"
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+              });
+            }
             $(document).ready(function () {
               const domainDetailsUrl = "{% url 'get_domain_details' %}";
 
-              // VIEW modal
-              $(document).on("click", ".domain-link", function (e) {
-                e.preventDefault();
-                const domainId = $(this).data("domain-id");
-                if (!domainId) return console.error("Domain ID missing!");
+              // ================= VIEW DOMAIN MODAL =================
+$(document).on("click", ".domain-link", function (e) {
+  e.preventDefault();
+  const domainId = $(this).data("domain-id");
+  if (!domainId) return console.error("Domain ID missing!");
 
-                $.get(domainDetailsUrl, { id: domainId, mode: "view" }, function (res) {
-                  if (!res.success) return console.error(res.error);
-                  const d = res.domain;
+  $.get(domainDetailsUrl, { id: domainId, mode: "view" }, function (res) {
+    if (!res.success) return console.error(res.error);
+    const d = res.domain;
 
-                  // ✅ Update modal title dynamically
-                  $("#domainDetailsModalLabel").html(
-                    `<i class="bx bx-folder-open me-2"></i> Project Details: ${d.project_name || '-'}`
-                  );
+    // ✅ Modal title → list associated projects
+    let titleProjects = "-";
+    if (d.projects?.length) {
+      titleProjects = d.projects.map(p => p.name).join(", ");
+    }
+    // header
+    $("#pd-header-domain-name").text(d.domain_name || "-");
+    // ✅ Projects section
+    if (d.projects && d.projects.length > 0) {
+      let projHtml = d.projects
+        .map(p => `${p.name} <small class="text-muted">(${p.code})</small>`)
+        .join("<br>");
+      $("#dd-projects").html(projHtml);
+    } else {
+      $("#dd-projects").text("-");
+    }
 
-                  $("#dd-domain-name").text(d.domain_name || '-');
-                  $("#dd-registrar").text(d.registrar || '-');
-                  document.getElementById("dd-purchase-date").innerText = formatDate(d.purchase_date);
-                  document.getElementById("dd-expiry-date").innerText   = formatDate(d.expiry_date);
+    // ==================== Domain Details ====================
+    $("#dd-domain-name").text(d.domain_name || "-");
+    $("#dd-sub-domain1").text(d.sub_domain1 || "-");
+    $("#dd-sub-domain2").text(d.sub_domain2 || "-");
+    $("#dd-registrar").text(d.registrar || "-");
+    $("#dd-purchase-date").text(formatDate(d.purchase_date));
+    $("#dd-expiry-date").text(formatDate(d.expiry_date));
 
-                  $("#dd-renewal-status")
-                    .removeClass()
-                    .addClass('badge ' +
-                      (d.renewal_status === "Pending" ? 'bg-label-warning' :
-                        d.renewal_status === "Active" ? 'bg-label-success' :
-                          'bg-label-danger'))
-                    .text(d.renewal_status || '-');
+    $("#dd-renewal-status")
+      .removeClass()
+      .addClass(
+        "badge " +
+          (d.renewal_status === "Pending"
+            ? "bg-label-warning"
+            : d.renewal_status === "Active"
+            ? "bg-label-success"
+            : "bg-label-danger")
+      )
+      .text(d.renewal_status || "-");
 
-                  $("#dd-dns-configured")
-                    .removeClass()
-                    .addClass('badge ' + (d.dns_configured ? 'bg-label-success' : 'bg-label-danger'))
-                    .text(d.dns_configured ? 'Yes' : 'No');
+    $("#dd-auto-renewal")
+      .removeClass()
+      .addClass("badge " + (d.auto_renewal ? "bg-label-success" : "bg-label-danger"))
+      .text(d.auto_renewal ? "On" : "Off");
 
-                  $("#dd-nameservers").html((d.nameservers || '').replace(/\n/g, '<br>'));
+    // ==================== Payment Details ====================
+    $("#dd-domain-charge").text(d.domain_charge || "0.00");
+    $("#dd-payment-status")
+      .removeClass()
+      .addClass(
+        "badge " +
+          (d.client_payment_status === "Paid"
+            ? "bg-label-success"
+            : d.client_payment_status === "Pending"
+            ? "bg-label-warning"
+            : "bg-label-danger")
+      )
+      .text(d.client_payment_status || "-");
 
-                  $("#dd-ssl-installed")
-                    .removeClass()
-                    .addClass('badge ' + (d.ssl_installed ? 'bg-label-success' : 'bg-label-danger'))
-                    .text(d.ssl_installed ? 'Yes' : 'No');
+    $("#dd-payment-method").text(d.payment_method || "-");
+    $("#dd-payment-mode").text(d.payment_mode || "-");
 
-                  document.getElementById("dd-ssl-expiry").innerText    = formatDate(d.ssl_expiry);
-                  $("#dd-credentials").html(
-                    `<strong>User:</strong> ${d.credentials_user || '-'}<br>
-             <strong>Pass:</strong> ${d.credentials_pass || '-'}`
-                  );
-                  $("#dd-linked-services").text(d.linked_services || '-');
-                  $("#dd-notes").text(d.notes || '-');
-                  $("#dd-sub-domain1").text(d.sub_domain1 || "-");
-$("#dd-sub-domain2").text(d.sub_domain2 || "-");
-$("#dd-domain-charge").text(d.domain_charge );
-$("#dd-auto-renewal")
-  .removeClass()
-  .addClass('badge ' + (d.auto_renewal ? 'bg-label-success' : 'bg-label-danger'))
-  .text(d.auto_renewal ? "On" : "Off");
+    // Pretty print payment details
+    let paymentHtml = "-";
+    if (d.payment_details) {
+      const details = d.payment_details;
 
-$("#dd-payment-status")
-  .removeClass()
-  .addClass('badge ' +
-    (d.client_payment_status === "Paid" ? 'bg-label-success' :
-     d.client_payment_status === "Pending" ? 'bg-label-warning' : 'bg-label-danger'))
-  .text(d.client_payment_status || "-");
+      if (d.payment_method === "Bank Transfer") {
+        paymentHtml = `
+          <table class="table table-sm table-bordered mb-0">
+            <tr><th>Bank Name</th><td>${details.bank_name || "-"}</td></tr>
+            <tr><th>Account No</th><td>${details.account_no || "-"}</td></tr>
+            <tr><th>IFSC Code</th><td>${details.ifsc_code || "-"}</td></tr>
+          </table>`;
+      } else if (d.payment_method === "UPI") {
+        paymentHtml = `
+          <table class="table table-sm table-bordered mb-0">
+            <tr><th>UPI ID</th><td>${details.upi_id || "-"}</td></tr>
+          </table>`;
+      } else if (d.payment_method === "Cheque") {
+        paymentHtml = `
+          <table class="table table-sm table-bordered mb-0">
+            <tr><th>Cheque No</th><td>${details.cheque_no || "-"}</td></tr>
+            <tr><th>Cheque Name</th><td>${details.cheque_name || "-"}</td></tr>
+          </table>`;
+      } else if (d.payment_method === "Other") {
+        paymentHtml = `
+          <table class="table table-sm table-bordered mb-0">
+            <tr><th>Description</th><td>${details.description || "-"}</td></tr>
+          </table>`;
+      } else if (d.payment_method === "Cash") {
+        paymentHtml = `<span class="badge bg-success">Cash Payment</span>`;
+      } else {
+        paymentHtml = `<pre>${JSON.stringify(details, null, 2)}</pre>`;
+      }
+    }
+    $("#dd-payment-details").html(paymentHtml);
 
-$("#dd-payment-method").text(d.payment_method || "-");
-$("#dd-payment-mode").text(d.payment_mode || "-");
+    // ==================== Credentials & Security ====================
+    $("#dd-credentials-user").text(d.credentials_user || "-");
+    $("#dd-credentials-pass")
+  .text("********")
+  .attr("data-real-pass", d.credentials_pass || "-")
+  .addClass("masked");
 
-// Pretty print JSON payment details
-// Render payment details based on method
-let paymentHtml = "-";
+$("#togglePassBtn").html('<i class="bx bx-show"></i>');
 
-if (d.payment_details) {
-  const details = d.payment_details;   // <-- already an object, no need to JSON.parse
+    $("#dd-ssl-installed")
+      .removeClass()
+      .addClass("badge " + (d.ssl_installed ? "bg-label-success" : "bg-label-danger"))
+      .text(d.ssl_installed ? "Yes" : "No");
 
-  if (d.payment_method === "Bank Transfer") {
-    paymentHtml = `
-      <table class="table table-sm table-bordered mb-0">
-        <tr><th>Bank Name</th><td>${details.bank_name || "-"}</td></tr>
-        <tr><th>Account No</th><td>${details.account_no || "-"}</td></tr>
-        <tr><th>IFSC Code</th><td>${details.ifsc_code || "-"}</td></tr>
-      </table>
-    `;
-  } else if (d.payment_method === "UPI") {
-    paymentHtml = `
-      <table class="table table-sm table-bordered mb-0">
-        <tr><th>UPI ID</th><td>${details.upi_id || "-"}</td></tr>
-      </table>
-    `;
-  } else if (d.payment_method === "Cheque") {
-    paymentHtml = `
-      <table class="table table-sm table-bordered mb-0">
-        <tr><th>Cheque No</th><td>${details.cheque_no || "-"}</td></tr>
-        <tr><th>Cheque Name</th><td>${details.cheque_name || "-"}</td></tr>
-      </table>
-    `;
-  } else if (d.payment_method === "Other") {
-    paymentHtml = `
-      <table class="table table-sm table-bordered mb-0">
-        <tr><th>Description</th><td>${details.description || "-"}</td></tr>
-      </table>
-    `;
-  } else if (d.payment_method === "Cash") {
-    paymentHtml = `<span class="badge bg-success">Cash Payment</span>`;
+    $("#dd-ssl-expiry").text(formatDate(d.ssl_expiry));
+
+    // ==================== DNS & Services ====================
+    $("#dd-dns-configured")
+      .removeClass()
+      .addClass("badge " + (d.dns_configured ? "bg-label-success" : "bg-label-danger"))
+      .text(d.dns_configured ? "Yes" : "No");
+
+    $("#dd-nameservers").html((d.nameservers || "").replace(/\n/g, "<br>"));
+    $("#dd-linked-services").text(d.linked_services || "-");
+
+    // ==================== Notes ====================
+    $("#dd-notes").text(d.notes || "-");
+
+    // ✅ Show modal
+    $("#domainDetailsModal").modal("show");
+  });
+});
+
+// ================= PASSWORD TOGGLE =================
+$(document).on("click", "#togglePassBtn", function () {
+  const passEl = $("#dd-credentials-pass");
+
+  if (passEl.hasClass("masked")) {
+    // Reveal password
+    passEl.text(passEl.data("real-pass")).removeClass("masked");
+    $(this).html('<i class="bx bx-hide"></i>');
   } else {
-    paymentHtml = `<pre>${JSON.stringify(details, null, 2)}</pre>`;
+    // Mask again
+    passEl.text("********").addClass("masked");
+    $(this).html('<i class="bx bx-show"></i>');
   }
+});
+
+// ================= DATE FORMAT HELPER =================
+function formatDate(dateStr) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr; // fallback if invalid
+  return d.toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
-
-$("#dd-payment-details").html(paymentHtml);
-
-
-                  $("#domainDetailsModal").modal("show");
-                });
-              });
 
               // EDIT modal
               $(document).on("click", ".edit-domain", function (e) {
@@ -464,52 +591,52 @@ $("#dd-payment-details").html(paymentHtml);
 
                   $("#editDomainForm").attr("action", `/update_domain/${domainId}/`);
                   $("#edit-domain-name").val(d.domain_name || '');
-      $("#edit-subdomain1").val(d.sub_domain1 || '');
-      $("#edit-subdomain2").val(d.sub_domain2 || '');
-      $("#edit-registrar").val(d.registrar || '');
-      const editPurchaseDate = initFlatpickrWithYearDropdown("#edit-purchase-date", d.purchase_date);
-      const editExpiryDate   = initFlatpickrWithYearDropdown("#edit-expiry-date", d.expiry_date);
-      $("#edit-renewal-status").val(d.renewal_status || '');
-      $("#edit-auto-renewal").val(d.auto_renewal || 'Off');
-      $("#edit-domain-charge").val(d.domain_charge || '');
-      $("#edit-dns-configured").prop('checked', d.dns_configured);
-      $("#edit-nameservers").val(d.nameservers || '');
-      $("#edit-ssl-installed").prop('checked', d.ssl_installed);
-      const editsslExpiryDate = initFlatpickrWithYearDropdown("#edit-ssl-expiry", d.ssl_expiry);
-      $("#edit-credentials-user").val(d.credentials_user || '');
-      $("#edit-credentials-pass").val(d.credentials_pass || '');
-      $("#edit-linked-services").val(d.linked_services || '');
-      $("#edit-client-payment-status").val(d.client_payment_status || 'Pending');
-      $("#edit-payment-mode").val(d.payment_mode || 'Client');
-      $("#edit-payment-method").val(d.payment_method || '');
-      $("#edit-notes").val(d.notes || '');
+                  $("#edit-subdomain1").val(d.sub_domain1 || '');
+                  $("#edit-subdomain2").val(d.sub_domain2 || '');
+                  $("#edit-registrar").val(d.registrar || '');
+                  const editPurchaseDate = initFlatpickrWithYearDropdown("#edit-purchase-date", d.purchase_date);
+                  const editExpiryDate = initFlatpickrWithYearDropdown("#edit-expiry-date", d.expiry_date);
+                  $("#edit-renewal-status").val(d.renewal_status || '');
+                  $("#edit-auto-renewal").val(d.auto_renewal || 'Off');
+                  $("#edit-domain-charge").val(d.domain_charge || '');
+                  $("#edit-dns-configured").prop('checked', d.dns_configured);
+                  $("#edit-nameservers").val(d.nameservers || '');
+                  $("#edit-ssl-installed").prop('checked', d.ssl_installed);
+                  const editsslExpiryDate = initFlatpickrWithYearDropdown("#edit-ssl-expiry", d.ssl_expiry);
+                  $("#edit-credentials-user").val(d.credentials_user || '');
+                  $("#edit-credentials-pass").val(d.credentials_pass || '');
+                  $("#edit-linked-services").val(d.linked_services || '');
+                  $("#edit-client-payment-status").val(d.client_payment_status || 'Pending');
+                  $("#edit-payment-mode").val(d.payment_mode || 'Client');
+                  $("#edit-payment-method").val(d.payment_method || '');
+                  $("#edit-notes").val(d.notes || '');
 
-      // Projects multi-select
-      $("#edit-projects option").prop("selected", false);
-      if (d.projects && d.projects.length > 0) {
-        d.projects.forEach(p => {
-          $(`#edit-projects option[value='${p.id}']`).prop("selected", true);
-        });
-      }
+                  // Projects multi-select
+                  $("#edit-projects option").prop("selected", false);
+                  if (d.projects && d.projects.length > 0) {
+                    d.projects.forEach(p => {
+                      $(`#edit-projects option[value='${p.id}']`).prop("selected", true);
+                    });
+                  }
 
-      // Show dynamic payment fields
-      $(".edit-payment-extra").addClass("d-none");
-      if (d.payment_method === "Bank Transfer") {
-        $("#edit-bank-name").val(d.payment_details?.bank_name || '');
-        $("#edit-account-no").val(d.payment_details?.account_no || '');
-        $("#edit-ifsc-code").val(d.payment_details?.ifsc_code || '');
-        $("#edit-bank-fields").removeClass("d-none");
-      } else if (d.payment_method === "UPI") {
-        $("#edit-upi-id").val(d.payment_details?.upi_id || '');
-        $("#edit-upi-fields").removeClass("d-none");
-      } else if (d.payment_method === "Cheque") {
-        $("#edit-cheque-no").val(d.payment_details?.cheque_no || '');
-        $("#edit-cheque-name").val(d.payment_details?.cheque_name || '');
-        $("#edit-cheque-fields").removeClass("d-none");
-      } else if (d.payment_method === "Other") {
-        $("#edit-other-details").val(d.payment_details?.description || '');
-        $("#edit-other-fields").removeClass("d-none");
-      }
+                  // Show dynamic payment fields
+                  $(".edit-payment-extra").addClass("d-none");
+                  if (d.payment_method === "Bank Transfer") {
+                    $("#edit-bank-name").val(d.payment_details?.bank_name || '');
+                    $("#edit-account-no").val(d.payment_details?.account_no || '');
+                    $("#edit-ifsc-code").val(d.payment_details?.ifsc_code || '');
+                    $("#edit-bank-fields").removeClass("d-none");
+                  } else if (d.payment_method === "UPI") {
+                    $("#edit-upi-id").val(d.payment_details?.upi_id || '');
+                    $("#edit-upi-fields").removeClass("d-none");
+                  } else if (d.payment_method === "Cheque") {
+                    $("#edit-cheque-no").val(d.payment_details?.cheque_no || '');
+                    $("#edit-cheque-name").val(d.payment_details?.cheque_name || '');
+                    $("#edit-cheque-fields").removeClass("d-none");
+                  } else if (d.payment_method === "Other") {
+                    $("#edit-other-details").val(d.payment_details?.description || '');
+                    $("#edit-other-fields").removeClass("d-none");
+                  }
                   $("#editDomainModal").modal("show");
                 });
               });
@@ -648,14 +775,31 @@ $("#dd-payment-details").html(paymentHtml);
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header table-primary text-white">
-        <h5 class="modal-title" id="domainDetailsModalLabel">Domain Details</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="domainDetailsModalLabel">
+            <i class="bx bx-folder-open"></i>
+            <span id="pd-header-domain-name" class="fw-bold text-primary text-uppercase"></span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+            aria-label="Close"></button>
       </div>
       <div class="modal-body px-4 py-3">
         <div class="table-responsive">
           <table class="table table-bordered table-striped align-middle">
             <tbody>
-              <!-- Domain & Subdomains -->
+
+              <!-- ==================== Project Association ==================== -->
+              <tr class="table-light">
+                <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Association</th>
+              </tr>
+              <tr>
+                <th>Associated Projects</th>
+                <td colspan="3" id="dd-projects"></td>
+              </tr>
+
+              <!-- ==================== Domain Details ==================== -->
+              <tr class="table-light">
+                <th colspan="4"><i class="bx bx-world me-2"></i> Domain Details</th>
+              </tr>
               <tr>
                 <th>Domain Name</th>
                 <td id="dd-domain-name" colspan="3"></td>
@@ -667,10 +811,9 @@ $("#dd-payment-details").html(paymentHtml);
                 <td id="dd-sub-domain2"></td>
               </tr>
               <tr>
-              <th>Registrar</th>
-              <td id="dd-registrar" colspan="3"></td>
+                <th>Registrar</th>
+                <td id="dd-registrar" colspan="3"></td>
               </tr>
-              <!-- Dates & Renewal -->
               <tr>
                 <th>Purchase Date</th>
                 <td id="dd-purchase-date"></td>
@@ -684,28 +827,41 @@ $("#dd-payment-details").html(paymentHtml);
                 <td><span id="dd-auto-renewal" class="badge"></span></td>
               </tr>
 
-              <!-- Charges & Payment -->
+              <!-- ==================== Payment Details ==================== -->
+              <tr class="table-light">
+                <th colspan="4"><i class="bx bx-credit-card me-2"></i> Payment Details</th>
+              </tr>
               <tr>
                 <th>Domain Charge (INR)</th>
                 <td id="dd-domain-charge"></td>
-                <th>Payment Status</th>
+                <th>Client Payment Status</th>
                 <td><span id="dd-payment-status" class="badge"></span></td>
               </tr>
               <tr>
-                <th>Payment Method</th>
-                <td id="dd-payment-method"></td>
                 <th>Payment Mode</th>
                 <td id="dd-payment-mode"></td>
+                <th>Payment Method</th>
+                <td id="dd-payment-method"></td>
               </tr>
               <tr>
                 <th>Payment Details</th>
                 <td colspan="3" id="dd-payment-details"></td>
               </tr>
 
-              <!-- Credentials & Security -->
+              <!-- ==================== Credentials & Security ==================== -->
+              <tr class="table-light">
+                <th colspan="4"><i class="bx bx-key me-2"></i> Credentials & Security</th>
+              </tr>
               <tr>
-                <th>Credentials</th>
-                <td colspan="3" id="dd-credentials"></td>
+                <th>Credentials User</th>
+                <td id="dd-credentials-user"></td>
+                <th>Credentials Pass</th>
+                <td>
+                  <span id="dd-credentials-pass" class="masked">********</span>
+                  <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="togglePassBtn">
+                    <i class="bx bx-show"></i>
+                  </button>
+                </td>
               </tr>
               <tr>
                 <th>SSL Installed</th>
@@ -713,22 +869,31 @@ $("#dd-payment-details").html(paymentHtml);
                 <th>SSL Expiry</th>
                 <td id="dd-ssl-expiry"></td>
               </tr>
+
+              <!-- ==================== DNS & Services ==================== -->
+              <tr class="table-light">
+                <th colspan="4"><i class="bx bx-network-chart me-2"></i> DNS & Services</th>
+              </tr>
               <tr>
                 <th>DNS Configured</th>
                 <td><span id="dd-dns-configured" class="badge"></span></td>
                 <th>Nameservers</th>
                 <td id="dd-nameservers"></td>
               </tr>
-
-              <!-- Linked Services & Notes -->
               <tr>
                 <th>Linked Services</th>
                 <td colspan="3" id="dd-linked-services"></td>
+              </tr>
+
+              <!-- ==================== Notes ==================== -->
+              <tr class="table-light">
+                <th colspan="4"><i class="bx bx-note me-2"></i> Notes</th>
               </tr>
               <tr>
                 <th>Notes</th>
                 <td colspan="3" id="dd-notes"></td>
               </tr>
+
             </tbody>
           </table>
         </div>
@@ -736,6 +901,8 @@ $("#dd-payment-details").html(paymentHtml);
     </div>
   </div>
 </div>
+
+
 
 
 
@@ -757,7 +924,12 @@ $("#dd-payment-details").html(paymentHtml);
           <div class="table-responsive">
             <table class="table table-bordered align-middle">
               <tbody>
-                  <tr>
+
+                <!-- ==================== Project Association ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Association</th>
+                </tr>
+                <tr>
                   <th>Associated Projects</th>
                   <td colspan="3">
                     <select class="form-select" name="projects" multiple>
@@ -765,11 +937,15 @@ $("#dd-payment-details").html(paymentHtml);
                       <option value="{{ project.id }}">{{ project.project_name }}</option>
                       {% endfor %}
                     </select>
-                    <small class="text-muted">Hold CTRL (Windows) or ⌘ (Mac) to select multiple projects. Leave empty if
-                      not linked to any project.</small>
+                    <small class="text-muted">Hold CTRL (Windows) or ⌘ (Mac) to select multiple. Leave empty if not
+                      linked.</small>
                   </td>
                 </tr>
 
+                <!-- ==================== Domain Details ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-world me-2"></i> Domain Details</th>
+                </tr>
                 <tr>
                   <th>Domain Name</th>
                   <td colspan="3">
@@ -778,36 +954,26 @@ $("#dd-payment-details").html(paymentHtml);
                 </tr>
                 <tr>
                   <th>Sub Domain 1</th>
-                  <td>
-                    <input type="text" class="form-control" name="subDomain1" placeholder="e.g. blog.example.com">
+                  <td><input type="text" class="form-control" name="subDomain1" placeholder="e.g. blog.example.com">
                   </td>
                   <th>Sub Domain 2</th>
-                  <td>
-                    <input type="text" class="form-control" name="subDomain2" placeholder="e.g. shop.example.com">
+                  <td><input type="text" class="form-control" name="subDomain2" placeholder="e.g. shop.example.com">
                   </td>
                 </tr>
                 <tr>
                   <th>Registrar</th>
                   <td colspan="3">
-                    <input type="text" class="form-control" name="registrar" placeholder="Enter registrar detail">
+                    <input type="text" class="form-control" name="registrar" placeholder="Enter registrar details">
                   </td>
                 </tr>
-
-
                 <tr>
                   <th>Purchase Date</th>
-                  <td>
-                    <!-- <input type="date" class="form-control" name="purchaseDate" required> -->
-                     <input type="text" class="form-control flat-date" name="purchaseDate" placeholder="Select purchase date">
-                  </td>
+                  <td><input type="text" class="form-control flat-date" name="purchaseDate"
+                      placeholder="Select purchase date"></td>
                   <th>Expiry Date</th>
-                  <td>
-                    <!-- <input type="date" class="form-control" name="expiryDate" required> -->
-                     <input type="text" class="form-control flat-date" name="expiryDate" placeholder="Select expiry date">
-                  </td>
+                  <td><input type="text" class="form-control flat-date" name="expiryDate"
+                      placeholder="Select expiry date"></td>
                 </tr>
-
-
                 <tr>
                   <th>Renewal Status</th>
                   <td>
@@ -828,11 +994,14 @@ $("#dd-payment-details").html(paymentHtml);
                   </td>
                 </tr>
 
+                <!-- ==================== Payment Details ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-credit-card me-2"></i> Payment Details</th>
+                </tr>
                 <tr>
                   <th>Domain Charge (INR)</th>
-                  <td>
-                    <input type="number" step="0.01" class="form-control" name="domainCharge" placeholder="e.g. 1200.00">
-                  </td>
+                  <td><input type="number" step="0.01" class="form-control" name="domainCharge"
+                      placeholder="e.g. 1200.00"></td>
                   <th>Client Payment Status</th>
                   <td>
                     <select class="form-select" name="clientPaymentStatus">
@@ -842,8 +1011,6 @@ $("#dd-payment-details").html(paymentHtml);
                     </select>
                   </td>
                 </tr>
-
-
                 <tr>
                   <th>Payment Mode</th>
                   <td>
@@ -853,7 +1020,6 @@ $("#dd-payment-details").html(paymentHtml);
                       <option value="Company">Company</option>
                     </select>
                   </td>
-
                   <th>Payment Method</th>
                   <td colspan="3">
                     <select class="form-select" name="paymentMethod" id="paymentMethod">
@@ -867,7 +1033,7 @@ $("#dd-payment-details").html(paymentHtml);
                   </td>
                 </tr>
 
-                <!-- Dynamic Fields -->
+                <!-- ==================== Dynamic Payment Fields ==================== -->
                 <tr id="bankFields" class="d-none">
                   <th>Bank Details</th>
                   <td colspan="3">
@@ -876,14 +1042,10 @@ $("#dd-payment-details").html(paymentHtml);
                     <input type="text" class="form-control" name="ifsc_code" placeholder="IFSC Code">
                   </td>
                 </tr>
-
                 <tr id="upiFields" class="d-none">
                   <th>UPI</th>
-                  <td colspan="3">
-                    <input type="text" class="form-control" name="upi_id" placeholder="UPI ID">
-                  </td>
+                  <td colspan="3"><input type="text" class="form-control" name="upi_id" placeholder="UPI ID"></td>
                 </tr>
-
                 <tr id="chequeFields" class="d-none">
                   <th>Cheque</th>
                   <td colspan="3">
@@ -891,25 +1053,23 @@ $("#dd-payment-details").html(paymentHtml);
                     <input type="text" class="form-control" name="cheque_name" placeholder="Cheque Holder Name">
                   </td>
                 </tr>
-
                 <tr id="otherFields" class="d-none">
                   <th>Other Payment Info</th>
-                  <td colspan="3">
-                    <input type="text" class="form-control" name="other_details" placeholder="Additional Info">
-                  </td>
+                  <td colspan="3"><input type="text" class="form-control" name="other_details"
+                      placeholder="Additional Info"></td>
                 </tr>
 
+                <!-- ==================== Credentials & SSL ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-key me-2"></i> Credentials & Security</th>
+                </tr>
                 <tr>
                   <th>Credentials User</th>
-                  <td>
-                    <input type="text" class="form-control" name="credentialsUser" placeholder="Enter username">
-                  </td>
+                  <td><input type="text" class="form-control" name="credentialsUser" placeholder="Enter username"></td>
                   <th>Credentials Pass</th>
-                  <td>
-                    <input type="password" class="form-control" name="credentialsPass" placeholder="Enter password">
+                  <td><input type="password" class="form-control" name="credentialsPass" placeholder="Enter password">
                   </td>
                 </tr>
-
                 <tr>
                   <th>SSL Installed</th>
                   <td>
@@ -919,43 +1079,44 @@ $("#dd-payment-details").html(paymentHtml);
                     </select>
                   </td>
                   <th>SSL Expiry</th>
-                  <td>
-                    <!-- <input type="date" class="form-control" name="sslExpiry"> -->
-                    <input type="text" class="form-control flat-date" name="sslExpiry" placeholder="Select ssl Expiry date">
-                  </td>
+                  <td><input type="text" class="form-control flat-date" name="sslExpiry"
+                      placeholder="Select SSL expiry date"></td>
                 </tr>
 
+                <!-- ==================== DNS & Services ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-network-chart me-2"></i> DNS & Services</th>
+                </tr>
                 <tr>
                   <th>DNS Configured</th>
                   <td>
-                    <select class="form-select" name="dnsConfigured" required>
+                    <select class="form-select" name="dnsConfigured">
                       <option value="True">Yes</option>
                       <option value="False">No</option>
                     </select>
                   </td>
                   <th>Nameservers</th>
-                  <td>
-                    <input type="text" class="form-control" name="nameservers"
-                      placeholder="e.g. ns1.example.com, ns2.example.com">
-                  </td>
+                  <td><input type="text" class="form-control" name="nameservers"
+                      placeholder="e.g. ns1.example.com, ns2.example.com"></td>
                 </tr>
-
                 <tr>
                   <th>Linked Services</th>
-                  <td colspan="3">
-                    <input type="text" class="form-control" name="linkedServices"
-                      placeholder="e.g. Email Hosting, Website Hosting">
-                  </td>
+                  <td colspan="3"><input type="text" class="form-control" name="linkedServices"
+                      placeholder="e.g. Email Hosting, Website Hosting"></td>
                 </tr>
-                
 
-
+                <!-- ==================== Notes ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-note me-2"></i> Notes</th>
+                </tr>
                 <tr>
                   <th>Notes</th>
                   <td colspan="3">
-                    <textarea class="form-control" name="notes" rows="2"></textarea>
+                    <textarea class="form-control" name="notes" rows="3"
+                      placeholder="Add any notes for this domain"></textarea>
                   </td>
                 </tr>
+
               </tbody>
             </table>
           </div>
@@ -965,33 +1126,31 @@ $("#dd-payment-details").html(paymentHtml);
           <button type="submit" class="btn btn-primary">Save Domain</button>
         </div>
       </form>
+
       <script>
         const methodSelect = document.getElementById("paymentMethod");
-const bankFields = document.getElementById("bankFields");
-const upiFields = document.getElementById("upiFields");
-const chequeFields = document.getElementById("chequeFields");
-const otherFields = document.getElementById("otherFields");
+        const bankFields = document.getElementById("bankFields");
+        const upiFields = document.getElementById("upiFields");
+        const chequeFields = document.getElementById("chequeFields");
+        const otherFields = document.getElementById("otherFields");
 
-methodSelect.addEventListener("change", function () {
-    // hide all first
-    bankFields.classList.add("d-none");
-    upiFields.classList.add("d-none");
-    chequeFields.classList.add("d-none");
-    otherFields.classList.add("d-none");
+        methodSelect.addEventListener("change", function () {
+          bankFields.classList.add("d-none");
+          upiFields.classList.add("d-none");
+          chequeFields.classList.add("d-none");
+          otherFields.classList.add("d-none");
 
-    if (this.value === "Bank Transfer") bankFields.classList.remove("d-none");
-    if (this.value === "UPI") upiFields.classList.remove("d-none");
-    if (this.value === "Cheque") chequeFields.classList.remove("d-none");
-    if (this.value === "Other") otherFields.classList.remove("d-none");
-});
-
+          if (this.value === "Bank Transfer") bankFields.classList.remove("d-none");
+          if (this.value === "UPI") upiFields.classList.remove("d-none");
+          if (this.value === "Cheque") chequeFields.classList.remove("d-none");
+          if (this.value === "Other") otherFields.classList.remove("d-none");
+        });
       </script>
     </div>
   </div>
 </div>
 
-<!-- update domain data modal -->
-<!-- Edit Domain Modal -->
+
 <!-- Edit Domain Modal -->
 <div class="modal fade" id="editDomainModal" tabindex="-1" aria-labelledby="editDomainModalLabel" aria-hidden="true"
   data-bs-backdrop="static" data-bs-keyboard="false">
@@ -1030,14 +1189,16 @@ methodSelect.addEventListener("change", function () {
                   <th>Domain Name</th>
                   <td colspan="3">
                     <input type="text" class="form-control" id="edit-domain-name" name="domainName"
-                      value="{{ domain.domain_name }}" required>
+                      value="{{ domain.domain_name }}" placeholder="Enter domain name">
                   </td>
                 </tr>
                 <tr>
                   <th>Sub Domain 1</th>
-                  <td><input type="text" class="form-control" id="edit-subdomain1" name="subDomain1" value="{{ domain.sub_domain1 }}"></td>
+                  <td><input type="text" class="form-control" id="edit-subdomain1" name="subDomain1"
+                      value="{{ domain.sub_domain1 }}" placeholder="Enter Sub Domain 1"></td>
                   <th>Sub Domain 2</th>
-                  <td><input type="text" class="form-control" id="edit-subdomain2" name="subDomain2" value="{{ domain.sub_domain2 }}"></td>
+                  <td><input type="text" class="form-control" id="edit-subdomain2" name="subDomain2"
+                      value="{{ domain.sub_domain2 }}" placeholder="Enter Sub Domain 2"></td>
                 </tr>
 
                 <!-- Registrar & Dates -->
@@ -1045,7 +1206,7 @@ methodSelect.addEventListener("change", function () {
                   <th>Registrar</th>
                   <td colspan="3">
                     <input type="text" class="form-control" id="edit-registrar" name="registrar"
-                      value="{{ domain.registrar }}">
+                      value="{{ domain.registrar }}" placeholder="Enter registrar details">
                   </td>
                 </tr>
                 <tr>
@@ -1062,14 +1223,18 @@ methodSelect.addEventListener("change", function () {
                   <th>Renewal Status</th>
                   <td>
                     <select class="form-select" id="edit-renewal-status" name="renewalStatus">
+                      <option value="">-- Select Renewal Status --</option>
                       <option value="Active" {% if domain.renewal_status == 'Active' %}selected{% endif %}>Active</option>
-                      <option value="Expired" {% if domain.renewal_status == 'Expired' %}selected{% endif %}>Expired</option>
-                      <option value="Pending" {% if domain.renewal_status == 'Pending' %}selected{% endif %}>Pending</option>
+                      <option value="Expired" {% if domain.renewal_status == 'Expired' %}selected{% endif %}>Expired
+                      </option>
+                      <option value="Pending" {% if domain.renewal_status == 'Pending' %}selected{% endif %}>Pending
+                      </option>
                     </select>
                   </td>
                   <th>Auto Renewal</th>
                   <td>
                     <select class="form-select" id="edit-auto-renewal" name="autoRenewal">
+                      <option value="">-- Select Auto Renewal --</option>
                       <option value="On" {% if domain.auto_renewal == 'On' %}selected{% endif %}>On</option>
                       <option value="Off" {% if domain.auto_renewal == 'Off' %}selected{% endif %}>Off</option>
                     </select>
@@ -1079,12 +1244,16 @@ methodSelect.addEventListener("change", function () {
                 <!-- Domain Charge & Client Payment Status -->
                 <tr>
                   <th>Domain Charge (INR)</th>
-                  <td><input type="number" step="0.01" class="form-control" id="edit-domain-charge" name="domainCharge" value="{{ domain.domain_charge }}"></td>
+                  <td><input type="number" step="0.01" class="form-control" id="edit-domain-charge" name="domainCharge"
+                      value="{{ domain.domain_charge }}" placeholder="Enter domain charge"></td>
                   <th>Client Payment Status</th>
                   <td>
                     <select class="form-select" id="edit-client-payment-status" name="clientPaymentStatus">
-                      <option value="Pending" {% if domain.client_payment_status == 'Pending' %}selected{% endif %}>Pending</option>
-                      <option value="Received" {% if domain.client_payment_status == 'Received' %}selected{% endif %}>Received</option>
+                      <option value="">-- Select Payment Status --</option>
+                      <option value="Pending" {% if domain.client_payment_status == 'Pending' %}selected{% endif %}>
+                        Pending</option>
+                      <option value="Received" {% if domain.client_payment_status == 'Received' %}selected{% endif %}>
+                        Received</option>
                     </select>
                   </td>
                 </tr>
@@ -1094,15 +1263,18 @@ methodSelect.addEventListener("change", function () {
                   <th>Payment Mode</th>
                   <td>
                     <select class="form-select" id="edit-payment-mode" name="paymentMode">
+                      <option value="">-- Select Payment Mode --</option>
                       <option value="Client" {% if domain.payment_mode == 'Client' %}selected{% endif %}>Client</option>
-                      <option value="Company" {% if domain.payment_mode == 'Company' %}selected{% endif %}>Company</option>
+                      <option value="Company" {% if domain.payment_mode == 'Company' %}selected{% endif %}>Company
+                      </option>
                     </select>
                   </td>
                   <th>Payment Method</th>
                   <td colspan="3">
                     <select class="form-select" id="edit-payment-method" name="paymentMethod">
                       <option value="">-- Select Method --</option>
-                      <option value="Bank Transfer" {% if domain.payment_method == 'Bank Transfer' %}selected{% endif %}>Bank Transfer</option>
+                      <option value="Bank Transfer" {% if domain.payment_method == 'Bank Transfer' %}selected{% endif %}>
+                        Bank Transfer</option>
                       <option value="UPI" {% if domain.payment_method == 'UPI' %}selected{% endif %}>UPI</option>
                       <option value="Cash" {% if domain.payment_method == 'Cash' %}selected{% endif %}>Cash</option>
                       <option value="Cheque" {% if domain.payment_method == 'Cheque' %}selected{% endif %}>Cheque</option>
@@ -1115,36 +1287,45 @@ methodSelect.addEventListener("change", function () {
                 <tr id="edit-bank-fields" class="edit-payment-extra d-none">
                   <th>Bank Details</th>
                   <td colspan="3">
-                    <input type="text" class="form-control mb-2" id="edit-bank-name" name="bank_name" placeholder="Bank Name" value="{{ domain.bank_name }}">
-                    <input type="text" class="form-control mb-2" id="edit-account-no" name="account_no" placeholder="Account Number" value="{{ domain.account_no }}">
-                    <input type="text" class="form-control" id="edit-ifsc-code" name="ifsc_code" placeholder="IFSC Code" value="{{ domain.ifsc_code }}">
+                    <input type="text" class="form-control mb-2" id="edit-bank-name" name="bank_name"
+                      placeholder="Bank Name" value="{{ domain.bank_name }}">
+                    <input type="text" class="form-control mb-2" id="edit-account-no" name="account_no"
+                      placeholder="Account Number" value="{{ domain.account_no }}">
+                    <input type="text" class="form-control" id="edit-ifsc-code" name="ifsc_code" placeholder="IFSC Code"
+                      value="{{ domain.ifsc_code }}">
                   </td>
                 </tr>
 
                 <tr id="edit-upi-fields" class="edit-payment-extra d-none">
                   <th>UPI</th>
-                  <td colspan="3"><input type="text" class="form-control" id="edit-upi-id" name="upi_id" placeholder="UPI ID" value="{{ domain.upi_id }}"></td>
+                  <td colspan="3"><input type="text" class="form-control" id="edit-upi-id" name="upi_id"
+                      placeholder="UPI ID" value="{{ domain.upi_id }}"></td>
                 </tr>
 
                 <tr id="edit-cheque-fields" class="edit-payment-extra d-none">
                   <th>Cheque</th>
                   <td colspan="3">
-                    <input type="text" class="form-control mb-2" id="edit-cheque-no" name="cheque_no" placeholder="Cheque Number" value="{{ domain.cheque_no }}">
-                    <input type="text" class="form-control" id="edit-cheque-name" name="cheque_name" placeholder="Cheque Holder Name" value="{{ domain.cheque_name }}">
+                    <input type="text" class="form-control mb-2" id="edit-cheque-no" name="cheque_no"
+                      placeholder="Cheque Number" value="{{ domain.cheque_no }}">
+                    <input type="text" class="form-control" id="edit-cheque-name" name="cheque_name"
+                      placeholder="Cheque Holder Name" value="{{ domain.cheque_name }}">
                   </td>
                 </tr>
 
                 <tr id="edit-other-fields" class="edit-payment-extra d-none">
                   <th>Other Payment Info</th>
-                  <td colspan="3"><input type="text" class="form-control" id="edit-other-details" name="other_details" placeholder="Additional Info" value="{{ domain.other_details }}"></td>
+                  <td colspan="3"><input type="text" class="form-control" id="edit-other-details" name="other_details"
+                      placeholder="Additional Info" value="{{ domain.other_details }}"></td>
                 </tr>
 
                 <!-- Credentials -->
                 <tr>
                   <th>Credentials User</th>
-                  <td><input type="text" class="form-control" id="edit-credentials-user" name="credentialsUser" value="{{ domain.credentials_user }}"></td>
+                  <td><input type="text" class="form-control" id="edit-credentials-user" name="credentialsUser"
+                      value="{{ domain.credentials_user }}" placeholder="Enter username"></td>
                   <th>Credentials Pass</th>
-                  <td><input type="password" class="form-control" id="edit-credentials-pass" name="credentialsPass" value="{{ domain.credentials_pass }}"></td>
+                  <td><input type="password" class="form-control" id="edit-credentials-pass" name="credentialsPass"
+                      value="{{ domain.credentials_pass }}" placeholder="Enter password"></td>
                 </tr>
 
                 <!-- SSL & DNS -->
@@ -1152,36 +1333,43 @@ methodSelect.addEventListener("change", function () {
                   <th>SSL Installed</th>
                   <td>
                     <select class="form-select" id="edit-ssl-installed" name="sslInstalled">
+                      <option value="">-- Select SSL Installed --</option>
                       <option value="True" {% if domain.ssl_installed %}selected{% endif %}>Yes</option>
                       <option value="False" {% if not domain.ssl_installed %}selected{% endif %}>No</option>
                     </select>
                   </td>
                   <th>SSL Expiry</th>
-                  <td><input type="text" class="form-control flat-date" id="edit-ssl-expiry" name="sslExpiry" placeholder="Select SSL expiry date" value="{{ domain.ssl_expiry }}"></td>
+                  <td><input type="text" class="form-control flat-date" id="edit-ssl-expiry" name="sslExpiry"
+                      placeholder="Select SSL expiry date" value="{{ domain.ssl_expiry }}"></td>
                 </tr>
 
                 <tr>
                   <th>DNS Configured</th>
                   <td>
                     <select class="form-select" name="dnsConfigured" id="edit-dns-configured">
+                      <option value="">-- Select DNS Configured --</option>
                       <option value="True" {% if domain.dns_configured %}selected{% endif %}>Yes</option>
                       <option value="False" {% if not domain.dns_configured %}selected{% endif %}>No</option>
                     </select>
                   </td>
                   <th>Nameservers</th>
-                  <td><input type="text" class="form-control" id="edit-nameservers" name="nameservers" value="{{ domain.nameservers }}"></td>
+                  <td><input type="text" class="form-control" id="edit-nameservers" name="nameservers"
+                      value="{{ domain.nameservers }}" placeholder="Enter Nameservers"></td>
                 </tr>
 
                 <!-- Linked Services -->
                 <tr>
                   <th>Linked Services</th>
-                  <td colspan="3"><input type="text" class="form-control" id="edit-linked-services" name="linkedServices" value="{{ domain.linked_services }}"></td>
+                  <td colspan="3"><input type="text" class="form-control" id="edit-linked-services"
+                      name="linkedServices" value="{{ domain.linked_services }}" placeholder="Enter linked services">
+                  </td>
                 </tr>
 
                 <!-- Notes -->
                 <tr>
                   <th>Notes</th>
-                  <td colspan="3"><textarea class="form-control" id="edit-notes" name="notes" rows="2">{{ domain.notes }}</textarea></td>
+                  <td colspan="3"><textarea class="form-control" id="edit-notes" name="notes" rows="2"
+                      placeholder="Add any notes for this domain">{{ domain.notes }}</textarea></td>
                 </tr>
 
               </tbody>
@@ -1207,8 +1395,6 @@ methodSelect.addEventListener("change", function () {
               }
 
               editMethodSelect.addEventListener("change", toggleEditPaymentFields);
-
-              // Initialize on load
               toggleEditPaymentFields();
             </script>
 
@@ -1224,8 +1410,10 @@ methodSelect.addEventListener("change", function () {
 </div>
 
 
+
 <!-- Delete Domain Confirmation Modal -->
-<div class="modal fade" id="deleteDomainModal" tabindex="-1" aria-labelledby="deleteDomainLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+<div class="modal fade" id="deleteDomainModal" tabindex="-1" aria-labelledby="deleteDomainLabel" aria-hidden="true"
+  data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content text-center">
       <div class="modal-header border-0">

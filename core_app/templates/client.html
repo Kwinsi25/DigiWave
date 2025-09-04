@@ -203,73 +203,86 @@
 </div>
 
 <!-- Add Client Modal -->
-<div class="modal fade" id="addClientModal" tabindex="-1"  data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+<div class="modal fade" id="addClientModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header table-primary text-white">
-        <h5 class="modal-title"><i class="bx bx-user-plus me-2"></i> Add Client</h5>
+        <h5 class="modal-title"><i class="bx bx-user-plus me-2"></i> Add New Client</h5>
         <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
+
       <form id="addClientForm" method="POST" action="{% url 'add_client' %}">
         {% csrf_token %}
-        <div class="modal-body">
-          <table class="table table-bordered">
-            <tbody>
-              <!-- Basic Info -->
-              <tr>
-                <th>Name</span></th>
-                <td><input class="form-control" name="name" maxlength="255" required
-                    placeholder="Full name of the client or company"></td>
-              </tr>
-              <tr>
-                <th>Email</span></th>
-                <td><input type="email" class="form-control" name="email" required placeholder="client@example.com">
-                </td>
-              </tr>
-              <tr>
-                <th>Phone</th>
-                <td><input class="form-control" name="phone" maxlength="20" placeholder="+91 9876543210"></td>
-              </tr>
+        <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <tbody>
 
-              <!-- Address -->
-              <tr>
-                <th>Address</th>
-                <td><textarea class="form-control" name="address" rows="2" placeholder="Street / Locality"></textarea>
-                </td>
-              </tr>
-              <tr>
-                <th>City</th>
-                <td><input class="form-control" name="city" maxlength="100"></td>
-              </tr>
-              <tr>
-                <th>State</th>
-                <td><input class="form-control" name="state" maxlength="100"></td>
-              </tr>
-              <tr>
-                <th>Country</th>
-                <td><input class="form-control" name="country" maxlength="100"></td>
-              </tr>
-              <tr>
-                <th>Pincode</th>
-                <td><input class="form-control" name="pincode" maxlength="15"></td>
-              </tr>
+                <!-- ==================== Basic Info ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-user me-2"></i> Basic Information</th>
+                </tr>
+                <tr>
+                  <th>Name</th>
+                  <td><input type="text" class="form-control" name="name" maxlength="255"
+                      placeholder="Enter client or company name"></td>
+                  <th>Email</th>
+                  <td><input type="email" class="form-control" name="email"
+                      placeholder="client@example.com"></td>
+                </tr>
+                <tr>
+                  <th>Phone</th>
+                  <td><input type="text" class="form-control" name="phone" maxlength="20"
+                      placeholder="+91 9876543210"></td>
+                  <th>Website</th>
+                  <td><input type="url" class="form-control" name="website"
+                      placeholder="https://example.com"></td>
+                </tr>
 
-              <!-- Extra Info -->
-              <tr>
-                <th>Company Name</th>
-                <td><input class="form-control" name="company_name" maxlength="255"></td>
-              </tr>
-              <tr>
-                <th>GST Number</th>
-                <td><input class="form-control" name="gst_number" maxlength="15"></td>
-              </tr>
-              <tr>
-                <th>Website</th>
-                <td><input type="url" class="form-control" name="website" placeholder="https://example.com"></td>
-              </tr>
-            </tbody>
-          </table>
+                <!-- ==================== Address ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-map me-2"></i> Address</th>
+                </tr>
+                <tr>
+                  <th>Street / Locality</th>
+                  <td colspan="3"><textarea class="form-control" name="address" rows="2"
+                      placeholder="Enter full address"></textarea></td>
+                </tr>
+                <tr>
+                  <th>City</th>
+                  <td><input type="text" class="form-control" name="city" maxlength="100"
+                      placeholder="Enter city"></td>
+                  <th>State</th>
+                  <td><input type="text" class="form-control" name="state" maxlength="100"
+                      placeholder="Enter state"></td>
+                </tr>
+                <tr>
+                  <th>Country</th>
+                  <td><input type="text" class="form-control" name="country" maxlength="100"
+                      placeholder="Enter country"></td>
+                  <th>Pincode</th>
+                  <td><input type="text" class="form-control" name="pincode" maxlength="15"
+                      placeholder="Enter postal code"></td>
+                </tr>
+
+                <!-- ==================== Company Details ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-buildings me-2"></i> Company Details</th>
+                </tr>
+                <tr>
+                  <th>Company Name</th>
+                  <td><input type="text" class="form-control" name="company_name" maxlength="255"
+                      placeholder="Enter company name"></td>
+                  <th>GST Number</th>
+                  <td><input type="text" class="form-control" name="gst_number" maxlength="15"
+                      placeholder="Enter GST number"></td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
         </div>
+
         <div class="modal-footer">
           <button class="btn btn-primary" type="submit">Save Client</button>
         </div>
@@ -279,160 +292,177 @@
 </div>
 
 
+
+
 <!-- View Client Modal -->
-<div class="modal fade" id="viewClientModal" tabindex="-1" aria-hidden="true"  data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+<div class="modal fade" id="viewClientModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header table-info text-white">
-        <h5 class="modal-title"><i class="bx bx-user me-2"></i> Client Details</h5>
+        
+        <h5 class="modal-title">
+                        <i class="bx bx-folder-open"></i>
+                        <span id="view-header-client-name" class="fw-bold text-primary text-uppercase"></span>
+                    </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body">
-        <table class="table table-bordered">
-          <tbody>
-            <!-- Basic Info -->
-            <tr>
-              <th>Name</th>
-              <td id="view-name"></td>
-            </tr>
-            <tr>
-              <th>Email</th>
-              <td id="view-email"></td>
-            </tr>
-            <tr>
-              <th>Phone</th>
-              <td id="view-phone"></td>
-            </tr>
 
-            <!-- Address -->
-            <tr>
-              <th>Address</th>
-              <td id="view-address"></td>
-            </tr>
-            <tr>
-              <th>City</th>
-              <td id="view-city"></td>
-            </tr>
-            <tr>
-              <th>State</th>
-              <td id="view-state"></td>
-            </tr>
-            <tr>
-              <th>Country</th>
-              <td id="view-country"></td>
-            </tr>
-            <tr>
-              <th>Pincode</th>
-              <td id="view-pincode"></td>
-            </tr>
+      <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <tbody>
 
-            <!-- Extra Info -->
-            <tr>
-              <th>Company Name</th>
-              <td id="view-company-name"></td>
-            </tr>
-            <tr>
-              <th>GST Number</th>
-              <td id="view-gst"></td>
-            </tr>
-            <tr>
-              <th>Website</th>
-              <td><a id="view-website" href="#" target="_blank"></a></td>
-            </tr>
+              <!-- ==================== Basic Info ==================== -->
+              <tr class="table-light">
+                <th colspan="4"><i class="bx bx-user me-2"></i> Basic Information</th>
+              </tr>
+              <tr>
+                <th>Name</th>
+                <td id="view-name"></td>
+                <th>Email</th>
+                <td id="view-email"></td>
+              </tr>
+              <tr>
+                <th>Phone</th>
+                <td id="view-phone"></td>
+                <th>Website</th>
+                <td><a id="view-website" href="#" target="_blank"></a></td>
+              </tr>
 
-            <!-- System Info -->
-            <tr>
-              <th>Created At</th>
-              <td id="view-created"></td>
-            </tr>
-            <tr>
-              <th>Updated At</th>
-              <td id="view-updated"></td>
-            </tr>
-          </tbody>
-        </table>
+              <!-- ==================== Address ==================== -->
+              <tr class="table-light">
+                <th colspan="4"><i class="bx bx-map me-2"></i> Address</th>
+              </tr>
+              <tr>
+                <th>Street / Locality</th>
+                <td colspan="3" id="view-address"></td>
+              </tr>
+              <tr>
+                <th>City</th>
+                <td id="view-city"></td>
+                <th>State</th>
+                <td id="view-state"></td>
+              </tr>
+              <tr>
+                <th>Country</th>
+                <td id="view-country"></td>
+                <th>Pincode</th>
+                <td id="view-pincode"></td>
+              </tr>
 
+              <!-- ==================== Company Details ==================== -->
+              <tr class="table-light">
+                <th colspan="4"><i class="bx bx-buildings me-2"></i> Company Details</th>
+              </tr>
+              <tr>
+                <th>Company Name</th>
+                <td id="view-company-name"></td>
+                <th>GST Number</th>
+                <td id="view-gst"></td>
+              </tr>
 
+              
+            </tbody>
+          </table>
+        </div>
       </div>
+
     </div>
   </div>
 </div>
 
 
 <!-- Edit Client Modal -->
-<div class="modal fade" id="editClientModal" tabindex="-1"  data-bs-backdrop="static" data-bs-keyboard="false">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+<div class="modal fade" id="editClientModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header table-warning text-dark">
         <h5 class="modal-title"><i class="bx bx-edit-alt me-2"></i> Edit Client</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
+
       <form id="editClientForm" method="POST" action="{% url 'update_client' %}">
         {% csrf_token %}
         <input type="hidden" name="id" id="edit-client-id">
-        <div class="modal-body">
-          <table class="table table-bordered">
-            <tbody>
-              <tr>
-                <th>Name</th>
-                <td><input class="form-control" name="name" id="edit-name" required
-                    placeholder="Full name of the client or company"></td>
-              </tr>
-              <tr>
-                <th>Email</th>
-                <td><input type="email" class="form-control" name="email" id="edit-email" required
-                    placeholder="client@example.com"></td>
-              </tr>
-              <tr>
-                <th>Phone</th>
-                <td><input class="form-control" name="phone" id="edit-phone" placeholder="+91 9876543210"></td>
-              </tr>
-              <tr>
-                <th>Address</th>
-                <td><textarea class="form-control" name="address" id="edit-address" rows="2"
-                    placeholder="Street / Locality"></textarea></td>
-              </tr>
-              <tr>
-                <th>City</th>
-                <td><input class="form-control" name="city" id="edit-city"></td>
-              </tr>
-              <tr>
-                <th>State</th>
-                <td><input class="form-control" name="state" id="edit-state"></td>
-              </tr>
-              <tr>
-                <th>Country</th>
-                <td><input class="form-control" name="country" id="edit-country"></td>
-              </tr>
-              <tr>
-                <th>Pincode</th>
-                <td><input class="form-control" name="pincode" id="edit-pincode"></td>
-              </tr>
-              <tr>
-                <th>Company Name</th>
-                <td><input class="form-control" name="company_name" id="edit-company_name"></td>
-              </tr>
-              <tr>
-                <th>GST Number</th>
-                <td><input class="form-control" name="gst_number" id="edit-gst_number"></td>
-              </tr>
-              <tr>
-                <th>Website</th>
-                <td><input type="url" class="form-control" name="website" id="edit-website"
-                    placeholder="https://example.com"></td>
-              </tr>
-            </tbody>
-          </table>
+
+        <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <tbody>
+
+                <!-- ==================== Basic Info ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-user me-2"></i> Basic Information</th>
+                </tr>
+                <tr>
+                  <th>Name</th>
+                  <td><input type="text" class="form-control" name="name" id="edit-name" maxlength="255"
+                      placeholder="Enter client or company name"></td>
+                  <th>Email</th>
+                  <td><input type="email" class="form-control" name="email" id="edit-email"
+                      placeholder="client@example.com"></td>
+                </tr>
+                <tr>
+                  <th>Phone</th>
+                  <td><input type="text" class="form-control" name="phone" id="edit-phone" maxlength="20"
+                      placeholder="+91 9876543210"></td>
+                  <th>Website</th>
+                  <td><input type="url" class="form-control" name="website" id="edit-website"
+                      placeholder="https://example.com"></td>
+                </tr>
+
+                <!-- ==================== Address ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-map me-2"></i> Address</th>
+                </tr>
+                <tr>
+                  <th>Street / Locality</th>
+                  <td colspan="3"><textarea class="form-control" name="address" id="edit-address" rows="2"
+                      placeholder="Enter full address"></textarea></td>
+                </tr>
+                <tr>
+                  <th>City</th>
+                  <td><input type="text" class="form-control" name="city" id="edit-city" maxlength="100"
+                      placeholder="Enter city"></td>
+                  <th>State</th>
+                  <td><input type="text" class="form-control" name="state" id="edit-state" maxlength="100"
+                      placeholder="Enter state"></td>
+                </tr>
+                <tr>
+                  <th>Country</th>
+                  <td><input type="text" class="form-control" name="country" id="edit-country" maxlength="100"
+                      placeholder="Enter country"></td>
+                  <th>Pincode</th>
+                  <td><input type="text" class="form-control" name="pincode" id="edit-pincode" maxlength="15"
+                      placeholder="Enter postal code"></td>
+                </tr>
+
+                <!-- ==================== Company Details ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-buildings me-2"></i> Company Details</th>
+                </tr>
+                <tr>
+                  <th>Company Name</th>
+                  <td><input type="text" class="form-control" name="company_name" id="edit-company_name" maxlength="255"
+                      placeholder="Enter company name"></td>
+                  <th>GST Number</th>
+                  <td><input type="text" class="form-control" name="gst_number" id="edit-gst_number" maxlength="15"
+                      placeholder="Enter GST number"></td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
         </div>
+
         <div class="modal-footer">
           <button class="btn btn-primary" type="submit">Update Client</button>
         </div>
       </form>
-
-
     </div>
   </div>
 </div>
+
 
 
 <!-- Delete Client Modal -->
@@ -522,7 +552,7 @@
             const el = document.getElementById(id);
             if (el) el.textContent = value || "-";
           };
-
+          setText("view-header-client-name",data.name);
           setText("view-name", data.name);
           setText("view-email", data.email);
           setText("view-phone", data.phone);
@@ -625,6 +655,83 @@
       }, 3000);
     }
 
+    // add client
+
+document.getElementById("addClientForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const form = new FormData(this);
+
+    
+    fetch("{% url 'add_client' %}", {
+        method: "POST",
+        body: form
+    })
+    .then(res => res.json())
+    .then(data => {
+      
+        if (data.success) {
+            showToast("Client added successfully!", "success");
+
+            // Close modal
+            const modalEl = document.getElementById("addClientModal");
+            bootstrap.Modal.getInstance(modalEl).hide();
+
+            // Reset form
+            document.getElementById("addClientForm").reset();
+
+            // Refresh data (optional: table reload instead of full page reload)
+            setTimeout(() => window.location.reload(), 1000);
+
+        } else {
+            showToast(data.error || "Failed to add client!", "danger");
+        }
+    })
+    .catch(() => {
+       
+        showToast("Error occurred while adding client!", "danger");
+    });
+});
+
+// edit client
+document.getElementById("editClientForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const form = this;
+  const formData = new FormData(form);
+
+  fetch(form.action, {
+    method: "POST",
+    body: formData,
+    headers: {
+      "X-Requested-With": "XMLHttpRequest",
+      "X-CSRFToken": formData.get("csrfmiddlewaretoken"),
+    },
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        // ✅ Close modal
+        bootstrap.Modal.getInstance(document.getElementById("editClientModal")).hide();
+
+        // ✅ Show toast
+        showToast("Client updated successfully!","success" );
+
+        // ✅ Refresh list/table if needed
+        if (typeof refreshClientTable === "function") {
+          refreshClientTable();
+        } else {
+          setTimeout(() => location.reload(), 1000);
+        }
+      } else {
+        // ❌ Show errors
+        showToast(data.error || "Failed to update client.","danger");
+      }
+    })
+    .catch(err => {
+      console.error("Update failed:", err);
+      showToast("An error occurred while updating client.","danger");
+    });
+});
 
     
 

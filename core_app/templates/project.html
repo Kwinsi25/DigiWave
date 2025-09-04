@@ -360,343 +360,342 @@
 
 
 
-    <!-- Add Project Modal -->
-    <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true"
-        data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header table-primary text-white">
-                    <h5 class="modal-title" id="addProjectModalLabel">
-                        <i class="bx bx-plus me-2"></i> Add New Project
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
+        <!-- Add Project Modal -->
+        <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true"
+            data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header table-primary text-white">
+                        <h5 class="modal-title" id="addProjectModalLabel">
+                            <i class="bx bx-plus me-2"></i> Add New Project
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
 
-                <form id="projectForm" method="POST" action="{% url 'save_project' %}">
-                    {% csrf_token %}
-                    <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle">
-                                <tbody>
+                    <form id="projectForm" method="POST" action="{% url 'save_project' %}">
+                        {% csrf_token %}
+                        <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle">
+                                    <tbody>
 
-                                    <!-- ==================== Quotation Details ==================== -->
-                                    <tr class="table-light">
-    <th colspan="4"><i class="bx bx-file me-2"></i> Quotation Details</th>
-</tr>
+                                        <!-- ==================== Quotation Details ==================== -->
+                                        <tr class="table-light">
+        <th colspan="4"><i class="bx bx-file me-2"></i> Quotation Details</th>
+    </tr>
 
-                                    <tr>
-                                        <th>Quotation</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="quotation" id="quotationSelect">
-                                                <option value="">-- Select Quotation --</option>
-                                                {% for q in quotations %}
-                                                <option value="{{ q.id }}">{{ q.quotation_no }} - {{ q.client_name }}
-                                                </option>
-                                                {% endfor %}
-                                            </select>
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Inquiry Date</th>
-                                        <td>
-                                            <input type="text" class="form-control flat-date" name="inquiry_date"
-                                                placeholder="Select inquiry date">
-                                            
-                                        </td>
-                                        <th>Lead Source</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="lead_source"
-                                                placeholder="Enter lead source">
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Quotation Sent</th>
-                                        <td>
-                                            <select class="form-select" name="quotation_sent">
-                                                <option value="">-- Select --</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            
-                                        </td>
-                                        <th>Demo Given</th>
-                                        <td>
-                                            <select class="form-select" name="demo_given">
-                                                <option value="">-- Select --</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Quotation Amount (₹)</th>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control"
-                                                name="quotation_amount" placeholder="Enter quotation amount">
-                                            
-                                        </td>
-                                        <th>Approval Amount (₹)</th>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control" name="approval_amount"
-                                                placeholder="Enter approval amount">
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Client Industry</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="client_industry"
-                                                placeholder="Enter client industry">
-                                            
-                                        </td>
-                                        <th>Client</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="client_name"
-                                                placeholder="Enter client name">
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Contract Signed</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="contract_signed">
-                                                <option value="">-- Select --</option>
-                                                <option value="Yes">Yes</option>
-                                                <option value="No">No</option>
-                                            </select>
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <!-- ==================== Project Details ==================== -->
-                                   <tr class="table-light">
-    <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Details</th>
-</tr>
-
-                                    <tr>
-                                        <th>Project Name</th>
-                                        <td>
-                                            <input type="text" class="form-control" name="project_name"
-                                                placeholder="Enter project name">
-                                            
-                                        </td>
-                                        <th>Project Type</th>
-                                        <td>
-                                            <select class="form-select" name="project_type" required>
-                                                <option value="">-- Select Project Type --</option>
-                                                <option value="Fixed">Fix</option>
-                                                <option value="Salary">Salary</option>
-                                            </select>
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Start Date</th>
-                                        <td>
-                                            <input type="text" class="form-control flat-date" name="start_date"
-                                                placeholder="Select start date">
-                                            
-                                        </td>
-                                        <th>Deadline</th>
-                                        <td>
-                                            <input type="text" class="form-control flat-date" name="deadline"
-                                                placeholder="Select deadline date">
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Technologies</th>
-                                        <td>
-                                            <select class="form-select" name="technologies" multiple>
-                                                {% for tech in technologies %}
-                                                <option value="{{ tech.id }}">{{ tech.name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                            <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
-                                                multiple</small>
-                                            
-                                        </td>
-                                        <th>App Mode</th>
-                                        <td>
-                                            <select class="form-select" name="app_mode">
-                                                <option value="">-- Select App Mode --</option>
-                                                {% for mode in app_modes %}
-                                                <option value="{{ mode.id }}">{{ mode.name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Status</th>
-                                        <td>
-                                            <select class="form-select" name="status">
-                                                <option value="">-- Select --</option>
-                                                <option value="Ongoing">Ongoing</option>
-                                                <option value="Completed">Completed</option>
-                                                <option value="On Hold">On Hold</option>
-                                                <option value="Cancelled">Cancelled</option>
-                                            </select>
-                                            
-                                        </td>
-                                        <th>Team Members</th>
-                                        <td>
-                                            <select class="form-select" name="team_members" multiple>
-                                                {% for user in users %}
-                                                <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}
-                                                </option>
-                                                {% endfor %}
-                                            </select>
-                                            <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
-                                                multiple</small>
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <!-- Payment, Links, Financials, Free Service -->
-                                    <tr>
-                                        <th>Payment (₹)</th>
-                                        <td>
-                                            <input type="number" class="form-control" name="payment_value"
-                                                placeholder="Enter total payment value" min="0">
-                                            
-                                        </td>
-                                        <th>Payment Status</th>
-                                        <td>
-                                            <select class="form-select" name="payment_status">
-                                                <option value="Pending">Pending</option>
-                                                <option value="Advanced">Advanced</option>
-                                                <option value="Paid">Paid</option>
-                                            </select>
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Live Link</th>
-                                        <td>
-                                            <input type="url" class="form-control" name="live_link"
-                                                placeholder="https://example.com">
-                                            
-                                        </td>
-                                        <th>Postman Collection</th>
-                                        <td>
-                                            <input type="url" class="form-control" name="postman_collection"
-                                                placeholder="https://example.com/postman.json">
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Data Folder</th>
-                                        <td>
-                                            <input type="url" class="form-control" name="data_folder"
-                                                placeholder="https://example.com/data/">
-                                            
-                                        </td>
-                                        <th>Other Link</th>
-                                        <td>
-                                            <input type="url" class="form-control" name="other_link"
-                                                placeholder="https://example.com/other">
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Expense (₹)</th>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control" name="expense"
-                                                placeholder="Enter expense amount">
-                                            
-                                        </td>
-                                        <th>Developer Charge (₹)</th>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control"
-                                                name="developer_charge" placeholder="Enter developer charge">
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Server Charge (₹)</th>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control" name="server_charge"
-                                                placeholder="Enter server charge">
-                                            
-                                        </td>
-                                        <th>3rd Party API Charge (₹)</th>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control"
-                                                name="third_party_api_charge" placeholder="Enter 3rd party API charge">
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Mediator Charge (₹)</th>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control" name="mediator_charge"
-                                                placeholder="Enter mediator charge">
-                                            
-                                        </td>
-                                        <th>Income (₹)</th>
-                                        <td>
-                                            <input type="number" class="form-control" name="income"
-                                                placeholder="Enter income">
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Free Service</th>
-                                        <td colspan="3">
-                                            <textarea class="form-control" name="free_service" rows="2"
-                                                placeholder="Describe free services included"></textarea>
-                                            
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Completed Date</th>
-                                        <td>
-                                            <input type="text" class="form-control flat-date" name="completed_date"
-                                                placeholder="Select completed date">
-                                            
-                                        </td>
-                                        <td colspan="2"></td>
-                                    </tr>
                                         <tr>
-    <th>Notes</th>
-    <td colspan="3">
-        <textarea class="form-control" name="notes" rows="3" placeholder="Add any notes for this project"></textarea>
-    </td>
-</tr>
+                                            <th>Quotation</th>
+                                            <td colspan="3">
+                                                <select class="form-select" name="quotation" id="quotationSelect">
+                                                    <option value="">-- Select Quotation --</option>
+                                                    {% for q in quotations %}
+                                                    <option value="{{ q.id }}">{{ q.quotation_no }} - {{ q.client_name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                                
+                                            </td>
+                                        </tr>
 
-                                </tbody>
-                            </table>
+                                        <tr>
+                                            <th>Inquiry Date</th>
+                                            <td>
+                                                <input type="text" class="form-control flat-date" name="inquiry_date"
+                                                    placeholder="Select inquiry date">
+                                                
+                                            </td>
+                                            <th>Lead Source</th>
+                                            <td>
+                                                <input type="text" class="form-control" name="lead_source"
+                                                    placeholder="Enter lead source">
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Quotation Sent</th>
+                                            <td>
+                                                <select class="form-select" name="quotation_sent">
+                                                    <option value="">-- Select --</option>
+                                                    <option value="Yes">Yes</option>
+                                                    <option value="No">No</option>
+                                                </select>
+                                                
+                                            </td>
+                                            <th>Demo Given</th>
+                                            <td>
+                                                <select class="form-select" name="demo_given">
+                                                    <option value="">-- Select --</option>
+                                                    <option value="Yes">Yes</option>
+                                                    <option value="No">No</option>
+                                                </select>
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Quotation Amount (₹)</th>
+                                            <td>
+                                                <input type="number" step="0.01" class="form-control"
+                                                    name="quotation_amount" placeholder="Enter quotation amount">
+                                                
+                                            </td>
+                                            <th>Approval Amount (₹)</th>
+                                            <td>
+                                                <input type="number" step="0.01" class="form-control" name="approval_amount"
+                                                    placeholder="Enter approval amount">
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Client Industry</th>
+                                            <td>
+                                                <input type="text" class="form-control" name="client_industry"
+                                                    placeholder="Enter client industry">
+                                                
+                                            </td>
+                                            <th>Client</th>
+                                            <td>
+                                                <input type="text" class="form-control" name="client_name"
+                                                    placeholder="Enter client name">
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Contract Signed</th>
+                                            <td colspan="3">
+                                                <select class="form-select" name="contract_signed">
+                                                    <option value="">-- Select --</option>
+                                                    <option value="Yes">Yes</option>
+                                                    <option value="No">No</option>
+                                                </select>
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <!-- ==================== Project Details ==================== -->
+                                    <tr class="table-light">
+        <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Details</th>
+    </tr>
+
+                                        <tr>
+                                            <th>Project Name</th>
+                                            <td>
+                                                <input type="text" class="form-control" name="project_name"
+                                                    placeholder="Enter project name">
+                                                
+                                            </td>
+                                            <th>Project Type</th>
+                                            <td>
+                                                <select class="form-select" name="project_type" required>
+                                                    <option value="">-- Select Project Type --</option>
+                                                    <option value="Fixed">Fix</option>
+                                                    <option value="Salary">Salary</option>
+                                                </select>
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Start Date</th>
+                                            <td>
+                                                <input type="text" class="form-control flat-date" name="start_date"
+                                                    placeholder="Select start date">
+                                                
+                                            </td>
+                                            <th>Deadline</th>
+                                            <td>
+                                                <input type="text" class="form-control flat-date" name="deadline"
+                                                    placeholder="Select deadline date">
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Technologies</th>
+                                            <td>
+                                                <select class="form-select" name="technologies" multiple>
+                                                    {% for tech in technologies %}
+                                                    <option value="{{ tech.id }}">{{ tech.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
+                                                    multiple</small>
+                                                
+                                            </td>
+                                            <th>App Mode</th>
+                                            <td>
+                                                <select class="form-select" name="app_mode">
+                                                    <option value="">-- Select App Mode --</option>
+                                                    {% for mode in app_modes %}
+                                                    <option value="{{ mode.id }}">{{ mode.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Status</th>
+                                            <td>
+                                                <select class="form-select" name="status">
+                                                    <option value="">-- Select --</option>
+                                                    <option value="Ongoing">Ongoing</option>
+                                                    <option value="Completed">Completed</option>
+                                                    <option value="On Hold">On Hold</option>
+                                                    <option value="Cancelled">Cancelled</option>
+                                                </select>
+                                                
+                                            </td>
+                                            <th>Team Members</th>
+                                            <td>
+                                                <select class="form-select" name="team_members" multiple>
+                                                    {% for user in users %}
+                                                    <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                                <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
+                                                    multiple</small>
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <!-- Payment, Links, Financials, Free Service -->
+                                        <tr>
+                                            <th>Payment (₹)</th>
+                                            <td>
+                                                <input type="number" class="form-control" name="payment_value"
+                                                    placeholder="Enter total payment value" min="0">
+                                                
+                                            </td>
+                                            <th>Payment Status</th>
+                                            <td>
+                                                <select class="form-select" name="payment_status">
+                                                    <option value="Pending">Pending</option>
+                                                    <option value="Advanced">Advanced</option>
+                                                    <option value="Paid">Paid</option>
+                                                </select>
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Live Link</th>
+                                            <td>
+                                                <input type="url" class="form-control" name="live_link"
+                                                    placeholder="https://example.com">
+                                                
+                                            </td>
+                                            <th>Postman Collection</th>
+                                            <td>
+                                                <input type="url" class="form-control" name="postman_collection"
+                                                    placeholder="https://example.com/postman.json">
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Data Folder</th>
+                                            <td>
+                                                <input type="url" class="form-control" name="data_folder"
+                                                    placeholder="https://example.com/data/">
+                                                
+                                            </td>
+                                            <th>Other Link</th>
+                                            <td>
+                                                <input type="url" class="form-control" name="other_link"
+                                                    placeholder="https://example.com/other">
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Expense (₹)</th>
+                                            <td>
+                                                <input type="number" step="0.01" class="form-control" name="expense"
+                                                    placeholder="Enter expense amount">
+                                                
+                                            </td>
+                                            <th>Developer Charge (₹)</th>
+                                            <td>
+                                                <input type="number" step="0.01" class="form-control"
+                                                    name="developer_charge" placeholder="Enter developer charge">
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Server Charge (₹)</th>
+                                            <td>
+                                                <input type="number" step="0.01" class="form-control" name="server_charge"
+                                                    placeholder="Enter server charge">
+                                                
+                                            </td>
+                                            <th>3rd Party API Charge (₹)</th>
+                                            <td>
+                                                <input type="number" step="0.01" class="form-control"
+                                                    name="third_party_api_charge" placeholder="Enter 3rd party API charge">
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Mediator Charge (₹)</th>
+                                            <td>
+                                                <input type="number" step="0.01" class="form-control" name="mediator_charge"
+                                                    placeholder="Enter mediator charge">
+                                                
+                                            </td>
+                                            <th>Income (₹)</th>
+                                            <td>
+                                                <input type="number" class="form-control" name="income"
+                                                    placeholder="Enter income">
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Free Service</th>
+                                            <td colspan="3">
+                                                <textarea class="form-control" name="free_service" rows="2"
+                                                    placeholder="Describe free services included"></textarea>
+                                                
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Completed Date</th>
+                                            <td>
+                                                <input type="text" class="form-control flat-date" name="completed_date"
+                                                    placeholder="Select completed date">
+                                                
+                                            </td>
+                                            <th>Notes</th>
+                                            <td>
+                                                <textarea class="form-control" name="notes" rows="3" placeholder="Add any notes for this project"></textarea>
+                                            </td>
+                                            
+                                        </tr>
+                                            
+
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Save Project</button>
-                    </div>
-                </form>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save Project</button>
+                        </div>
+                    </form>
 
+                </div>
             </div>
         </div>
-    </div>
 
 
 
@@ -1100,16 +1099,14 @@
                                     <!-- Completion -->
                                     <tr>
                                         <th>Completed Date</th>
-                                        <td><input type="text" class="form-control flat-date" name="completed_date"
+                                        <td ><input type="text" class="form-control flat-date" name="completed_date"
                                                 id="edit-completed-date" placeholder="Select completed date"></td>
-                                        <td colspan="2"></td>
-                                    </tr>
-                                    <tr>
+                                        
                                         <th>Notes</th>
-                                        <td><input type="text" class="form-control" name="notes"
+                                        <td ><input type="text" class="form-control" name="notes"
                                                 id="edit-notes" placeholder="Enter notes"></td>
-                                        <td colspan="2"></td>
                                     </tr>
+                                    
                                 </tbody>
                             </table>
                         </div>

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Subfolder Details{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="container-xxl flex-grow-1 container-p-y">
+
+    <!-- Back Button -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <a href="{% url 'view_folder' subfolder.folder.id %}" class="btn btn-secondary mb-3">
+          <i class="bx bx-arrow-back"></i> Back to Folder
+        </a>
+      </div>
+    </div>
+
+    <!-- Subfolder Info -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <h3>{{ subfolder.name }}</h3>
+        <p>Parent Folder: {{ subfolder.folder.name }}</p>
+      </div>
+    </div>
+
+    <!-- Files -->
+    <div class="row mb-3">
+      {% for file in files %}
+      <div class="col-md-2 col-sm-4 col-6">
+        <a href="{{ file.file.url }}" target="_blank" class="text-decoration-none">
+          <div class="card file-card text-center position-relative p-2">
+            <!-- File Icon -->
+            <i class="bx bx-file fs-1 text-secondary"></i>
+            <p class="mb-0 fw-bold text-truncate">{{ file.name }}</p>
+            <small class="text-muted d-block">{{ file.created_at|date:"M j, Y" }}</small>
+          </div>
+        </a>
+      </div>
+      {% empty %}
+      <div class="col-12 text-muted">No files in this subfolder.</div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

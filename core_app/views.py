@@ -26,7 +26,7 @@ from decimal import Decimal, InvalidOperation
 import asyncio
 from playwright.async_api import async_playwright
 from django.template.loader import render_to_string
-
+from dateutil.relativedelta import relativedelta
 from collections import OrderedDict
 
 def parse_date(val):
@@ -833,7 +833,7 @@ def get_domain_details(request):
         return JsonResponse({"success": False, "error": "Invalid domain ID"}, status=400)
 
     domain = get_object_or_404(Domain, id=domain_id)
-
+    print(domain.credentials_pass)
     data = {
         "id": domain.id,
         # ManyToMany projects → return both IDs and names
@@ -854,7 +854,7 @@ def get_domain_details(request):
         "ssl_installed": domain.ssl_installed,
         "ssl_expiry": domain.ssl_expiry.strftime("%Y-%m-%d") if domain.ssl_expiry else None,
         "credentials_user": domain.credentials_user,
-        "credentials_pass": domain.credentials_pass if mode == "edit" else "********",
+        "credentials_pass": domain.credentials_pass ,
         "linked_services": domain.linked_services,
         "notes": domain.notes,
         "domain_charge": str(domain.domain_charge) if domain.domain_charge else "0.00",
@@ -1238,29 +1238,44 @@ def get_user(request, id):
         total_paid = sum(d.get("amount", 0) for d in details)
         fixed_details = details 
 
-    # Hourly: combine by date
+   
     hourly_details = []
-    if user.employee_type == "hourly" and user.hourly_employee_details:
-        combined = defaultdict(lambda: {"total_hours": 0, "final_total": 0, "descriptions": []})
-        for d in user.hourly_employee_details:
-            date_key = d["date"]
-            combined[date_key]["total_hours"] += d.get("total_hours", 0)
-            combined[date_key]["final_total"] += d.get("final_total", 0)
-            combined[date_key]["descriptions"].append(d.get("description", "-"))
-
-        # Convert to list for JSON
-        for date_key, info in combined.items():
-            hourly_details.append({
-                "date": date_key,
-                "total_hours": info["total_hours"],
-                "final_total": info["final_total"],
-                "description": " | ".join(info["descriptions"]),  # optional: join all descriptions
-            })
-            # single row
+    month_filter = request.GET.get("month") 
+    print(month_filter)
     hourwise = []
     if user.employee_type == "hourly" and user.hourly_employee_details:
-        hourwise = user.hourly_employee_details
-    print(hourwise)
+        today = date.today()
+        five_months_ago = today - relativedelta(months=5)
+
+        combined = defaultdict(lambda: {"total_hours": 0, "final_total": 0, "descriptions": []})
+
+        for d in user.hourly_employee_details:
+            try:
+                entry_date = datetime.strptime(d["date"], "%Y-%m-%d").date()
+            except Exception:
+                continue
+
+            if entry_date >= five_months_ago.replace(day=1):
+                month_key = entry_date.strftime("%Y-%m")
+
+                combined[month_key]["total_hours"] += d.get("total_hours", 0)
+                combined[month_key]["final_total"] += d.get("final_total", 0)
+                combined[month_key]["descriptions"].append(d.get("description", "-"))
+
+                # Apply month filter for raw rows
+                if not month_filter or month_key == month_filter:
+                    hourwise.append(d)
+
+        hourly_details = [
+            {
+                "month": month_key,
+                "total_hours": info["total_hours"],
+                "final_total": info["final_total"],
+                "description": " | ".join(info["descriptions"]),
+            }
+            for month_key, info in sorted(combined.items(), reverse=True)
+        ]
+        print(hourwise)
     return JsonResponse({
         "id": user.id,
         "first_name": user.first_name,
@@ -1948,22 +1963,23 @@ def add_client(request):
             client.full_clean()  
             client.save()
 
-            messages.success(request, "Client added successfully!")
-            return redirect("client_list")  # Redirect to your client list page
+            return JsonResponse({"success": True, "message": "Client added successfully!"})
 
-        except ValidationError as e:
-            # Convert error dict to readable messages
-            for field, errors in e.message_dict.items():
-                for err in errors:
-                    messages.error(request, f"{field}: {err}")
-            return redirect("client_list")
+        except ValidationError as ve:
+            if hasattr(ve, "message_dict"):
+                flat_errors = []
+                for field, msgs in ve.message_dict.items():
+                    for msg in msgs:
+                        flat_errors.append(f"{field}: {msg}" if field != "__all__" else msg)
+            else:
+                flat_errors = ve.messages
+
+            return JsonResponse({"success": False, "flat_errors": flat_errors}, status=400)
 
         except Exception as e:
-            messages.error(request, f"Error adding client: {str(e)}")
-            return redirect("client_list")
+            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
 
-    # If GET request → redirect to list
-    return redirect("client_list")
+    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method"]}}, status=405)
 
 def get_client(request):
     client_id = request.GET.get("id")
@@ -2012,20 +2028,35 @@ def update_client(request):
             client.full_clean()
             client.save()
 
+            # ✅ JSON response for AJAX
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({"success": True})
+
+            # Fallback for non-AJAX
             messages.success(request, "Client updated successfully!")
             return redirect("client_list")
 
         except Client.DoesNotExist:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "error": "Client not found."})
             messages.error(request, "Client not found.")
             return redirect("client_list")
+
         except ValidationError as e:
-            for field, errors in e.message_dict.items():
-                for err in errors:
+            errors = {field: errs for field, errs in e.message_dict.items()}
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "error": errors})
+            for field, errs in errors.items():
+                for err in errs:
                     messages.error(request, f"{field}: {err}")
             return redirect("client_list")
+
         except Exception as e:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "error": str(e)})
             messages.error(request, f"Error updating client: {str(e)}")
             return redirect("client_list")
+
     return redirect("client_list")
 
 def delete_client(request, id):
@@ -2052,7 +2083,7 @@ def file_docs(request):
 
     all_projects = Project.objects.all()
     all_folders = Folder.objects.select_related("project").all()
-
+    all_subfolders = SubFolder.objects.select_related("folder__project").all()
     # Flatten to folders directly
     folder_rows = []
     for f in all_folders:
@@ -2068,7 +2099,25 @@ def file_docs(request):
             "file_count": file_count,
             "last_file_name": last_file.name if last_file else "No Files",
         })
+    # -----------------------------
+    # SubFolder rows
+    # -----------------------------
+    subfolder_rows = []
+    for sf in all_subfolders:
+        file_count = FileDoc.objects.filter(subfolder=sf).count()
+        last_file = FileDoc.objects.filter(subfolder=sf).order_by("-created_at").first()
 
+        subfolder_rows.append({
+            "id": sf.id,
+            "name": sf.name,
+            "parent_folder_id": sf.folder.id,
+            "parent_folder_name": sf.folder.name,
+            "project_id": sf.folder.project.project_id if sf.folder.project else "-",
+            "project_name": sf.folder.project.project_name if sf.folder.project else "No Project",
+            "created_at": sf.created_at,
+            "file_count": file_count,
+            "last_file_name": last_file.name if last_file else "No Files",
+        })
     paginator = Paginator(folder_rows, records_per_page)
     page_obj = paginator.get_page(page_number)
 
@@ -2079,6 +2128,7 @@ def file_docs(request):
     context = {
         "all_projects": all_projects,
         "all_folders": all_folders,
+        "all_subfolders": all_subfolders,
         "page_obj": page_obj,
         "records_per_page": records_per_page,
         "records_options": [20, 50, 100, 200, 300],
@@ -2118,10 +2168,46 @@ def create_folder(request):
 
     return JsonResponse({"success": False, "error": "Invalid request method."}, status=405)
 
+@csrf_exempt
+def create_subfolder(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            name = data.get("name", "").strip()
+            folder_id = data.get("folder_id")
+
+            if not name:
+                return JsonResponse({"success": False, "error": "SubFolder name is required."})
+
+            if not folder_id:
+                return JsonResponse({"success": False, "error": "Parent folder is required."})
+
+            # Get parent folder
+            try:
+                folder = Folder.objects.get(id=folder_id)
+            except Folder.DoesNotExist:
+                return JsonResponse({"success": False, "error": "Parent folder does not exist."})
+
+            # Create subfolder
+            subfolder = SubFolder.objects.create(name=name, folder=folder)
+
+            return JsonResponse({
+                "success": True,
+                "subfolder_id": subfolder.id,
+                "subfolder_name": subfolder.name,
+                "folder_name": folder.name,
+            })
+
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    return JsonResponse({"success": False, "error": "Invalid request method."})
+
 def add_file(request):
     if request.method == "POST":
         try:
             folder_id = request.POST.get("folder")
+            subfolder_id = request.POST.get("subfolder")
             project_id = request.POST.get("project")
             files = request.FILES.getlist("files")
 
@@ -2135,6 +2221,12 @@ def add_file(request):
             # project comes indirectly from folder, but we can still accept project_id
             project = Project.objects.filter(id=project_id).first() if project_id else folder.project
 
+            # get subfolder if provided
+            subfolder = None
+            if subfolder_id:
+                subfolder = SubFolder.objects.filter(id=subfolder_id, folder=folder).first()
+                if not subfolder:
+                    return JsonResponse({"success": False, "error": "Invalid subfolder for selected folder"})
             if not files:
                 return JsonResponse({"success": False, "error": "No files provided"})
 
@@ -2142,6 +2234,7 @@ def add_file(request):
                 FileDoc.objects.create(
                     name=f.name,
                     folder=folder,
+                    subfolder=subfolder,
                     file=f
                 )
 
@@ -2166,7 +2259,17 @@ def get_files(request):
             "file_url": f.file.url if f.file else None,
             "created_at": f.created_at.strftime("%Y-%m-%d %H:%M"),
         }
-        for f in folder.files.all()
+        for f in folder.files.filter(subfolder__isnull=True)
+    ]
+    subfolders_data = [
+        {
+            "id": sf.id,
+            "name": sf.name,
+            "file_count": sf.files.count(),
+            "created_at": sf.created_at.strftime("%Y-%m-%d %H:%M"), 
+           
+        }
+        for sf in folder.subfolders.all()
     ]
     print(files_data)
     return JsonResponse({
@@ -2176,7 +2279,37 @@ def get_files(request):
         "created_at": folder.created_at.strftime("%Y-%m-%d %H:%M"),
         "updated_at": folder.updated_at.strftime("%Y-%m-%d %H:%M"),
         "files": files_data,
+        "subfolders": subfolders_data,
     })
+
+def get_subfolder_files(request):
+    subfolder_id = request.GET.get("id")
+    try:
+        subfolder = SubFolder.objects.get(id=subfolder_id)
+    except SubFolder.DoesNotExist:
+        raise Http404("SubFolder not found")
+
+    files_data = [
+        {
+            "id": f.id,
+            "name": f.name,
+            "file_url": f.file.url if f.file else None,
+            "created_at": f.created_at.strftime("%Y-%m-%d %H:%M"),
+        }
+        for f in subfolder.files.all()
+    ]
+
+    
+    print(files_data)
+    return JsonResponse({
+        "id": subfolder.id,
+        "name": subfolder.name,
+        "folder": subfolder.folder.name,
+        "created_at": subfolder.created_at.strftime("%Y-%m-%d %H:%M"),
+        "files": files_data,
+        #  "subfolders": subfolders_data,
+    })
+
 
 def delete_file(request, file_id):
     """
@@ -2196,24 +2329,22 @@ def delete_file(request, file_id):
             return JsonResponse({"success": False, "error": str(e)})
     else:
         return JsonResponse({"success": False, "error": "Invalid request method."})
-    
-def delete_files(request):
+
+def delete_subfolder(request, subfolder_id):
     if request.method == "POST":
         try:
-            data = json.loads(request.body.decode("utf-8"))
-            ids = data.get("ids", [])
-
-            if not ids:
-                return JsonResponse({"success": False, "message": "No file IDs provided"}, status=400)
-
-            # Delete files
-            FileDoc.objects.filter(id__in=ids).delete()
-
-            return JsonResponse({"success": True, "deleted_ids": ids})
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)}, status=500)
-
-    return JsonResponse({"success": False, "message": "Invalid request method"}, status=405)
+            subfolder = SubFolder.objects.get(id=subfolder_id)
+            
+            # Delete all files in the subfolder
+            subfolder.files.all().delete()
+            
+            # Delete the subfolder itself
+            subfolder.delete()
+            
+            return JsonResponse({"success": True})
+        except SubFolder.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Subfolder not found"})
+    return JsonResponse({"success": False, "error": "Invalid request method"})
 
 def delete_folder(request, id):
     if request.method == "POST":
@@ -2226,13 +2357,23 @@ def delete_folder(request, id):
 
 def view_folder(request, id):
     folder = get_object_or_404(Folder, id=id)
-    files = folder.files.all()  # Related FileDoc objects
+    files = folder.files.filter(subfolder__isnull=True)  # Related FileDoc objects
 
     context = {
         "folder": folder,
         "files": files,
     }
     return render(request, "view_folder.html", context)
+
+def view_subfolder(request, id):
+    subfolder = get_object_or_404(SubFolder, id=id)
+    files = subfolder.files.all()  # all files in this subfolder
+
+    context = {
+        "subfolder": subfolder,
+        "files": files,
+    }
+    return render(request, "view_subfolder.html", context)
 
 # -----------------------------
 # Payment View  
@@ -2303,6 +2444,7 @@ def add_payment(request):
     if request.method == "POST":
         try:
             project_id = request.POST.get("project")
+            milestone_name = request.POST.get("milestone_name") 
             amount = request.POST.get("amount")
             payment_date = request.POST.get("payment_date")
             payment_method = request.POST.get("payment_method")
@@ -2335,6 +2477,7 @@ def add_payment(request):
             # Create ProjectPayment instance
             payment = ProjectPayment(
                 project=project,
+                milestone_name = milestone_name,
                 amount=amount,
                 payment_date=payment_date,
                 payment_method=payment_method,
@@ -2349,17 +2492,30 @@ def add_payment(request):
             project.income = project.total_paid
             project.save(update_fields=["income"])
 
+                # ✅ Return JSON for AJAX
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": True, "message": "Payment added successfully!"})
+
+            # Fallback for normal form submit
             messages.success(request, "Payment added successfully!")
+            return redirect("payment_list")
 
         except ValidationError as ve:
-   
-            for field, errs in ve.message_dict.items():
+            errors = ve.message_dict
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "errors": errors}, status=400)
+
+            for field, errs in errors.items():
                 for err in errs:
                     messages.error(request, f"{field}: {err}")
-        except Exception as e:
-            messages.error(request, f"Error: {str(e)}")
+            return redirect("payment_list")
 
-        return redirect("payment_list")  
+        except Exception as e:
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
+            messages.error(request, f"Error: {str(e)}")
+            return redirect("payment_list")
+
     return redirect("payment_list")
 
 def get_payment(request):

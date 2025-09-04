@@ -312,172 +312,199 @@
 
     </div>
 
+<!-- Add Payment Modal -->
+<div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
 
-    <!-- Add Payment Modal -->
-    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true"
-        data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
+      <div class="modal-header table-primary text-white">
+        <h5 class="modal-title" id="addPaymentModalLabel">
+          <i class="bx bx-credit-card me-2"></i> Add Payment
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+      </div>
 
-                <div class="modal-header table-primary text-white">
-                    <h5 class="modal-title" id="addPaymentModalLabel">
-                        <i class="bx bx-credit-card me-2"></i> Add Payment
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
+      <form method="POST" action="{% url 'add_payment' %}">
+        {% csrf_token %}
+        <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <tbody>
 
-                <form method="POST" action="{% url 'add_payment' %}">
-                    {% csrf_token %}
-                    <div class="modal-body px-4 py-3">
+                <!-- ==================== Project Selection ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Details</th>
+                </tr>
+                <tr>
+                  <th>Project</th>
+                  <td colspan="3">
+                    <select class="form-select" name="project">
+                      <option value="">-- Select Project --</option>
+                      {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.project_name }}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                </tr>
 
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle">
-                                <tbody>
-                                    <!-- Select Project -->
-                                    <tr>
-                                        <th>Project</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="project" required>
-                                                <option value="">-- Select Project --</option>
-                                                {% for project in projects %}
-                                                    <option value="{{ project.id }}">{{ project.project_name }}</option>
-                                                {% endfor %}
-                                            </select>
+                <!-- ==================== Payment Information ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-money me-2"></i> Payment Information</th>
+                </tr>
+                <tr>
+                        <th>Milestone Name</th>
+                        <td colspan="3">
+                            <input type="text" class="form-control" name="milestone_name"
+                                placeholder="Enter milestone name (optional)">
+                        </td>
+                        </tr>
+                <tr>
+                  <th>Amount (₹)</th>
+                  <td>
+                    <input type="number" step="0.01" class="form-control" name="amount"
+                           placeholder="Enter payment amount">
+                  </td>
+                  <th>Payment Date</th>
+                  <td>
+                    <input type="text" class="form-control flat-date" name="payment_date" 
+           placeholder="Select payment date"  >
+                  </td>
+                </tr>
 
-                                        </td>
-                                    </tr>
+                <tr>
+                  <th>Payment Method</th>
+                  <td colspan="3">
+                    <select class="form-select" name="payment_method" id="paymentMethod">
+                      <option value="">-- Select Method --</option>
+                      <option value="Bank Transfer">Bank Transfer</option>
+                      <option value="UPI">UPI</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Cheque">Cheque</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </td>
+                </tr>
 
-                                    <!-- Amount -->
-                                    <tr>
-                                        <th>Amount</th>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control" name="amount"
-                                                required>
-                                        </td>
-                                        <th>Payment Date</th>
-                                        <td>
-                                            <input type="date" class="form-control" name="payment_date"
-                                                value="{{ today|date:'Y-m-d' }}">
-                                        </td>
-                                    </tr>
+                <!-- ==================== Bank Transfer ==================== -->
+                <tr id="bankFields" class="d-none">
+                  <th>Bank Details</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control mb-2" name="bank_name" placeholder="Bank Name">
+                    <input type="text" class="form-control mb-2" name="account_no" placeholder="Account Number">
+                    <input type="text" class="form-control" name="ifsc_code" placeholder="IFSC Code">
+                  </td>
+                </tr>
 
-                                    <!-- Payment Method -->
-                                    <tr>
-                                        <th>Payment Method</th>
-                                        <td colspan="3">
-                                            <select class="form-select" name="payment_method" id="paymentMethod"
-                                                required>
-                                                <option value="">-- Select Method --</option>
-                                                <option value="Bank">Bank Transfer</option>
-                                                <option value="UPI">UPI</option>
-                                                <option value="Cash">Cash</option>
-                                                <option value="Cheque">Cheque</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                        </td>
-                                    </tr>
+                <!-- ==================== UPI ==================== -->
+                <tr id="upiFields" class="d-none">
+                  <th>UPI</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control" name="upi_id" placeholder="UPI ID (example@upi)">
+                  </td>
+                </tr>
 
-                                    <!-- Dynamic Fields -->
-                                    <tr id="bankFields" class="d-none">
-                                        <th>Bank Details</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control mb-2" name="bank_name"
-                                                placeholder="Bank Name">
-                                            <input type="text" class="form-control mb-2" name="account_no"
-                                                placeholder="Account Number">
-                                            <input type="text" class="form-control" name="ifsc_code"
-                                                placeholder="IFSC Code">
-                                        </td>
-                                    </tr>
+                <!-- ==================== Cheque ==================== -->
+                <tr id="chequeFields" class="d-none">
+                  <th>Cheque</th>
+                  <td colspan="3">
+                    <input type="text" class="form-control mb-2" name="cheque_no" placeholder="Cheque Number">
+                    <input type="text" class="form-control" name="cheque_name" placeholder="Cheque Holder Name">
+                  </td>
+                </tr>
 
-                                    <tr id="upiFields" class="d-none">
-                                        <th>UPI</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control" name="upi_id" placeholder="UPI ID">
-                                        </td>
-                                    </tr>
+                <!-- ==================== Other Details ==================== -->
+                <tr id="otherFields" class="d-none">
+                  <th>Other Details</th>
+                  <td colspan="3">
+                    <textarea class="form-control" name="other_details" rows="2"
+                              placeholder="Enter additional payment details"></textarea>
+                  </td>
+                </tr>
 
-                                    <tr id="chequeFields" class="d-none">
-                                        <th>Cheque</th>
-                                        <td colspan="3">
-                                            <input type="text" class="form-control mb-2" name="cheque_no"
-                                                placeholder="Cheque Number">
-                                            <input type="text" class="form-control" name="cheque_name"
-                                                placeholder="Cheque Holder Name">
-                                        </td>
-                                    </tr>
-
-                                    <tr id="otherFields" class="d-none">
-                                        <th>Other Details</th>
-                                        <td colspan="3">
-                                            <textarea class="form-control" name="other_details" rows="2"
-                                                placeholder="Enter details"></textarea>
-                                        </td>
-                                    </tr>
-
-                                </tbody>
-                            </table>
-                        </div>
-
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Save Payment</button>
-                    </div>
-                </form>
-
-            </div>
+              </tbody>
+            </table>
+          </div>
         </div>
-    </div>
 
-
-    <!-- Payment Details Modal -->
-
-    <div class="modal fade" id="paymentDetailsModal" tabindex="-1" aria-labelledby="paymentDetailsModalLabel"
-        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header table-success text-white">
-                    <h5 class="modal-title" id="paymentDetailsModalLabel">
-                        <i class="bx bx-credit-card me-2"></i> Payment Details
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body px-4 py-3">
-                    <div class="table-responsive">
-                        <!-- Project Summary -->
-                        <h6 class="fw-bold mb-3">Project Summary</h6>
-                        <table class="table table-bordered table-sm mb-4">
-                            <tbody>
-                                <tr>
-                                    <th>Project ID</th>
-                                    <td id="pd-project-id"></td>
-                                    <th>Project Name</th>
-                                    <td id="pd-project-name"></td>
-                                </tr>
-                                <tr>
-                                    <th>Approval Amount</th>
-                                    <td id="pd-approval-amount"></td>
-                                    <th>Total Paid</th>
-                                    <td id="pd-total-paid"></td>
-                                </tr>
-                                <tr>
-                                    <th>Remaining Amount</th>
-                                    <td colspan="3" id="pd-remaining-amount"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <!-- Payments Table -->
-                        <h6 class="fw-bold mb-3">Payment Breakdown</h6>
-                        <div id="payment-details-body" class="row g-3"></div>
-                    </div>
-                </div>
-            </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Payment</button>
         </div>
+      </form>
+
     </div>
+  </div>
+</div>
+
+
+<!-- Payment Details Modal -->
+<div class="modal fade" id="paymentDetailsModal" tabindex="-1" aria-labelledby="paymentDetailsModalLabel"
+     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <!-- Header -->
+      <div class="modal-header table-success text-white">
+        <h5 class="modal-title" id="paymentDetailsModalLabel">
+          <i class="bx bx-credit-card me-2"></i> Payment Details
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body px-4 py-3">
+        <div class="table-responsive">
+
+          <!-- ================= Project Summary ================= -->
+          <h6 class="fw-bold mb-3"><i class="bx bx-briefcase me-1"></i> Project Summary</h6>
+          <table class="table table-bordered table-sm mb-4">
+            <tbody>
+              <tr>
+                <th>Project ID</th>
+                <td id="pd-project-id"></td>
+                <th>Project Name</th>
+                <td id="pd-project-name"></td>
+              </tr>
+              <tr>
+                <th>Approval Amount</th>
+                <td id="pd-approval-amount"></td>
+                <th>Total Paid</th>
+                <td id="pd-total-paid"></td>
+              </tr>
+              <tr>
+                <th>Remaining Amount</th>
+                <td colspan="3" id="pd-remaining-amount"></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- ================= Payment Breakdown ================= -->
+          <h6 class="fw-bold mb-3"><i class="bx bx-money me-1"></i> Payment Breakdown</h6>
+          <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Milestone</th>
+                <th>Amount (₹)</th>
+                <th>Payment Date</th>
+                <th>Method</th>
+                <th>Details</th>
+               
+              </tr>
+            </thead>
+            <tbody id="payment-details-body">
+              <!-- Filled dynamically -->
+             
+            </tbody>
+          </table>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 
 
@@ -501,71 +528,16 @@
         </div>
     </div>
 
-    <!-- display user data -->
-    <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true"
-        data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header table-info text-white">
-                    <h5 class="modal-title" id="viewUserModalLabel">
-                        <i class="bx bx-user me-2"></i> User Details
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
-                    <div class="table-responsive">
-                        <table class="table table-bordered align-middle">
-                            <tbody>
-                                <tr>
-                                    <th>Username</th>
-                                    <td id="view-username" colspan="3"></td>
-                                </tr>
-                                <tr>
-                                    <th>First Name</th>
-                                    <td id="view-firstname"></td>
-                                    <th>Last Name</th>
-                                    <td id="view-lastname"></td>
-                                </tr>
-                                <tr>
-                                    <th>Email</th>
-                                    <td id="view-email"></td>
-                                    <th>Phone</th>
-                                    <td id="view-phone"></td>
-                                </tr>
-                                <tr>
-                                    <th>Designation</th>
-                                    <td id="view-designation"></td>
-                                    <th>Status</th>
-                                    <td id="view-status"></td>
-                                </tr>
-                                <tr>
-                                    <th>Projects</th>
-                                    <td colspan="3">
-                                        <ul id="view-projects" class="mb-0"></ul>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Profile Picture</th>
-                                    <td colspan="3" id="view-profile-picture"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                    </div>
-                </div>
-
-
-            </div>
-        </div>
-    </div>
+    
 
 </div>
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+
+
+
         // pagination links
         document.getElementById('recordsPerPage').addEventListener('change', function () {
             // Always reset to page 1 when changing limit
@@ -638,107 +610,146 @@
             chequeFields.classList.add("d-none");
             otherFields.classList.add("d-none");
 
-            if (this.value === "Bank") bankFields.classList.remove("d-none");
+            if (this.value === "Bank Transfer") bankFields.classList.remove("d-none");
             if (this.value === "UPI") upiFields.classList.remove("d-none");
             if (this.value === "Cheque") chequeFields.classList.remove("d-none");
             if (this.value === "Other") otherFields.classList.remove("d-none");
         });
 
         // Payment Details Modal Population
-        const paymentDetailsUrl = "{% url 'get_payment' %}";
+const paymentDetailsUrl = "{% url 'get_payment' %}";
 
-        $(document).on("click", ".payment-link", function (e) {
-            e.preventDefault();
-            const projectId = $(this).data("project-id");
-            console.log("Fetching details for payment ID:", projectId);
-            $.get(paymentDetailsUrl, { id: projectId }, function (res) {
-                if (!res.success) {
-                    console.error("Failed:", res.error);
-                    return;
-                }
+$(document).on("click", ".payment-link", function (e) {
+    e.preventDefault();
+    const projectId = $(this).data("project-id");
+    console.log("Fetching details for payment ID:", projectId);
 
-                const project = res.data;
+    $.get(paymentDetailsUrl, { id: projectId }, function (res) {
+        if (!res.success) {
+            console.error("Failed:", res.error);
+            return;
+        }
 
-                // Fill project summary
-                $("#pd-project-id").text(project.project_id);
-                $("#pd-project-name").text(project.project_name);
-                $("#pd-approval-amount")
-                    .text(`₹${project.approval_amount}`)
-                    .addClass("text-primary fw-bold");
+        const project = res.data;
 
-                $("#pd-total-paid")
-                    .text(`₹${project.total_paid}`)
-                    .addClass("text-success fw-bold");
+        // === Fill project summary ===
+        $("#pd-project-id").text(project.project_id);
+        $("#pd-project-name").text(project.project_name);
 
-                $("#pd-remaining-amount")
-                    .text(project.remaining_amount === 0 ? "-" : `₹${project.remaining_amount}`)
-                    .addClass("text-danger fw-bold");
+        $("#pd-approval-amount")
+            .text(`₹${project.approval_amount}`)
+            .addClass("text-primary fw-bold");
 
-                // Clear existing rows
-                const tbody = $("#payment-details-body");
-                tbody.empty();
+        $("#pd-total-paid")
+            .text(`₹${project.total_paid}`)
+            .addClass("text-success fw-bold");
 
-                // Fill payments
-                project.payments.forEach((p, index) => {
-                    let extraDetails = "";
-                    if (p.method === "Bank Transfer") {
-                        extraDetails = `
-            <strong>Bank:</strong> ${p.details.bank_name || ""}<br>
-            <strong>Acc:</strong> ${p.details.account_no || ""}<br>
-            <strong>IFSC:</strong> ${p.details.ifsc_code || ""}
-        `;
-                    } else if (p.method === "UPI") {
-                        extraDetails = `<strong>UPI:</strong> ${p.details.upi_id || ""}`;
-                    } else if (p.method === "Cheque") {
-                        extraDetails = `
-            <strong>Cheque No:</strong> ${p.details.cheque_no || ""}<br>
-            <strong>Name:</strong> ${p.details.cheque_name || ""}
-        `;
-                    }
+        $("#pd-remaining-amount")
+            .text(project.remaining_amount === 0 ? "-" : `₹${project.remaining_amount}`)
+            .addClass("text-danger fw-bold");
 
-                    tbody.append(`
-    <div class="col-12 mb-3">
-        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="card-header bg-light p-3" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#paymentCollapse${index}" aria-expanded="false" aria-controls="paymentCollapse${index}">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 text-primary fw-bold">${p.milestone}</h6>
-                    <span class="badge rounded-pill bg-gradient text-primary fw-bold px-3 py-1">${p.method}</span>
-                </div>
-            </div>
+        // === Clear existing rows ===
+        const tbody = $("#payment-details-body");
+        tbody.empty();
 
-            <div id="paymentCollapse${index}" class="collapse">
-                <div class="card-body p-3">
-                    <div class="mb-2 d-flex align-items-center">
-                        <i class="bi bi-cash-stack text-success me-2"></i>
-                        <p class="mb-0"><strong>Amount:</strong> <span class="text-success">₹${p.amount}</span></p>
-                    </div>
+        // === Fill payments as table rows ===
+        project.payments.forEach((p) => {
+            let extraDetails = "";
 
-                    <div class="mb-2 d-flex align-items-center">
-                        <i class="bi bi-calendar-event text-muted me-2"></i>
-                        <p class="mb-0"><strong>Date:</strong> <span class="text-muted">${p.date}</span></p>
-                    </div>
+            if (p.method === "Bank Transfer") {
+                extraDetails = `
+                    <strong>Bank:</strong> ${p.details.bank_name || ""}<br>
+                    <strong>Acc:</strong> ${p.details.account_no || ""}<br>
+                    <strong>IFSC:</strong> ${p.details.ifsc_code || ""}
+                `;
+            } else if (p.method === "UPI") {
+                extraDetails = `<strong>UPI:</strong> ${p.details.upi_id || ""}`;
+            } else if (p.method === "Cheque") {
+                extraDetails = `
+                    <strong>Cheque No:</strong> ${p.details.cheque_no || ""}<br>
+                    <strong>Name:</strong> ${p.details.cheque_name || ""}
+                `;
+            } else if (p.method === "Other") {
+                extraDetails = `<strong>Details:</strong> ${p.details.other_details || ""}`;
+            }
 
-                    <div class="mb-2 d-flex align-items-start">
-                        <i class="bi bi-journal-text text-secondary me-2 mt-1"></i>
-                        <p class="mb-0"><strong>Notes:</strong> ${p.notes || "<em>No notes</em>"}</p>
-                    </div>
-
-                    <div class="border-top pt-2 mt-3 small text-secondary fst-italic text-truncate">
-                        ${extraDetails || ""}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    `);
-
-                });
-
-                $("#paymentDetailsModal").modal("show");
-            });
-
+            tbody.append(`
+                <tr>
+                    <td>${p.milestone || "-"}</td>
+                    <td class="text-success fw-bold">₹${p.amount}</td>
+                    <td>${formatDate(p.date)}</td>
+                     
+                    <td>${p.method}</td>
+                    <td>${extraDetails || "-"}</td>
+                </tr>
+            `);
         });
 
+        // Show modal
+        $("#paymentDetailsModal").modal("show");
+    });
+});
+
+
+// add
+
+    const addPaymentForm = document.querySelector("#addPaymentModal form");
+
+    addPaymentForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        let form = this;
+        let formData = new FormData(form);
+
+        fetch("{% url 'add_payment' %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            // Clear old validation errors
+            form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+
+            if (data.success) {
+                // Close modal
+                let modalEl = document.getElementById("addPaymentModal");
+                let modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+
+                // Show success toast
+                showToast(data.message || "Payment added successfully!", "success");
+
+                // Reload after short delay
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                if (data.errors) {
+                    if (data.errors["__all__"]) {
+                        showToast(data.errors["__all__"].join(", "), "danger");
+                    } else {
+                        // Highlight fields with errors
+                        Object.keys(data.errors).forEach(field => {
+                            let input = form.querySelector(`[name="${field}"]`);
+                            if (input) {
+                                input.classList.add("is-invalid");
+                            }
+                        });
+                        showToast("Please fix highlighted errors.", "danger");
+                    }
+                } else {
+                    showToast("Something went wrong while saving payment.", "danger");
+                }
+            }
+        })
+        .catch(err => {
+            console.error("Error:", err);
+            showToast("Unexpected error while adding payment.", "danger");
+        });
+    });
+    
     });
 </script>
 {% endblock %}

@@ -64,12 +64,15 @@ urlpatterns = [
     #file_docs
     path('file_docs/', file_docs, name='file_docs'),
     path('create_folder/', create_folder, name='create_folder'),
+    path('create_subfolder/', create_subfolder, name='create_subfolder'),
     path('add_file/', add_file, name='add_file'),
     path('get_files/', get_files, name='get_files'),
+    path('get_subfolder_files/', get_subfolder_files, name='get_subfolder_files'),
     path('delete_file/<int:file_id>/', delete_file, name='delete_file'),
-    path("delete_files/", delete_files, name="delete_files"),
+    path('delete_subfolder/<int:subfolder_id>/', delete_subfolder, name='delete_subfolder'),
     path('delete_folder/<int:id>/', delete_folder, name='delete_folder'),
     path('folder/<int:id>/', view_folder, name='view_folder'),
+    path('sub_folder/<int:id>/', view_subfolder, name='view_subfolder'),
 
 
     #payment

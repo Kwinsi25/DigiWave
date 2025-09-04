@@ -475,6 +475,7 @@ class Domain(models.Model):
     ]
 
     PAYMENT_MODE_CHOICES = [
+        ('None', 'None'),
         ('Client', 'Client'),
         ('Company', 'Company'),
     ]
@@ -512,11 +513,11 @@ class Domain(models.Model):
     domain_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text="Charge in INR")
     client_payment_status = models.CharField(
         max_length=20,
-        choices=[("Received", "Received"), ("Pending", "Pending")],
-        default="Pending"
+        choices=[("None", "None"),("Received", "Received"), ("Pending", "Pending")],
+        blank=True,
     )
     payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True)
-    payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODE_CHOICES, default="Client")
+    payment_mode = models.CharField(max_length=20, choices=PAYMENT_MODE_CHOICES,blank=True )
     payment_details = models.JSONField(blank=True, null=True)
 
     notes = models.TextField(blank=True, null=True)
@@ -536,8 +537,8 @@ class Domain(models.Model):
         if self.expiry_date:
             today = timezone.now().date()
             self.left_days = max((self.expiry_date - today).days, 0)
-        if not self.domain_name:
-            errors["domain_name"] = "Domain name is required."
+        # if not self.domain_name:
+        #     errors["domain_name"] = "Domain name is required."
         # Cost-related validation example
         if self.ssl_expiry and self.expiry_date and self.ssl_expiry > self.expiry_date:
             errors["ssl_expiry"] = "SSL expiry cannot be after domain expiry."
@@ -555,9 +556,9 @@ class Domain(models.Model):
             else:
                 required_fields = []
 
-            for field in required_fields:
-                if field not in details or not details[field]:
-                    errors["payment_details"] = f"'{field}' is required for {self.payment_method}."
+            # for field in required_fields:
+            #     if field not in details or not details[field]:
+            #         errors["payment_details"] = f"'{field}' is required for {self.payment_method}."
 
 
         if errors:
@@ -862,13 +863,32 @@ class Folder(models.Model):
         project_name = self.project.project_name if self.project else "No Project"
         return f"{self.name} ({project_name})"
 
+class SubFolder(models.Model):
+    name = models.CharField(max_length=255)
+    folder = models.ForeignKey(
+        Folder,
+        on_delete=models.CASCADE,
+        related_name="subfolders"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return f"{self.name} (Sub of {self.folder.name})"
+    
 class FileDoc(models.Model):
     name = models.CharField(max_length=255)
     folder = models.ForeignKey(
         Folder,
         on_delete=models.CASCADE,
         related_name="files"
+    )
+    subfolder = models.ForeignKey(
+        SubFolder,
+        on_delete=models.CASCADE,
+        related_name="files",
+        blank=True,
+        null=True
     )
     file = models.FileField(upload_to="files/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
