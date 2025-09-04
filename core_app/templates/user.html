@@ -411,7 +411,7 @@
                                         <div class="row">
 
                                             <!-- Personal -->
-                                            <div class="col-md-6 border-end">
+                                            <div class="col-md-6 border-end" id="pdetails">
                                                 <h6 class="fw-bold mb-3 border-bottom pb-2"><i
                                                         class="bx bx-id-card me-1"></i> Personal Details</h6>
                                                 <div class="row">
@@ -466,19 +466,19 @@
                                             <div class="col-md-6 ps-4">
                                                 <div class="row ">
                                                     <!-- Job -->
-                                                    <div class="col-md-6 border-end">
+                                                    <div class="col-md-6 border-end" id="job-section">
                                                         <h6 class="fw-bold mb-3 border-bottom pb-2"><i
                                                                 class="bx bx-briefcase me-1"></i> Job</h6>
                                                         <p><strong>Type:</strong> <span id="view-employee-type"></span>
                                                         </p>
-                                                        <p><strong>Amount:</strong> <span id="view-amount"></span></p>
+                                                        <p><strong>Salary:</strong> <span id="view-salary"></span></p>
                                                         <p><strong>Joining:</strong> <span
                                                                 id="view-joining-date"></span></p>
                                                         <p><strong>Last Date:</strong> <span id="view-last-date"></span>
                                                         </p>
                                                     </div>
                                                     <!-- Bank -->
-                                                    <div class="col-md-6 ">
+                                                    <div class="col-md-6 " id="bdetails">
                                                         <h6 class="fw-bold mb-3 border-bottom pb-2"><i
                                                                 class="bx bx-buildings me-1"></i> Bank</h6>
                                                         <p><strong>Holder:</strong> <span
@@ -514,9 +514,9 @@
                                             <table class="table table-bordered" id="fixed-details-table">
                                                 <thead class="table-light">
                                                     <tr>
-                                                        <th>Amount</th>
                                                         <th>Date</th>
                                                         <th>Description</th>
+                                                        <th>Amount</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody></tbody>
@@ -684,7 +684,8 @@
 
                                                 // ================= Job vs Fixed Employee Details =================
                                                 // ✅ Select correct sections
-                                                const jobSection = document.querySelector(".col-md-6.ps-4 > .row > .col-md-6.border-end");
+                                                const jobSection = document.getElementById("job-section");
+
                                                 const personalSections = document.querySelectorAll(".col-md-6.border-end");
                                                 const personalSection = personalSections[1]; // the second personal section
                                                 const bankSection = personalSection ? personalSection.nextElementSibling : null;
@@ -719,13 +720,9 @@
                                                 if (data.employee_type && data.employee_type.toLowerCase() === "fixed") {
                                                     // Hide Salary job section
                                                     jobSection.style.display = "none";
-
-
-
-
                                                     // Show Fixed section
                                                     fixedSection.style.display = "block";
-
+                                                    document.getElementById("hourly-employee-section").style.display = "none";
                                                     // Top row: Type | Joining | Last
                                                     document.getElementById("fixed-type").textContent = "Type: " + (data.employee_type || "-");
                                                     document.getElementById("fixed-joining-date").textContent = "Joining Date: " + (data.joining_date || "-");
@@ -735,6 +732,8 @@
                                                     // Table body
                                                     const tbody = document.querySelector("#fixed-details-table tbody");
                                                     tbody.innerHTML = "";
+                                                    document.getElementById("fixed-total-amount").textContent = "0.00";
+
                                                     let total = 0;
                                                     if (data.fixed_employee_details && data.fixed_employee_details.length) {
                                                         data.fixed_employee_details.forEach(item => {
@@ -765,7 +764,7 @@
                                                         bankSection.classList.add("col-md-6");
                                                     }
                                                     document.getElementById("view-employee-type").textContent = data.employee_type || "-";
-                                                    document.getElementById("view-amount").textContent = data.amount || "-";
+                                                    document.getElementById("view-salary").textContent = data.amount || "-";
                                                     document.getElementById("view-joining-date").textContent = data.joining_date || "-";
                                                     document.getElementById("view-last-date").textContent = data.last_date || "-";
                                                 }
@@ -816,6 +815,25 @@
                                                     // Hide if not hourly
                                                     document.getElementById("hourly-employee-section").style.display = "none";
                                                 }
+                                                // ================= Adjust layout for Salary Employees =================
+if (data.employee_type && data.employee_type.toLowerCase() === "salary") {
+    const profileSection = document.getElementById("pdetails"); // Personal / Profile
+    const jobSection = document.getElementById("job-section"); // Job
+    const bankSection = document.getElementById("bdetails"); // Bank
+
+    // Remove all classes and set new ones
+    if (profileSection) profileSection.className = "col-md-6 border-end";
+    if (jobSection) jobSection.className = "col-md-6 border-end";
+    if (bankSection) bankSection.className = "col-md-6";
+
+    // Show job and bank sections
+    if (jobSection) jobSection.style.display = "block";
+    if (bankSection) bankSection.style.display = "block";
+
+    // Hide fixed and hourly sections
+    document.getElementById("fixed-employee-section").style.display = "none";
+    document.getElementById("hourly-employee-section").style.display = "none";
+}
 
                                                 // ================= Show Modal =================
                                                 viewUserModal.show();
@@ -978,8 +996,8 @@
                                                             <option value="salary">Salary</option>
                                                         </select>
                                                     </td>
-                                                    <th>Amount</th>
-                                                    <td><input type="number" class="form-control" name="amount"
+                                                    <th>Salary</th>
+                                                    <td><input type="number" class="form-control" name="salary"
                                                             placeholder="Enter salary"></td>
                                                 </tr>
                                                 <tr>
@@ -1365,9 +1383,9 @@
                                                             <option value="salary">Salary</option>
                                                         </select>
                                                     </td>
-                                                    <th>Amount</th>
-                                                    <td><input type="number" class="form-control" name="amount"
-                                                            id="edit-amount" placeholder="Enter salary"></td>
+                                                    <th>Salary</th>
+                                                    <td><input type="number" class="form-control" name="salary"
+                                                            id="edit-salary" placeholder="Enter salary"></td>
                                                 </tr>
                                                 <tr>
                                                     <th>Joining Date</th>
@@ -1862,7 +1880,7 @@ addAmountForm.addEventListener("submit", e => {
 
                     // Job Details
                     $("#edit-employee-type").val(res.employee_type);
-                    $("#edit-amount").val(res.amount);
+                    $("#edit-salary").val(res.amount);
                     // $("#edit-joining-date").val(res.joining_date);
                     const editJoiningDate = flatpickr("#edit-joining-date", {
                         dateFormat: "Y-m-d",

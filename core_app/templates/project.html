@@ -193,14 +193,23 @@
                                     </a>
                                 </td>
                                 <td>{{ project.start_date }}</td>
-                                <td>{{ project.app_mode.name|default:"-" }}</td>
+                               <td>
+                                    {% if project.app_modes.all %}
+                                        {% for mode in project.app_modes.all %}
+                                            {{ mode.name }}{% if not forloop.last %}<br/> {% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+
                                 <td>
-                                    {% if project.status == "Ongoing" %}
-                                    <span class="badge bg-label-primary">{{ project.status }}</span>
+                                    {% if project.status == "In Progress" %}
+                                    <span class="badge bg-label-warning">{{ project.status }}</span>
                                     {% elif project.status == "Completed" %}
                                     <span class="badge bg-label-success">{{ project.status }}</span>
                                     {% elif project.status == "On Hold" %}
-                                    <span class="badge bg-label-warning">{{ project.status }}</span>
+                                    <span class="badge bg-label-primary">{{ project.status }}</span>
                                     {% elif project.status == "Cancelled" %}
                                     <span class="badge bg-label-danger">{{ project.status }}</span>
                                     {% else %}
@@ -491,8 +500,9 @@
                                             </td>
                                             <th>Project Type</th>
                                             <td>
-                                                <select class="form-select" name="project_type" required>
+                                                <select class="form-select" name="project_type">
                                                     <option value="">-- Select Project Type --</option>
+                                                    <option value="Hourly">Hourly</option>
                                                     <option value="Fixed">Fix</option>
                                                     <option value="Salary">Salary</option>
                                                 </select>
@@ -529,13 +539,13 @@
                                             </td>
                                             <th>App Mode</th>
                                             <td>
-                                                <select class="form-select" name="app_mode">
-                                                    <option value="">-- Select App Mode --</option>
-                                                    {% for mode in app_modes %}
+                                                <select class="form-select" name="app_mode" multiple>
+                                                   {% for mode in app_modes %}
                                                     <option value="{{ mode.id }}">{{ mode.name }}</option>
                                                     {% endfor %}
                                                 </select>
-                                                
+                                                <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
+                                                    multiple</small>
                                             </td>
                                         </tr>
 
@@ -544,7 +554,7 @@
                                             <td>
                                                 <select class="form-select" name="status">
                                                     <option value="">-- Select --</option>
-                                                    <option value="Ongoing">Ongoing</option>
+                                                    <option value="In Progress">In Progress</option>
                                                     <option value="Completed">Completed</option>
                                                     <option value="On Hold">On Hold</option>
                                                     <option value="Cancelled">Cancelled</option>
@@ -578,7 +588,7 @@
                                                 <select class="form-select" name="payment_status">
                                                     <option value="Pending">Pending</option>
                                                     <option value="Advanced">Advanced</option>
-                                                    <option value="Paid">Paid</option>
+                                                    <option value="Paid">Received</option>
                                                 </select>
                                                 
                                             </td>
@@ -659,15 +669,7 @@
                                             </td>
                                         </tr>
 
-                                        <tr>
-                                            <th>Free Service</th>
-                                            <td colspan="3">
-                                                <textarea class="form-control" name="free_service" rows="2"
-                                                    placeholder="Describe free services included"></textarea>
-                                                
-                                            </td>
-                                        </tr>
-
+                                       
                                         <tr>
                                             <th>Completed Date</th>
                                             <td>
@@ -675,13 +677,20 @@
                                                     placeholder="Select completed date">
                                                 
                                             </td>
+                                            
+                                            <th>Free Service</th>
+                                            <td >
+                                                <textarea class="form-control" name="free_service" rows="2"
+                                                    placeholder="Describe free services included"></textarea>
+                                                
+                                            </td>
+                                        </tr>   
+ <tr>
                                             <th>Notes</th>
-                                            <td>
+                                            <td colspan="3">
                                                 <textarea class="form-control" name="notes" rows="3" placeholder="Add any notes for this project"></textarea>
                                             </td>
-                                            
                                         </tr>
-                                            
 
                                     </tbody>
                                 </table>
@@ -725,6 +734,10 @@
                                 <tr>
                                     <th>Quotation</th>
                                     <td id="pd-quotation-reference" colspan="3"></td>
+                                </tr>
+                                <tr>
+                                     <th>Client Name</th>
+                                    <td id="pd-client-name" colspan="3"></td>
                                 </tr>
                                 <tr>
                                     <th>Inquiry Date</th>
@@ -815,6 +828,7 @@
                                     <td id="pd-income"></td>
                                 </tr>
                                 <tr>
+                                    
                                     <th>Free Service</th>
                                     <td id="pd-free-service" colspan="3"></td>
                                 </tr>
@@ -840,9 +854,7 @@
                                     <td id="pd-other-link" colspan="3"></td>
                                 </tr>
                                 <tr>
-    <th>Notes</th>
-    <td id="pd-notes" colspan="3"></td>
-</tr>
+   
                             </tbody>
                         </table>
                     </div>
@@ -965,6 +977,7 @@
                                         <td>
                                             <select class="form-select" name="project_type" id="edit-project-type">
                                                 <option value="">-- Select Project Type --</option>
+                                                <option value="Hourly">Hourly</option>
                                                 <option value="Fixed">Fix</option>
                                                 <option value="Salary">Salary</option>
                                             </select>
@@ -985,7 +998,7 @@
                                         <td>
                                             <select class="form-select" name="technologies" id="edit-technologies"
                                                 multiple>
-                                                <option value="">-- Select Techlologies --</option>
+                                               
                                                 {% for tech in technologies %}
                                                 <option value="{{ tech.id }}">{{ tech.name }}</option>
                                                 {% endfor %}
@@ -994,8 +1007,9 @@
                                         </td>
                                         <th>App Mode</th>
                                         <td>
-                                            <select class="form-select" name="app_mode" id="edit-app-mode">
-                                                <option value="">-- Select App Mode --</option>
+
+                                            <select class="form-select" name="app_mode" id="edit-app-mode" multiple>
+                                               
                                                 {% for mode in app_modes %}
                                                 <option value="{{ mode.id }}">{{ mode.name }}</option>
                                                 {% endfor %}
@@ -1008,7 +1022,7 @@
                                         <td>
                                             <select class="form-select" name="status" id="edit-status">
                                                 <option value="">-- Select --</option>
-                                                <option value="Ongoing">Ongoing</option>
+                                                <option value="In Progress">In Progress</option>
                                                 <option value="Completed">Completed</option>
                                                 <option value="On Hold">On Hold</option>
                                                 <option value="Cancelled">Cancelled</option>
@@ -1037,7 +1051,7 @@
                                                 <option value="">-- Select Payment Status --</option>
                                                 <option value="Pending">Pending</option>
                                                 <option value="Advanced">Advanced</option>
-                                                <option value="Paid">Paid</option>
+                                                <option value="Paid">Received</option>
                                             </select>
                                         </td>
                                     </tr>
@@ -1087,24 +1101,25 @@
                                         <td><input type="number" step="0.01" class="form-control" name="income"
                                                 id="edit-income" placeholder="Enter income"></td>
                                     </tr>
-                                    <!-- Free Service -->
+                                    <!-- Completion and Free Service -->
                                     <tr>
+                                        <th>Completed Date</th>
+                                        <td ><input type="text" class="form-control flat-date" name="completed_date"
+                                                id="edit-completed-date" placeholder="Select completed date"></td>
                                         <th>Free Service</th>
-                                        <td colspan="3"><textarea class="form-control" name="free_service"
+                                        <td><textarea class="form-control" name="free_service"
                                                 id="edit-free-service" rows="2"
                                                 placeholder="Describe free services if any"></textarea></td>
                                     </tr>
 
 
-                                    <!-- Completion -->
+                                    <!-- notes -->
                                     <tr>
-                                        <th>Completed Date</th>
-                                        <td ><input type="text" class="form-control flat-date" name="completed_date"
-                                                id="edit-completed-date" placeholder="Select completed date"></td>
+                                        
                                         
                                         <th>Notes</th>
-                                        <td ><input type="text" class="form-control" name="notes"
-                                                id="edit-notes" placeholder="Enter notes"></td>
+                                        <td colspan="3"><textarea class="form-control" name="notes" rows="3"  id="edit-notes" placeholder="Add any notes for this project"></textarea>
+                                           
                                     </tr>
                                     
                                 </tbody>
@@ -1431,17 +1446,17 @@
                 $("#pd-project-name").text(p.project_name);
                 $('#pd-project-type').text(p.project_type);
                 $("#pd-technologies").text(p.technologies.join(", ") || "-");
-                $("#pd-app-mode").text(p.app_mode || "-");
+               $("#pd-app-mode").text((p.app_modes_names || []).join(", ") || "-");
 
                 $("#pd-lead-source").text(p.lead_source);
                 // Status Badge (same as Django template)
                 let statusBadge = '';
-                if (p.status === "Ongoing") {
-                    statusBadge = `<span class="badge bg-label-primary">${p.status}</span>`;
+                if (p.status === "In Progress") {
+                    statusBadge = `<span class="badge bg-label-warning">${p.status}</span>`;
                 } else if (p.status === "Completed") {
                     statusBadge = `<span class="badge bg-label-success">${p.status}</span>`;
                 } else if (p.status === "On Hold") {
-                    statusBadge = `<span class="badge bg-label-warning">${p.status}</span>`;
+                    statusBadge = `<span class="badge bg-label-primary">${p.status}</span>`;
                 } else if (p.status === "Cancelled") {
                     statusBadge = `<span class="badge bg-label-danger">${p.status}</span>`;
                 } else {
@@ -1506,7 +1521,7 @@
                 $("#pd-payment-status").html(`<span class="${paymentBadge}">${p.payment_value} ${p.payment_status}</span>`);
 
                 $("#pd-client-industry").text(p.client_industry);
-
+                $("#pd-client-name").text(p.client_name || "-");
                 if (p.live_link) {
                     $("#pd-live-link").html(`<a href="${p.live_link}" target="_blank">${p.live_link}</a>`);
                 } else {
@@ -1520,22 +1535,22 @@
                 $("#pd-income").text(p.income ? `₹${p.income}` : "-");
                 $("#pd-free-service").text(p.free_service);
                 if (p.postman_collection) {
-                    $("#pd-postman-collection").html(`<a href="${p.postman_collection}" target="_blank">Postman JSON</a>`);
+                    $("#pd-postman-collection").html(`<a href="${p.postman_collection}" target="_blank">${p.postman_collection}</a>`);
                 } else {
                     $("#pd-postman-collection").text("");
                 }
                 if (p.data_folder) {
-                    $("#pd-data-folder").html(`<a href="${p.data_folder}" target="_blank">Data Folder</a>`);
+                    $("#pd-data-folder").html(`<a href="${p.data_folder}" target="_blank">${p.data_folder}</a>`);
                 } else {
                     $("#pd-data-folder").text("");
                 }
 
                 if (p.other_link) {
-                    $("#pd-other-link").html(`<a href="${p.other_link}" target="_blank">Other Link</a>`);
+                    $("#pd-other-link").html(`<a href="${p.other_link}" target="_blank">${p.other_link}</a>`);
                 } else {
                     $("#pd-other-link").text("");
                 }
-                $("#pd-notes").text(p.notes);
+                $("#pd-notes").val(p.notes);
                 $("#pd-start-date").text(formatDate(p.start_date));
 
 
@@ -1627,8 +1642,7 @@
                 if (p.start_date) $("#edit-start-date")[0]._flatpickr.setDate(p.start_date, true);
                 if (p.deadline) $("#edit-deadline")[0]._flatpickr.setDate(p.deadline, true);
                 $("#edit-status").val(p.status);
-                // App Mode
-                $("#edit-app-mode").val(p.app_mode_id ? p.app_mode_id.toString() : "");
+              
 
                 $("#edit-payment-value").val(p.payment_value);
                 $("#edit-payment-status").val(p.payment_status);
@@ -1660,7 +1674,8 @@
                 // $("#edit-technologies").val(p.technologies_ids);
                 $("#edit-technologies").val(p.technologies_ids.map(id => id.toString()));
                 $("#edit-team-members").val(p.team_members_ids.map(id => id.toString()));
-
+                  // App Mode
+                $("#edit-app-mode").val(p.app_modes_ids.map(id => id.toString()));
                 // If project has a quotation → lock quotation fields
                 if (p.quotation_id) {
                     if ($("#edit-inquiry-date")[0]._flatpickr) {

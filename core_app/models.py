@@ -84,11 +84,17 @@ class User(models.Model):
         null=True,
         help_text="Stores amount, date, description for hourly employees in JSON format"
     )
-    amount = models.DecimalField(
+    salary = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         blank=True,
         null=True
+    )
+    working_days = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Automatically calculated based on joining and last date"
     )
     joining_date = models.DateField(blank=True, null=True)
     last_date = models.DateField(blank=True, null=True)
@@ -175,7 +181,44 @@ class User(models.Model):
         if self.branch:
             self.branch = self.branch.upper()
 
+    # ---------------------------
+    # Working days calculation
+    # ---------------------------
+    def calculate_working_days(self):
+        if not self.joining_date:
+            return ""
 
+        end_date = self.last_date or date.today()
+        delta = end_date - self.joining_date
+        total_days = delta.days
+
+        if total_days <= 28:
+            return f"{total_days} day{'s' if total_days != 1 else ''}"
+        elif total_days < 365:
+            months = total_days // 30
+            days = total_days % 30
+            result = f"{months} month{'s' if months != 1 else ''}"
+            if days:
+                result += f" {days} day{'s' if days != 1 else ''}"
+            return result
+        else:
+            years = total_days // 365
+            remaining_days = total_days % 365
+            months = remaining_days // 30
+            days = remaining_days % 30
+            result = f"{years} year{'s' if years != 1 else ''}"
+            if months:
+                result += f" {months} month{'s' if months != 1 else ''}"
+            if days:
+                result += f" {days} day{'s' if days != 1 else ''}"
+            return result
+
+    # ---------------------------
+    # Override save to update working_days
+    # ---------------------------
+    def save(self, *args, **kwargs):
+        self.working_days = self.calculate_working_days()
+        super().save(*args, **kwargs)
 # -----------------------------
 # Project model
 # -----------------------------
@@ -194,7 +237,7 @@ class AppMode(models.Model):
 
 class Project(models.Model):
     PROJECT_STATUS_CHOICES = [
-        ('Ongoing', 'Ongoing'),
+        ('In Progress', 'In Progress'),
         ('Completed', 'Completed'),
         ('On Hold', 'On Hold'),
         ('Cancelled', 'Cancelled'),
@@ -212,6 +255,7 @@ class Project(models.Model):
     ]
 
     PROJECT_TYPE_CHOICES = [
+        ('Hourly','Hourly'),
         ('Fixed', 'Fixed'),
         ('Salary', 'Salary Based'),
     ]
@@ -224,16 +268,16 @@ class Project(models.Model):
         null=True,
     )
     project_name = models.CharField(max_length=255,  unique=True,blank=True, null=False)
-    project_type = models.CharField(max_length=20, choices=PROJECT_TYPE_CHOICES, default="Fixed")
+    project_type = models.CharField(max_length=20, choices=PROJECT_TYPE_CHOICES, blank=True)
     start_date = models.DateField(blank=True, null=True)
     technologies = models.ManyToManyField(Technology, blank=True)
-    app_mode = models.ForeignKey(AppMode, on_delete=models.SET_NULL, blank=True, null=True)
-    status = models.CharField(max_length=20, choices=PROJECT_STATUS_CHOICES, default="Ongoing")
+    app_modes = models.ManyToManyField(AppMode, blank=True, related_name="projects")
+    status = models.CharField(max_length=20, choices=PROJECT_STATUS_CHOICES, blank=True)
 
     deadline = models.DateField(blank=True, null=True)
     team_members = models.ManyToManyField(User, blank=True, related_name="projects")
     payment_value = models.PositiveIntegerField(default=0, blank=True, null=True)
-    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default="Pending")
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, blank=True)
     live_link = models.URLField(blank=True, null=True)
 
     # Expenses & Income

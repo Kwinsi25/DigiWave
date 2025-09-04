@@ -129,6 +129,7 @@ def project_list(request):
     print(users) 
     technologies = Technology.objects.all()      
     app_modes = AppMode.objects.all() 
+    
     quotations = Quotation.objects.all()
     # Count stats
     total_projects = projects.count()
@@ -175,7 +176,7 @@ def save_project(request):
                 start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date() if start_date_str else None,
                 deadline = datetime.strptime(deadline_str, "%Y-%m-%d").date() if deadline_str else None,
                 
-                app_mode=AppMode.objects.filter(id=data.get("app_mode")).first() if data.get("app_mode") else None,
+                # app_mode=AppMode.objects.filter(id=data.get("app_mode")).first() if data.get("app_mode") else None,
                 status=data.get("status"),
                 
                 payment_value=data.get("payment_value") or 0,
@@ -216,6 +217,12 @@ def save_project(request):
              #  Run backend validation
             project.full_clean()   
             project.save()
+            # Handle ManyToMany: App Modes
+            app_mode_ids = request.POST.getlist("app_mode")  # get multiple selected IDs
+            if app_mode_ids:
+                project.app_modes.set(AppMode.objects.filter(id__in=app_mode_ids))
+            else:
+                project.app_modes.clear()
             # Handle ManyToMany: Technologies
             tech_ids = request.POST.getlist("technologies")
             if tech_ids:
@@ -277,7 +284,13 @@ def get_project_details(request):
         }
         for m in project.team_members.all()
     ]
-    print(project.notes)
+     # App Modes for multi-select
+    app_modes_display = [
+        {"id": am.id, "name": am.name} for am in project.app_modes.all()
+    ]
+    app_modes_ids = list(project.app_modes.values_list("id", flat=True))
+    app_modes_names = [am.name for am in project.app_modes.all()]
+
     data = {
 
         "id": project.id,   # numeric id (important)
@@ -292,10 +305,11 @@ def get_project_details(request):
         "client_name": project.quotation.client_name if project.quotation else '',
 
         "technologies": [t.name for t in project.technologies.all()],
-        # App Mode
-        "app_mode_id": project.app_mode.id if project.app_mode else None,
-        "app_mode_name": project.app_mode.name if project.app_mode else '',
-        "app_mode": project.app_mode.name if project.app_mode else '',
+        
+         # App Modes
+        "app_modes_display": app_modes_display,    
+        "app_modes_ids": app_modes_ids,            
+        "app_modes_names": app_modes_names,        
 
         "status": project.status,
         "deadline": project.deadline.strftime('%Y-%m-%d') if project.deadline else None,
@@ -360,7 +374,7 @@ def update_project(request, id):
             project.start_date = parse_date(request.POST.get('start_date'))
             # project.deadline = data.get("deadline") or None
             project.deadline = parse_date(request.POST.get('deadline'))
-            project.app_mode_id = data.get("app_mode") or None
+            
             project.status = data.get("status")
 
             # Payment info
@@ -411,6 +425,10 @@ def update_project(request, id):
             members = User.objects.filter(id__in=team_member_ids)
             project.team_members.set(members)
 
+             # ManyToMany: App Modes
+            app_mode_ids = request.POST.getlist("app_mode")  # <-- multi-select field name
+            project.app_modes.set(AppMode.objects.filter(id__in=app_mode_ids))
+            
             return JsonResponse({"success": True, "message": "Project updated successfully!"})
 
         except ValidationError as ve:
@@ -1039,7 +1057,7 @@ def add_user(request):
                 email=request.POST.get("email"),
                 phone=request.POST.get("phone") or None,
                 password=request.POST.get("password"),
-                amount=request.POST.get("amount") or None,
+                salary=request.POST.get("salary") or None,
                 joining_date=parse_date(request.POST.get("joining_date")),
                 last_date=parse_date(request.POST.get("last_date")),
                 birth_date=parse_date(request.POST.get("birth_date")),
@@ -1225,10 +1243,10 @@ def get_user(request, id):
      # Calculate total salary/fixed amount
     total_paid = 0
     fixed_details = []
-    if user.employee_type == "salary" and user.joining_date and user.amount:
+    if user.employee_type == "salary" and user.joining_date and user.salary:
         today = date.today()
         months_diff = (today.year - user.joining_date.year) * 12 + (today.month - user.joining_date.month) + 1
-        total_paid = float(user.amount) * months_diff
+        total_paid = float(user.salary) * months_diff
 
     elif user.employee_type == "fixed" and user.fixed_employee_details:
         # fixed_employee_details can be list or single dict
@@ -1286,7 +1304,7 @@ def get_user(request, id):
         "phone": user.phone,
         "gender": user.gender if user.gender else None,
         "employee_type": user.employee_type if user.employee_type else None,
-        "amount": total_paid,
+        "salary": total_paid,
         "joining_date": user.joining_date.strftime("%Y-%m-%d") if user.joining_date else None,
     
         "last_date": user.last_date.strftime("%Y-%m-%d") if user.last_date else None,
@@ -1334,8 +1352,8 @@ def update_user(request, id):
 
             # Job details
             user.employee_type = request.POST.get("employee_type") or None
-            amount = request.POST.get("amount")
-            user.amount = amount if amount else None
+            salary = request.POST.get("salary")
+            user.salary = salary if salary else None
             user.joining_date = parse_date(request.POST.get("joining_date"))
             user.last_date = parse_date(request.POST.get("last_date"))
             # Personal details
@@ -2084,6 +2102,31 @@ def file_docs(request):
     all_projects = Project.objects.all()
     all_folders = Folder.objects.select_related("project").all()
     all_subfolders = SubFolder.objects.select_related("folder__project").all()
+
+
+    display_all_folders = Folder.objects.all()
+    display_all_subfolders = SubFolder.objects.all()
+
+    # Total folders: main + subfolders
+    total_folders = display_all_folders.count() + display_all_subfolders.count()
+
+    # Total files: files in folders + files in subfolders
+    total_files = FileDoc.objects.count()
+
+    # Recent file
+    recent_file = FileDoc.objects.order_by("-created_at").first()
+
+    # Prepare recent file info with folder/subfolder
+    if recent_file:
+        if recent_file.subfolder:  # file is in subfolder
+            recent_location = f"{recent_file.subfolder.folder.name} / {recent_file.subfolder.name}"
+        elif recent_file.folder:  # file is in main folder
+            recent_location = f"{recent_file.folder.name}"
+        else:
+            recent_location = "No folder info"
+    else:
+        recent_location = "No recent files"
+
     # Flatten to folders directly
     folder_rows = []
     for f in all_folders:
@@ -2121,11 +2164,13 @@ def file_docs(request):
     paginator = Paginator(folder_rows, records_per_page)
     page_obj = paginator.get_page(page_number)
 
-    recent_file = FileDoc.objects.order_by("-created_at").first()  # returns single object or None
+    # recent_file = FileDoc.objects.order_by("-created_at").first()  # returns single object or None
     print(recent_file)
     
 
     context = {
+        "display_all_folders": display_all_folders,
+        "display_all_subfolders": display_all_subfolders,
         "all_projects": all_projects,
         "all_folders": all_folders,
         "all_subfolders": all_subfolders,
@@ -2133,9 +2178,10 @@ def file_docs(request):
         "records_per_page": records_per_page,
         "records_options": [20, 50, 100, 200, 300],
         "total_projects": all_projects.count(),
-        "total_folders": all_folders.count(),
-        "total_files": FileDoc.objects.count(),
-        "recent_files": recent_file,
+        "total_folders": total_folders,
+        "total_files": total_files,
+        "recent_file": recent_file,
+        "recent_location": recent_location,
     }
     return render(request, 'file_docs.html', context)
 
