@@ -219,6 +219,7 @@ class User(models.Model):
     def save(self, *args, **kwargs):
         self.working_days = self.calculate_working_days()
         super().save(*args, **kwargs)
+
 # -----------------------------
 # Project model
 # -----------------------------
@@ -281,12 +282,12 @@ class Project(models.Model):
     live_link = models.URLField(blank=True, null=True)
 
     # Expenses & Income
-    expense = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    other_expense = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     developer_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     server_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     third_party_api_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     mediator_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True) 
-    income = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    # income = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     # Free service
     free_service = models.TextField(blank=True, null=True)
@@ -361,11 +362,10 @@ class Project(models.Model):
                 self.quotation_sent = "Yes"
        
         super().save(*args, **kwargs)
-        # ===== Update income with total_paid =====
-        if self.income is None:
-            self.income = self.total_paid
-            super().save(update_fields=["income"])
-    
+       
+        self.payment_value = self.total_paid
+        super().save(update_fields=["payment_value"])
+        
     # ==== Payment Helpers ====
     @property
     def total_paid(self):
@@ -836,7 +836,7 @@ class Quotation(models.Model):
         return f"{self.quotation_no} - {self.client_name} ({self.date})"
     
 # -----------------------------
-# client model
+# client    
 # -----------------------------
 class Client(models.Model):
     # Basic details

@@ -179,17 +179,17 @@ def save_project(request):
                 # app_mode=AppMode.objects.filter(id=data.get("app_mode")).first() if data.get("app_mode") else None,
                 status=data.get("status"),
                 
-                payment_value=data.get("payment_value") or 0,
+                # payment_value=data.get("payment_value") or 0,
                 payment_status=data.get("payment_status"),
                 
                 live_link=data.get("live_link"),
-                expense=data.get("expense") or None,
+                other_expense=data.get("other_expense") or None,
 
                 developer_charge=data.get("developer_charge") or None,
                 server_charge=data.get("server_charge") or None,
                 third_party_api_charge=data.get("third_party_api_charge") or None,
                 mediator_charge=data.get("mediator_charge") or None,
-                income=Decimal(data.get("income")) if data.get("income") else None,
+                # income=Decimal(data.get("income")) if data.get("income") else None,
                 free_service=data.get("free_service"),
                 postman_collection=data.get("postman_collection"),
                 data_folder=data.get("data_folder"),
@@ -247,8 +247,6 @@ def save_project(request):
             return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
 
     return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}}, status=405)
-
-
 
 def to_decimal(val):
     try:
@@ -317,12 +315,12 @@ def get_project_details(request):
         "payment_status": project.payment_status,
         
         "live_link": project.live_link,
-        "expense": str(project.expense) if project.expense is not None else '',
+        "other_expense": str(project.other_expense) if project.other_expense is not None else '',
         "developer_charge": str(project.developer_charge) if project.developer_charge is not None else '',
         "server_charge": str(project.server_charge) if project.server_charge is not None else '',
         "third_party_api_charge": str(project.third_party_api_charge) if project.third_party_api_charge is not None else '',
         "mediator_charge": str(project.mediator_charge) if project.mediator_charge is not None else '',
-        "income": str(project.income) if project.income is not None else '',
+        # "income": str(project.income) if project.income is not None else '',
         "free_service": project.free_service or '',
         
         "postman_collection": project.postman_collection,
@@ -388,28 +386,35 @@ def update_project(request, id):
             project.other_link = data.get("other_link")
 
             # Financials
-            project.expense = to_decimal(data.get("expense"))
+            project.other_expense = to_decimal(data.get("other_expense"))
             project.developer_charge = to_decimal(data.get("developer_charge"))
             project.server_charge = to_decimal(data.get("server_charge"))
             project.third_party_api_charge = to_decimal(data.get("third_party_api_charge"))
             project.mediator_charge = to_decimal(data.get("mediator_charge"))
-            project.income = to_decimal(data.get("income"))
+            # project.income = to_decimal(data.get("income"))
             project.free_service = data.get("free_service")
 
             # Sales / lead tracking
             # project.inquiry_date = parse_date(data.get("inquiry_date"))
             project.inquiry_date = parse_date(request.POST.get('inquiry_date'))
             project.lead_source = data.get("lead_source")
-            project.quotation_sent = data.get("quotation_sent")
-            project.demo_given = data.get("demo_given")
-            project.quotation_amount = to_decimal(data.get("quotation_amount"))
-            project.approval_amount = to_decimal(data.get("approval_amount"))
+            if data.get("quotation_amount") is not None:
+                project.quotation_amount = to_decimal(data.get("quotation_amount"))
 
+            if data.get("demo_given") is not None:
+                project.demo_given = data.get("demo_given")
+
+            if data.get("contract_signed") is not None:
+                project.contract_signed = data.get("contract_signed")
+
+            if data.get("client_industry") is not None:
+                project.client_industry = data.get("client_industry")
+
+
+            project.approval_amount = to_decimal(data.get("approval_amount"))
             # Completion / client info
             # project.completed_date = parse_date(data.get("completed_date"))
             project.completed_date = parse_date(request.POST.get('completed_date'))
-            project.client_industry = data.get("client_industry")
-            project.contract_signed = data.get("contract_signed")
             project.notes = data.get("notes")
             # Save project first before updating many-to-many
             project.full_clean()
@@ -439,7 +444,6 @@ def update_project(request, id):
 
     return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}}, status=405)
 
-
 def delete_project(request, id):
     """
     Delete a project by its ID.
@@ -453,6 +457,144 @@ def delete_project(request, id):
             return JsonResponse({"success": False, "message": f"Error deleting project: {str(e)}"}, status=500)
 
     return JsonResponse({"success": False, "message": "Invalid request method."}, status=405)
+
+
+def get_project_p_l(request):
+    """ Display a list of all projects with their expense and income . """ 
+    # Get dropdown value or default to 20 
+    records_per_page = int(request.GET.get('recordsPerPage', 20)) 
+    # Ensure page number is valid integer >= 1 
+    try: 
+        page_number = int(request.GET.get('page', 1)) 
+    except ValueError: 
+        page_number = 1 
+    if page_number < 1: 
+        page_number = 1 
+        
+    projects = Project.objects.all().order_by("-created_at")
+
+    project_list = []
+    total_ex = Decimal(0)
+    total_income = Decimal(0)
+
+    for p in projects:
+        duration_str = ""
+        if p.start_date:
+            end_date = p.completed_date or date.today()
+            delta = end_date - p.start_date
+            total_days = delta.days
+
+            if total_days <= 28:
+                duration_str = f"{total_days} day{'s' if total_days != 1 else ''}"
+            elif total_days < 365:
+                months = total_days // 30
+                days = total_days % 30
+                duration_str = f"{months} month{'s' if months != 1 else ''}"
+                if days:
+                    duration_str += f" {days} day{'s' if days != 1 else ''}"
+            else:
+                years = total_days // 365
+                remaining_days = total_days % 365
+                months = remaining_days // 30
+                days = remaining_days % 30
+                duration_str = f"{years} year{'s' if years != 1 else ''}"
+                if months:
+                    duration_str += f" {months} month{'s' if months != 1 else ''}"
+                if days:
+                    duration_str += f" {days} day{'s' if days != 1 else ''}"
+
+        # calculate expense from fields
+        expense = sum([
+            p.other_expense or 0,
+            p.developer_charge or 0,
+            p.server_charge or 0,
+            p.third_party_api_charge or 0,
+            p.mediator_charge or 0,
+        ])
+
+        income = Decimal(p.payment_value or 0)
+
+        # add to totals
+        total_ex += Decimal(expense)
+        total_income += income
+        
+        project_list.append({
+            "id": p.id,
+            "project_id": p.project_id,
+            "project_name": p.project_name,
+            "duration": duration_str,
+            "expense": Decimal(expense),
+            "income": income,
+        })
+
+     # Paginate 
+    
+    paginator = Paginator(project_list, records_per_page) 
+    page_obj = paginator.get_page(page_number) # Safe pagination 
+
+    # Count stats
+    total_projects = projects.count()
+
+    return render(request, "project_p_l.html", {
+        "page_obj": page_obj,
+        "total_expense": total_ex,
+        "total_income": total_income,
+        'records_per_page': records_per_page, 
+        'records_options': [20, 50, 100, 200, 300],
+        'total_projects': total_projects,
+    })
+
+def get_project_p_l_detail(request):
+    project_id = request.GET.get("id")
+    if not project_id:
+        return JsonResponse({"success": False, "error": "Missing project id"}, status=400)
+
+    project = get_object_or_404(Project, id=project_id)
+
+    # --- Payments ---
+    all_payments = ProjectPayment.objects.filter(project=project).order_by("id")
+
+    payments_data = []
+    total_paid = 0
+    for p in all_payments:
+        total_paid += float(p.amount)
+        payments_data.append({
+            "id": p.id,
+            "milestone": p.milestone_name or "",
+            "amount": float(p.amount),
+            "method": p.payment_method,
+            "details": p.payment_details or {},
+            "notes": p.notes or "",
+            "date": p.payment_date.strftime("%Y-%m-%d") if p.payment_date else "",
+        })
+
+    approval_amount = float(project.approval_amount or 0)
+    remaining_amount = approval_amount - total_paid
+
+    # --- Expenses ---
+    expenses_data = {
+        "Other": float(project.other_expense or 0),
+        "Developer": float(project.developer_charge or 0),
+        "Server": float(project.server_charge or 0),
+        "Third Party API": float(project.third_party_api_charge or 0),
+        "Mediator": float(project.mediator_charge or 0),
+    }
+    total_expense = sum(expenses_data.values())
+
+
+    data = {
+        "project_id": project.project_id,
+        "project_name": project.project_name,
+        "approval_amount": approval_amount,
+        "total_paid": total_paid,
+        "remaining_amount": remaining_amount,
+        "payments": payments_data,
+        "expenses": expenses_data,
+        "total_expense": total_expense,
+    }
+    return JsonResponse({"success": True, "data": data})
+
+
 
 # -----------------------------
 # Host View
@@ -2534,9 +2676,9 @@ def add_payment(request):
             payment.full_clean()
             payment.save()
 
-            # Update project income
-            project.income = project.total_paid
-            project.save(update_fields=["income"])
+            # Update project payment
+            project.payment_value = project.total_paid
+            project.save(update_fields=["payment_value"])
 
                 # ✅ Return JSON for AJAX
             if request.headers.get("x-requested-with") == "XMLHttpRequest":

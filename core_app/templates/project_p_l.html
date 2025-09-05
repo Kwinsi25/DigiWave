@@ -1,0 +1,485 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}All Expense and Income{% endblock %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+{% block extra_css %}
+<style>
+    .alert-success {
+        background-color: #017004 !important;
+        /* Green */
+        color: black !important;
+    }
+
+    /* Example: Custom error background */
+    .alert-error,
+    .alert-danger {
+        background-color: #F44336;
+        /* Red */
+        color: black;
+    }
+
+    /* Example: Custom info background */
+    .alert-info {
+        background-color: #2196F3;
+        /* Blue */
+        color: black;
+    }
+
+    /* Example: Custom warning background */
+    .alert-warning {
+        background-color: #FF9800;
+        /* Orange */
+        color: black;
+    }
+
+    .scrollable-table-body {
+        max-height: 400px;
+        /* Adjust height as needed */
+        overflow-y: auto;
+    }
+
+    .scrollable-table-body table {
+        margin-bottom: 0;
+        /* Avoid extra spacing */
+    }
+
+    /* Optional: Fix the header */
+    .scrollable-table-body thead th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div id="toast-container    " style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 3000;  /* above sidebar/navbar */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+">
+    {% for message in messages %}
+    <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert"
+        aria-live="assertive" aria-atomic="true" style="min-width: 250px;">
+        <div class="d-flex">
+            <div class="toast-body">
+                {{ message }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+<div class="content-wrapper">
+
+    <!-- Content -->
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <!-- Project Status Cards -->
+        <div class="row mb-4">
+            <!-- Total Projects -->
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Projects</h6>
+                            <h4 class="fw-bold">{{total_projects}}</h4>
+                        </div>
+                        <div class="avatar bg-primary text-white rounded-circle p-2">
+                            <i class="bx bx-folder-open fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- total expense -->
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Expense</h6>
+                            <h4 class="fw-bold text-info">{{ total_expense }}</h4>
+                        </div>
+                        <div class="avatar bg-info text-white rounded-circle p-2">
+                            <i class="bx bx-minus-circle fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- total income -->
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Total Income</h6>
+                            <h4 class="fw-bold text-success">{{total_income|floatformat:2 }}</h4>
+                        </div>
+                        <div class="avatar bg-success text-white rounded-circle p-2">
+                            <i class="bx bx-plus-circle fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+           
+        </div>
+
+        <!-- All Projects Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">All Projects Expense and Income</h4>
+                    <div class="d-flex gap-2">
+
+                        <button type="button" class="btn btn-outline-secondary" title="Filter Projects">
+                            <i class="bx bx-filter-alt"></i>
+                        </button>
+                        
+                    </div>
+                </div>
+
+                <div class="table-responsive text-nowrap scrollable-table-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sr No.</th>
+                                <th>Project ID</th>
+                                <th>Project Name</th>
+                                <th>Duration</th>
+                                <th>Expense</th>
+                                <th>Income</th>
+                               
+                            </tr>
+                        </thead>
+                        <tbody class="table-border-bottom-0">
+                            {% for project in page_obj %}
+
+                            <tr>
+
+                                <th>{{ forloop.counter0|add:page_obj.start_index }}</th>
+                                <td>{{ project.project_id }}</td>
+                                <td>
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#projectDetailsModal"
+                                        class="fw-bold project-link" data-project-id="{{ project.id }}">
+                                        {{ project.project_name }}
+                                    </a>
+                                </td>
+                                 <td>{% if project.duration %}{{ project.duration }}{% else %}-{% endif %}</td>
+                                <td>{{ project.expense }}</td>
+                                <td>{{ project.income|floatformat:2 }}</td>
+
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8">No projects found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+
+
+
+
+                </div>
+                <!-- Records Per Page & Pagination -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex align-items-center">
+                        <form method="GET" id="recordsForm" class="d-flex align-items-center">
+                            <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
+                            <select class="form-select form-select-sm" name="recordsPerPage" id="recordsPerPage"
+                                style="width: auto;">
+                                {% for option in records_options %}
+                                <option value="{{ option }}" {% if records_per_page == option %}selected{% endif %}>
+                                    {{ option }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Page navigation" class="mt-3">
+                        <ul class="pagination justify-content-end mb-0">
+
+                            <!-- Previous Button -->
+                            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                                {% if page_obj.has_previous %}
+                                <a class="page-link"
+                                    href="?page={{ page_obj.previous_page_number }}&recordsPerPage={{ records_per_page }}">
+                                    <i class="bx bx-chevrons-left"></i>
+                                </a>
+                                {% else %}
+                                <span class="page-link disabled">
+                                    <i class="bx bx-chevrons-left"></i>
+                                </span>
+                                {% endif %}
+                            </li>
+
+
+                            <!-- Always show page 1 -->
+                            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                                <a class="page-link" href="?page=1&recordsPerPage={{ records_per_page }}">1</a>
+                            </li>
+
+                            <!-- Always show page 2 if exists -->
+                            {% if page_obj.paginator.num_pages >= 2 %}
+                            <li class="page-item {% if page_obj.number == 2 %}active{% endif %}">
+                                <a class="page-link" href="?page=2&recordsPerPage={{ records_per_page }}">2</a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Ellipsis if there’s a gap before last two pages -->
+                            {% if page_obj.paginator.num_pages > 4 %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                            {% endif %}
+
+                            <!-- Show second last page only if it's not duplicate of page 2 -->
+                            {% if page_obj.paginator.num_pages > 2 and page_obj.paginator.num_pages|add:'-1' != 2 %}
+                            <li
+                                class="page-item {% if page_obj.number == page_obj.paginator.num_pages|add:'-1' %}active{% endif %}">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.paginator.num_pages|add:'-1' }}&recordsPerPage={{ records_per_page }}">
+                                    {{ page_obj.paginator.num_pages|add:'-1' }}
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Show last page only if it's not duplicate of page 2 -->
+                            {% if page_obj.paginator.num_pages > 1 and page_obj.paginator.num_pages != 2 %}
+                            <li
+                                class="page-item {% if page_obj.number == page_obj.paginator.num_pages %}active{% endif %}">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.paginator.num_pages }}&recordsPerPage={{ records_per_page }}">
+                                    {{ page_obj.paginator.num_pages }}
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Next Button -->
+                            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                                {% if page_obj.has_next %}
+                                <a class="page-link"
+                                    href="?page={{ page_obj.next_page_number }}&recordsPerPage={{ records_per_page }}">
+                                    <i class="bx bx-chevrons-right"></i>
+                                </a>
+                                {% else %}
+                                <span class="page-link disabled">
+                                    <i class="bx bx-chevrons-right"></i>
+                                </span>
+                                {% endif %}
+                            </li>
+
+                        </ul>
+                    </nav>
+                </div>
+
+
+            </div>
+
+        </div>
+
+       <!--  Details Modal -->
+    <div class="modal fade" id="projectDetailsModal" tabindex="-1" aria-labelledby="projectDetailsModalLabel"
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+        <!-- Header -->
+        <div class="modal-header table-success text-white">
+            <h5 class="modal-title" id="projectDetailsModalLabel">
+            <i class="bx bx-credit-card me-2"></i> Details
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body px-4 py-3">
+            <div class="table-responsive">
+
+            <!-- ================= Project Summary ================= -->
+            <h6 class="fw-bold mb-3"><i class="bx bx-briefcase me-1"></i> Project Summary</h6>
+            <table class="table table-bordered table-sm mb-4">
+                <tbody>
+                <tr>
+                    <th>Project ID</th>
+                    <td id="pd-project-id"></td>
+                    <th>Project Name</th>
+                    <td id="pd-project-name"></td>
+                </tr>
+                <tr>
+                    <th>Approval Amount</th>
+                    <td id="pd-approval-amount"></td>
+                    <th>Total Income</th>
+                    <td id="pd-total-paid"></td>
+                </tr>
+                <tr>
+                    <th>Remaining Amount</th>
+                    <td id="pd-remaining-amount"></td>
+                    <th>Total Expense</th>
+                    <td id="pd-total-expense"></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!-- ================= Payment Breakdown ================= -->
+            <h6 class="fw-bold mb-3"><i class="bx bx-money me-1"></i> Payment Breakdown</h6>
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>Milestone</th>
+                    <th>Amount (₹)</th>
+                    <th>Payment Date</th>
+                    <th>Method</th>
+                    <th>Details</th>
+                
+                </tr>
+                </thead>
+                <tbody id="payment-details-body">
+                <!-- Filled dynamically -->
+                
+                </tbody>
+            </table>
+
+           <!-- ================= Expense Breakdown ================= -->
+            <h6 class="fw-bold mb-3"><i class="bx bx-receipt me-1"></i> Expense Breakdown</h6>
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Other</th>
+                        <th>Developer</th>
+                        <th>Server</th>
+                        <th>Third Party API</th>
+                        <th>Mediator</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="expense-values-row">
+                        <!-- Filled dynamically -->
+                    </tr>
+                </tbody>
+            </table>
+
+
+            </div>
+        </div>
+
+        </div>
+    </div>
+    </div>
+</div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+     document.addEventListener("DOMContentLoaded", function () {
+        // pagination links
+        document.getElementById('recordsPerPage').addEventListener('change', function () {
+            // Always reset to page 1 when changing limit
+            const form = document.getElementById('recordsForm');
+            const hiddenPage = document.createElement('input');
+            hiddenPage.type = 'hidden';
+            hiddenPage.name = 'page';
+            hiddenPage.value = 1;
+            form.appendChild(hiddenPage);
+            form.submit();
+        });
+        // Payment Details Modal Population
+    const paymentDetailsUrl = "{% url 'get_project_p_l_detail' %}";
+
+    $(document).on("click", ".project-link", function (e) {
+    e.preventDefault();
+    const projectId = $(this).data("project-id");
+    console.log("Fetching details for payment ID:", projectId);
+
+    $.get(paymentDetailsUrl, { id: projectId }, function (res) {
+        if (!res.success) {
+            console.error("Failed:", res.error);
+            return;
+        }
+
+        const project = res.data;
+
+        // === Fill project summary ===
+        $("#pd-project-id").text(project.project_id);
+        $("#pd-project-name").text(project.project_name);
+
+        $("#pd-approval-amount")
+            .text(`₹${project.approval_amount}`)
+            .addClass("text-primary fw-bold");
+
+        $("#pd-total-paid")
+            .text(`₹${project.total_paid}`)
+            .addClass("text-success fw-bold");
+
+        $("#pd-remaining-amount")
+            .text(project.remaining_amount === 0 ? "-" : `₹${project.remaining_amount}`)
+            .addClass("text-warning fw-bold");
+
+       // === Clear existing rows ===
+$("#payment-details-body").empty();
+$("#expense-details-body").empty();
+
+// === Fill payments ===
+project.payments.forEach((p) => {
+    let extraDetails = "";
+
+    if (p.method === "Bank Transfer") {
+        extraDetails = `
+            <strong>Bank:</strong> ${p.details.bank_name || ""}<br>
+            <strong>Acc:</strong> ${p.details.account_no || ""}<br>
+            <strong>IFSC:</strong> ${p.details.ifsc_code || ""}`;
+    } else if (p.method === "UPI") {
+        extraDetails = `<strong>UPI:</strong> ${p.details.upi_id || ""}`;
+    } else if (p.method === "Cheque") {
+        extraDetails = `
+            <strong>Cheque No:</strong> ${p.details.cheque_no || ""}<br>
+            <strong>Name:</strong> ${p.details.cheque_name || ""}`;
+    } else if (p.method === "Other") {
+        extraDetails = `<strong>Details:</strong> ${p.details.other_details || ""}`;
+    }
+
+    $("#payment-details-body").append(`
+        <tr>
+            <td>${p.milestone || "-"}</td>
+            <td class="text-success fw-bold">₹${p.amount}</td>
+            <td>${formatDate(p.date)}</td>
+            <td>${p.method}</td>
+            <td>${extraDetails || "-"}</td>
+        </tr>
+    `);
+});
+
+// === Fill expenses ===
+// === Fill expenses in single row ===
+$("#expense-values-row").html(`
+    <td class="text-danger fw-bold">₹${project.expenses.Other}</td>
+    <td class="text-danger fw-bold">₹${project.expenses.Developer}</td>
+    <td class="text-danger fw-bold">₹${project.expenses.Server}</td>
+    <td class="text-danger fw-bold">₹${project.expenses["Third Party API"]}</td>
+    <td class="text-danger fw-bold">₹${project.expenses.Mediator}</td>
+    
+`);
+
+
+// Set total expense
+$("#pd-total-expense").addClass("text-danger fw-bold").text(`₹${project.total_expense}`);
+
+        // Show modal
+        $("#projectDetailsModal").modal("show");
+    });
+});
+})
+</script>
+{% endblock %}

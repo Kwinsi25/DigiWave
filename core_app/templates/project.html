@@ -5,6 +5,12 @@
 
 {% block extra_css %}
 <style>
+    select.readonly {
+    pointer-events: none;   /* blocks click */
+    background-color: #eceef1 !important;  /* your requested color */
+    color: #495057;         /* optional: text color like Bootstrap disabled */
+}
+
     .alert-success {
         background-color: #017004 !important;
         /* Green */
@@ -580,7 +586,7 @@
                                             <th>Payment (₹)</th>
                                             <td>
                                                 <input type="number" class="form-control" name="payment_value"
-                                                    placeholder="Enter total payment value" min="0">
+                                                    placeholder="Enter total payment value" min="0" readonly>
                                                 
                                             </td>
                                             <th>Payment Status</th>
@@ -625,15 +631,15 @@
                                         </tr>
 
                                         <tr>
-                                            <th>Expense (₹)</th>
+                                            <th>Other Expense (₹)</th>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" name="expense"
+                                                <input type="number"  class="form-control" name="other_expense"
                                                     placeholder="Enter expense amount">
                                                 
                                             </td>
                                             <th>Developer Charge (₹)</th>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control"
+                                                <input type="number"  class="form-control"
                                                     name="developer_charge" placeholder="Enter developer charge">
                                                 
                                             </td>
@@ -642,13 +648,13 @@
                                         <tr>
                                             <th>Server Charge (₹)</th>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" name="server_charge"
+                                                <input type="number"  class="form-control" name="server_charge"
                                                     placeholder="Enter server charge">
                                                 
                                             </td>
                                             <th>3rd Party API Charge (₹)</th>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control"
+                                                <input type="number"  class="form-control"
                                                     name="third_party_api_charge" placeholder="Enter 3rd party API charge">
                                                 
                                             </td>
@@ -657,16 +663,16 @@
                                         <tr>
                                             <th>Mediator Charge (₹)</th>
                                             <td>
-                                                <input type="number" step="0.01" class="form-control" name="mediator_charge"
+                                                <input type="number"  class="form-control" name="mediator_charge"
                                                     placeholder="Enter mediator charge">
                                                 
                                             </td>
-                                            <th>Income (₹)</th>
+                                            <!-- <th>Income (₹)</th>
                                             <td>
                                                 <input type="number" class="form-control" name="income"
                                                     placeholder="Enter income">
                                                 
-                                            </td>
+                                            </td> -->
                                         </tr>
 
                                        
@@ -810,8 +816,8 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th>Expense</th>
-                                    <td id="pd-expense"></td>
+                                    <th>Other Expense</th>
+                                    <td id="pd-other-expense"></td>
                                     <th>Developer Charge</th>
                                     <td id="pd-developer-charge"></td>
                                 </tr>
@@ -824,11 +830,12 @@
                                 <tr>
                                     <th>Mediator Charge</th>
                                     <td id="pd-mediator-charge"></td>
-                                    <th>Income</th>
-                                    <td id="pd-income"></td>
+                                    <th>Total Income</th>
+                                    <td id="pd-total-income"></td>
                                 </tr>
                                 <tr>
-                                    
+                                    <th>Total Expense</th>
+                                    <td id="pd-total-expense"></td>
                                     <th>Free Service</th>
                                     <td id="pd-free-service" colspan="3"></td>
                                 </tr>
@@ -854,7 +861,9 @@
                                     <td id="pd-other-link" colspan="3"></td>
                                 </tr>
                                 <tr>
-   
+                                    <th>Notes</th>
+                                    <td id="pd-notes" colspan="3"></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -1044,7 +1053,7 @@
                                     <tr>
                                         <th>Payment (₹)</th>
                                         <td><input type="number" class="form-control" name="payment_value"
-                                                id="edit-payment-value" placeholder="Enter payment amount"></td>
+                                                id="edit-payment-value" placeholder="Enter payment amount" readonly></td>
                                         <th>Payment Status</th>
                                         <td>
                                             <select class="form-select" name="payment_status" id="edit-payment-status">
@@ -1076,30 +1085,30 @@
                                     </tr>
                                     <!-- Financials -->
                                     <tr>
-                                        <th>Expense (₹)</th>
-                                        <td><input type="number" step="0.01" class="form-control" name="expense"
-                                                id="edit-expense" placeholder="Enter expense"></td>
+                                        <th>Other Expense (₹)</th>
+                                        <td><input type="number"  class="form-control" name="other_expense"
+                                                id="edit-other-expense" placeholder="Enter expense"></td>
                                         <th>Developer Charge (₹)</th>
-                                        <td><input type="number" step="0.01" class="form-control"
+                                        <td><input type="number"  class="form-control"
                                                 name="developer_charge" id="edit-developer-charge"
                                                 placeholder="Enter developer charge"></td>
                                     </tr>
                                     <tr>
                                         <th>Server Charge (₹)</th>
-                                        <td><input type="number" step="0.01" class="form-control" name="server_charge"
+                                        <td><input type="number"  class="form-control" name="server_charge"
                                                 id="edit-server-charge" placeholder="Enter server charge"></td>
                                         <th>3rd Party API Charge (₹)</th>
-                                        <td><input type="number" step="0.01" class="form-control"
+                                        <td><input type="number"  class="form-control"
                                                 name="third_party_api_charge" id="edit-third-party-charge"
                                                 placeholder="Enter API charge"></td>
                                     </tr>
                                     <tr>
                                         <th>Mediator Charge (₹)</th>
-                                        <td><input type="number" step="0.01" class="form-control" name="mediator_charge"
+                                        <td><input type="number"  class="form-control" name="mediator_charge"
                                                 id="edit-mediator-charge" placeholder="Enter mediator charge"></td>
-                                        <th>Income (₹)</th>
-                                        <td><input type="number" step="0.01" class="form-control" name="income"
-                                                id="edit-income" placeholder="Enter income"></td>
+                                        <!-- <th>Income (₹)</th>
+                                        <td><input type="number"  class="form-control" name="income"
+                                                id="edit-income" placeholder="Enter income"></td> -->
                                     </tr>
                                     <!-- Completion and Free Service -->
                                     <tr>
@@ -1335,6 +1344,13 @@
             form.dataset.listenerAttached = "true";
         }
     });
+    function makeSelectReadonly(select) {
+    ["mousedown", "keydown", "wheel"].forEach(evt => {
+        select.addEventListener(evt, e => e.preventDefault());
+    });
+    select.classList.add("readonly"); // apply the style
+}
+
         // Auto-fill when quotation is selected
         document.getElementById('quotationSelect').addEventListener('change', function () {
             let quotationId = this.value;
@@ -1412,8 +1428,13 @@
                     leadInput.readOnly = true;
                     quotationInput.readOnly = true;
                     quotationSelect.disabled = true;
-                    demoGiven.disabled = true;
-                    contractSigned.disabled = true;
+                    makeSelectReadonly(demoGiven);
+makeSelectReadonly(contractSigned);
+
+                    // demoGiven.addEventListener("mousedown", e => e.preventDefault());
+
+                    // contractSigned.addEventListener("mousedown", e => e.preventDefault());
+
                     clientName.disabled = true;
                     if (inquiryInput._flatpickr) {
                         inquiryInput._flatpickr.input.disabled = true;
@@ -1527,12 +1548,12 @@
                 } else {
                     $("#pd-live-link").text("");
                 }
-                $("#pd-expense").text(p.expense ? `₹${p.expense}` : "-");
+                $("#pd-other-expense").text(p.other_expense ? `₹${p.other_expense}` : "-");
                 $("#pd-developer-charge").text(p.developer_charge ? `₹${p.developer_charge}` : "-");
                 $("#pd-server-charge").text(p.server_charge ? `₹${p.server_charge}` : "-");
                 $("#pd-third-party-charge").text(p.third_party_api_charge ? `₹${p.third_party_api_charge}` : "-");
                 $("#pd-mediator-charge").text(p.mediator_charge ? `₹${p.mediator_charge}` : "-");
-                $("#pd-income").text(p.income ? `₹${p.income}` : "-");
+                // $("#pd-income").text(p.income ? `₹${p.income}` : "-");
                 $("#pd-free-service").text(p.free_service);
                 if (p.postman_collection) {
                     $("#pd-postman-collection").html(`<a href="${p.postman_collection}" target="_blank">${p.postman_collection}</a>`);
@@ -1557,6 +1578,15 @@
 
                 $("#projectDetailsModal").modal("show");
             });
+            
+            $.get("{% url 'get_project_p_l_detail' %}", { id: projectId }, function (res) {
+                if (res.success) {
+                    const d = res.data;
+                    $("#pd-total-income").addClass("text-success").text(`₹${d.total_paid}`);
+                    $("#pd-total-expense").addClass("text-danger").text(`₹${d.total_expense}`);
+                }
+            });
+
         });
 
 
@@ -1650,12 +1680,12 @@
                 $("#edit-postman-collection").val(p.postman_collection);
                 $("#edit-data-folder").val(p.data_folder);
                 $("#edit-other-link").val(p.other_link);
-                $("#edit-expense").val(p.expense);
+                $("#edit-other-expense").val(p.other_expense);
                 $("#edit-developer-charge").val(p.developer_charge);
                 $("#edit-server-charge").val(p.server_charge);
                 $("#edit-third-party-charge").val(p.third_party_api_charge);
                 $("#edit-mediator-charge").val(p.mediator_charge);
-                $("#edit-income").val(p.income);
+                // $("#edit-income").val(p.income);
 
                 $("#edit-free-service").val(p.free_service);
                 if (p.inquiry_date) $("#edit-inquiry-date")[0]._flatpickr.setDate(p.inquiry_date, true);
@@ -1849,9 +1879,13 @@
                     quotationInput.readOnly = true;
                
                     quotationSelect.disabled = true;
-                    demoGiven.disabled = true;
+                    // demoGiven.addEventListener("mousedown", e => e.preventDefault());
+                    // contractSigned.addEventListener("mousedown", e => e.preventDefault());
+                    makeSelectReadonly(demoGiven);
+makeSelectReadonly(contractSigned);
+
                     clientName.readOnly = true;
-                    contractSigned.disabled = true;
+
 
                     if (inquiryInput._flatpickr) {
                         inquiryInput._flatpickr.set('clickOpens', false);

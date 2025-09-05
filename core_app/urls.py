@@ -22,6 +22,8 @@ urlpatterns = [
     path('get_project_details/', get_project_details, name='get_project_details'),
     path('update_project/<int:id>/', update_project, name='update_project'),
     path('delete_project/<int:id>/', delete_project, name='delete_project'),
+    path("get_project_p_l/", get_project_p_l, name="get_project_p_l"),
+    path('get_project_p_l_detail/', get_project_p_l_detail, name='get_project_p_l_detail'),
 
     #host
     path('host/', host_list, name='host_list'),
