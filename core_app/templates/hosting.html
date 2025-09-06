@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}All Hosts{% endblock %}
-
+{% load static%}
 {% block extra_css %}
 <style>
     .scrollable-table-body {
@@ -139,17 +139,17 @@
                 </div>
 
                 <div class="table-responsive text-nowrap scrollable-table-body">
-                    <table class="table">
+                    <table class="table" id="hostTable">
                         <thead>
 
                             <tr>
-                                <th>Sr No.</th>
-                                <th>Hosting Provider</th>
-                                <th>Project ID</th>
-                                <th>Project Name</th>
-                                <th>Login URL</th>
-                                <th>Status</th>
-                                <th>Left Days</th>
+                                <th data-sort="number">Sr No.</th>
+                                <th data-sort="string">Hosting Provider</th>
+                                <th data-sort="string">Project ID</th>
+                                <th data-sort="string">Project Name</th>
+                                <th data-sort="string">Login URL</th>
+                                <th data-sort="string">Status</th>
+                                <th data-sort="string">Left Days</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -708,224 +708,251 @@
 
 
 
-<!-- Edit Host Data Modal -->
-<div class="modal fade" id="editHostModal" tabindex="-1" aria-labelledby="editHostModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header table-primary text-white">
-                <h5 class="modal-title" id="editHostModalLabel">
-                    <i class="bx bx-edit-alt me-2"></i> Edit Server / Host Data
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+    <!-- Edit Host Data Modal -->
+    <div class="modal fade" id="editHostModal" tabindex="-1" aria-labelledby="editHostModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header table-primary text-white">
+                    <h5 class="modal-title" id="editHostModalLabel">
+                        <i class="bx bx-edit-alt me-2"></i> Edit Server / Host Data
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
 
-            <form id="editHostForm" method="POST">
-                {% csrf_token %}
-                <input type="hidden" name="host_id" id="edit-host-id">
+                <form id="editHostForm" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="host_id" id="edit-host-id">
 
-                <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
-                    <div class="table-responsive">
-                        <table class="table table-bordered align-middle">
-                            <tbody>
-                                <!-- Project Info -->
-                                <tr class="table-light">
-                                    <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Info</th>
-                                </tr>
-                                <tr>
-                                    <th>Project(s)</th>
-                                    <td colspan="3">
-                                        <select class="form-select" name="project" id="edit-project" multiple>
-                                            {% for project in projects %}
-                                            <option value="{{ project.id }}">{{ project.project_name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <small class="text-muted">Hold Ctrl (Windows) or Command (Mac) to select multiple</small>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Hosting Provider</th>
-                                    <td colspan="3">
-                                        <input type="text" class="form-control" name="hosting_provider" id="edit-hosting-provider" placeholder="Enter hosting provider">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Server Name</th>
-                                    <td colspan="3">
-                                        <input type="text" class="form-control" name="server_name" id="edit-server-name" placeholder="Enter server name">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Server Type</th>
-                                    <td>
-                                        <input type="text" class="form-control" name="server_type" id="edit-server-type" placeholder="Enter server type">
-                                    </td>
-                                    <th>Plan / Package</th>
-                                    <td>
-                                        <input type="text" class="form-control" name="plan_package" id="edit-plan-package" placeholder="Enter plan/package">
-                                    </td>
-                                </tr>
+                    <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle">
+                                <tbody>
+                                    <!-- Project Info -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Info</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Project(s)</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="project" id="edit-project" multiple>
+                                                {% for project in projects %}
+                                                <option value="{{ project.id }}">{{ project.project_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <small class="text-muted">Hold Ctrl (Windows) or Command (Mac) to select
+                                                multiple</small>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Hosting Provider</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="hosting_provider"
+                                                id="edit-hosting-provider" placeholder="Enter hosting provider">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Server Name</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="server_name"
+                                                id="edit-server-name" placeholder="Enter server name">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Server Type</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="server_type"
+                                                id="edit-server-type" placeholder="Enter server type">
+                                        </td>
+                                        <th>Plan / Package</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="plan_package"
+                                                id="edit-plan-package" placeholder="Enter plan/package">
+                                        </td>
+                                    </tr>
 
-                                <!-- Network & OS -->
-                                <tr class="table-light">
-                                    <th colspan="4"><i class="bx bx-server me-2"></i> Network & OS</th>
-                                </tr>
-                                <tr>
-                                    <th>Server IP</th>
-                                    <td>
-                                        <input type="text" class="form-control" name="server_ip" id="edit-server-ip" placeholder="Enter server IP">
-                                    </td>
-                                    <th>Operating System</th>
-                                    <td>
-                                        <input type="text" class="form-control" name="operating_system" id="edit-operating-system" placeholder="Enter operating system">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Login URL</th>
-                                    <td colspan="3">
-                                        <input type="url" class="form-control" name="login_url" id="edit-login-url" placeholder="Enter login URL">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Username</th>
-                                    <td>
-                                        <input type="text" class="form-control" name="username" id="edit-username" placeholder="Enter hosting username">
-                                    </td>
-                                    <th>Password</th>
-                                    <td>
-                                        <div class="input-group">
-                                            <input type="password" class="form-control" name="password" id="edit-password" placeholder="Enter hosting password">
-                                            <button class="btn btn-outline-secondary" type="button" id="edit-toggle-password">
-                                                <i class="bx bx-show"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>SSH Username</th>
-                                    <td>
-                                        <input type="text" class="form-control" name="ssh_username" id="edit-ssh-username" placeholder="Enter SSH username">
-                                    </td>
-                                    <th>SSH / FTP Access</th>
-                                    <td>
-                                        <input type="text" class="form-control" name="ssh_ftp_access" id="edit-ssh-ftp-access" placeholder="Enter SSH/FTP access">
-                                    </td>
-                                </tr>
+                                    <!-- Network & OS -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-server me-2"></i> Network & OS</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Server IP</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="server_ip" id="edit-server-ip"
+                                                placeholder="Enter server IP">
+                                        </td>
+                                        <th>Operating System</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="operating_system"
+                                                id="edit-operating-system" placeholder="Enter operating system">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Login URL</th>
+                                        <td colspan="3">
+                                            <input type="url" class="form-control" name="login_url" id="edit-login-url"
+                                                placeholder="Enter login URL">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Username</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="username" id="edit-username"
+                                                placeholder="Enter hosting username">
+                                        </td>
+                                        <th>Password</th>
+                                        <td>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" name="password"
+                                                    id="edit-password" placeholder="Enter hosting password">
+                                                <button class="btn btn-outline-secondary" type="button"
+                                                    id="edit-toggle-password">
+                                                    <i class="bx bx-show"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>SSH Username</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="ssh_username"
+                                                id="edit-ssh-username" placeholder="Enter SSH username">
+                                        </td>
+                                        <th>SSH / FTP Access</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="ssh_ftp_access"
+                                                id="edit-ssh-ftp-access" placeholder="Enter SSH/FTP access">
+                                        </td>
+                                    </tr>
 
-                                <!-- Database -->
-                                <tr class="table-light">
-                                    <th colspan="4"><i class="bx bx-cloud me-2"></i> Database</th>
-                                </tr>
-                                <tr>
-                                    <th>Database Name</th>
-                                    <td>
-                                        <input type="text" class="form-control" name="database_name" id="edit-database-name" placeholder="Enter database name">
-                                    </td>
-                                    <th>DB Username</th>
-                                    <td>
-                                        <input type="text" class="form-control" name="db_username" id="edit-db-username" placeholder="Enter DB username">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>DB Password</th>
-                                    <td colspan="3">
-                                        <div class="input-group">
-                                            <input type="password" class="form-control" name="db_password" id="edit-db-password" placeholder="Enter DB password">
-                                            <button class="btn btn-outline-secondary" type="button" id="edit-toggle-db-password">
-                                                <i class="bx bx-show"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                                    <!-- Database -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-cloud me-2"></i> Database</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Database Name</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="database_name"
+                                                id="edit-database-name" placeholder="Enter database name">
+                                        </td>
+                                        <th>DB Username</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="db_username"
+                                                id="edit-db-username" placeholder="Enter DB username">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>DB Password</th>
+                                        <td colspan="3">
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" name="db_password"
+                                                    id="edit-db-password" placeholder="Enter DB password">
+                                                <button class="btn btn-outline-secondary" type="button"
+                                                    id="edit-toggle-db-password">
+                                                    <i class="bx bx-show"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
 
-                                <!-- Dates & Cost -->
-                                <tr class="table-light">
-                                    <th colspan="4"><i class="bx bx-calendar me-2"></i> Dates & Cost</th>
-                                </tr>
-                                <tr>
-                                    <th>Purchase Date</th>
-                                    <td>
-                                        <input type="text" class="form-control flat-date" name="purchase_date" id="edit-purchase-date" placeholder="Select purchase date">
-                                    </td>
-                                    <th>Expiry Date</th>
-                                    <td>
-                                        <input type="text" class="form-control flat-date" name="expiry_date" id="edit-expiry-date" placeholder="Select expiry date">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Server Cost (₹)</th>
-                                    <td colspan="3">
-                                        <input type="number" step="0.01" class="form-control" name="server_cost" id="edit-server-cost" placeholder="Enter server cost">
-                                    </td>
-                                </tr>
+                                    <!-- Dates & Cost -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-calendar me-2"></i> Dates & Cost</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Purchase Date</th>
+                                        <td>
+                                            <input type="text" class="form-control flat-date" name="purchase_date"
+                                                id="edit-purchase-date" placeholder="Select purchase date">
+                                        </td>
+                                        <th>Expiry Date</th>
+                                        <td>
+                                            <input type="text" class="form-control flat-date" name="expiry_date"
+                                                id="edit-expiry-date" placeholder="Select expiry date">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Server Cost (₹)</th>
+                                        <td colspan="3">
+                                            <input type="number" step="0.01" class="form-control" name="server_cost"
+                                                id="edit-server-cost" placeholder="Enter server cost">
+                                        </td>
+                                    </tr>
 
-                                <!-- Metrics -->
-                                <tr class="table-light">
-                                    <th colspan="4"><i class="bx bx-bar-chart-alt-2 me-2"></i> Metrics</th>
-                                </tr>
-                                <tr>
-                                    <th>Memory</th>
-                                    <td colspan="3">
-                                        <input type="text" class="form-control" name="memory_usage" id="edit-memory-usage" placeholder="e.g. 5.6 GB / 8 GB">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>RAM</th>
-                                    <td colspan="3">
-                                        <input type="text" class="form-control" name="disk_space" id="edit-disk-space" placeholder="e.g. 120 GB / 150 GB">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Backup Status</th>
-                                    <td colspan="3">
-                                        <select class="form-select" name="backup_status" id="edit-backup-status">
-                                            <option value="">-- Select Backup Status --</option>
-                                            <option value="Scheduled">Scheduled</option>
-                                            <option value="Completed">Completed</option>
-                                            <option value="Failed">Failed</option>
-                                        </select>
-                                    </td>
-                                </tr>
+                                    <!-- Metrics -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-bar-chart-alt-2 me-2"></i> Metrics</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Memory</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="memory_usage"
+                                                id="edit-memory-usage" placeholder="e.g. 5.6 GB / 8 GB">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>RAM</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control" name="disk_space"
+                                                id="edit-disk-space" placeholder="e.g. 120 GB / 150 GB">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Backup Status</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="backup_status" id="edit-backup-status">
+                                                <option value="">-- Select Backup Status --</option>
+                                                <option value="Scheduled">Scheduled</option>
+                                                <option value="Completed">Completed</option>
+                                                <option value="Failed">Failed</option>
+                                            </select>
+                                        </td>
+                                    </tr>
 
-                                <!-- Services & Notes -->
-                                <tr class="table-light">
-                                    <th colspan="4"><i class="bx bx-link me-2"></i> Services & Notes</th>
-                                </tr>
-                                <tr>
-                                    <th>Linked Services</th>
-                                    <td colspan="3">
-                                        <textarea class="form-control" name="linked_services" id="edit-linked-services" rows="2" placeholder="e.g. Nginx, MySQL, Docker"></textarea>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Status</th>
-                                    <td colspan="3">
-                                        <select class="form-select" name="status" id="edit-status">
-                                            <option value="">-- Select Status --</option>
-                                            <option value="Active">Active</option>
-                                            <option value="Inactive">Inactive</option>
-                                            <option value="Expired">Expired</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Notes</th>
-                                    <td colspan="3">
-                                        <textarea class="form-control" name="notes" id="edit-notes" rows="2" placeholder="Enter additional notes"></textarea>
-                                    </td>
-                                </tr>
+                                    <!-- Services & Notes -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-link me-2"></i> Services & Notes</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Linked Services</th>
+                                        <td colspan="3">
+                                            <textarea class="form-control" name="linked_services"
+                                                id="edit-linked-services" rows="2"
+                                                placeholder="e.g. Nginx, MySQL, Docker"></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Status</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="status" id="edit-status">
+                                                <option value="">-- Select Status --</option>
+                                                <option value="Active">Active</option>
+                                                <option value="Inactive">Inactive</option>
+                                                <option value="Expired">Expired</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Notes</th>
+                                        <td colspan="3">
+                                            <textarea class="form-control" name="notes" id="edit-notes" rows="2"
+                                                placeholder="Enter additional notes"></textarea>
+                                        </td>
+                                    </tr>
 
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
 
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Update Server</button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Update Server</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
 
 
@@ -952,65 +979,15 @@
 </div>
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/common.js' %}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        document.getElementById('recordsPerPage').addEventListener('change', function () {
-            const form = document.getElementById('recordsForm');
-            const hiddenPage = document.createElement('input');
-            hiddenPage.type = 'hidden';
-            hiddenPage.name = 'page';
-            hiddenPage.value = 1;
-            form.appendChild(hiddenPage);
-            form.submit();
-        });
 
-        // Function to show toast notifications
-        function showToast(message, type = "info") {
-            const container = document.getElementById("toast-container") || (() => {
-                const div = document.createElement("div");
-                div.id = "toast-container";
-                div.style.position = "fixed";
-                div.style.top = "20px";
-                div.style.right = "20px";
-                div.style.zIndex = "3000";
-                div.style.display = "flex";
-                div.style.flexDirection = "column";
-                div.style.gap = "10px";
-                document.body.appendChild(div);
-                return div;
-            })();
+        // searching
+        enableTableSearch("searchBox", "hostTable");
+        // sorting
 
-            const toast = document.createElement("div");
-            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-            toast.style.minWidth = "250px";
-            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                toast.style.opacity = "0";
-                toast.style.transform = "translateX(100%)";
-                setTimeout(() => toast.remove(), 500);
-            }, 3000);
-        }
-
-
-        const toasts = document.querySelectorAll('#toast-container .toast');
-        toasts.forEach(function (toast) {
-            setTimeout(() => {
-                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                toast.style.opacity = "0";
-                toast.style.transform = "translateX(100%)";
-                setTimeout(() => toast.remove(), 500);
-            }, 3000); // Auto-hide after 3 seconds
-        });
-
+        enableTableSorting("hostTable");
 
         $(document).ready(function () {
             const hostDetailsUrl = "{% url 'get_host_details' %}";
@@ -1119,7 +1096,7 @@
 
             $(document).on("click", ".edit-host", function (e) {
                 // Password toggle
-                $("#edit-toggle-password").click(function() {
+                $("#edit-toggle-password").click(function () {
                     const input = $("#edit-password");
                     const icon = $(this).find("i");
                     if (input.attr("type") === "password") {
@@ -1131,7 +1108,7 @@
                     }
                 });
 
-                $("#edit-toggle-db-password").click(function() {
+                $("#edit-toggle-db-password").click(function () {
                     const input = $("#edit-db-password");
                     const icon = $(this).find("i");
                     if (input.attr("type") === "password") {
@@ -1178,7 +1155,7 @@
                     $("#edit-database-name").val(h.database_name || '');
                     $("#edit-db-username").val(h.db_username || '');
                     $("#edit-db-password").val(h.db_password || '');
-                   // When populating edit modal
+                    // When populating edit modal
                     if (h.purchase_date) {
                         $("#edit-purchase-date")[0]._flatpickr.setDate(h.purchase_date);
                     } else {
@@ -1226,7 +1203,7 @@
                     success: function (res) {
                         if (res.success) {
                             showToast(res.message, "success");
-                            setTimeout(() => window.location.reload(), 3000);
+                            setTimeout(() => window.location.reload(), 800);
                         } else {
                             showToast(res.error || "Failed to delete host.", "danger");
                         }
@@ -1271,7 +1248,7 @@
                         modal.hide();
 
                         showToast(data.message, "success");
-                        setTimeout(() => window.location.reload(), 1000);
+                        setTimeout(() => window.location.reload(), 800);
                     } else {
                         if (data.errors) {
                             for (let field in data.errors) {
@@ -1324,7 +1301,7 @@
                         let modal = bootstrap.Modal.getInstance(modalEl);
                         modal.hide();
                         showToast(data.message, "success");
-                        setTimeout(() => window.location.reload(), 3000);
+                        setTimeout(() => window.location.reload(), 800);
                     } else {
                         if (data.errors) {
                             for (let field in data.errors) {

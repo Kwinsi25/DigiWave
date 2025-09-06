@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}All Designations{% endblock %}
-
+{% load static %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 {% block content %}
@@ -53,8 +53,8 @@
           <table class="table" id="designationTable">
             <thead>
               <tr>
-                <th>Sr No.</th>
-                <th>Title</th>
+                <th data-sort="number">Sr No.</th>
+                <th data-sort="string">Title</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -200,7 +200,7 @@
   </div>
 </div>
 
-<!-- Edit Designation Modal -->
+<!-- edit modal -->
 <div class="modal fade" id="editDesignationModal" tabindex="-1"  data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
@@ -251,67 +251,17 @@
 
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/common.js' %}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-  // ------------------ Records per page ------------------
-  document.getElementById('recordsPerPage').addEventListener('change', function () {
-    const form = document.getElementById('recordsForm');
-    const hiddenPage = document.createElement('input');
-    hiddenPage.type = 'hidden';
-    hiddenPage.name = 'page';
-    hiddenPage.value = 1;
-    form.appendChild(hiddenPage);
-    form.submit();
-  });
-
-  // ------------------ Toast Function ------------------
-  // Toast function
-        function showToast(message, type = "info") {
-            const container = document.getElementById("toast-container") || (() => {
-                const div = document.createElement("div");
-                div.id = "toast-container";
-                div.style.position = "fixed";
-                div.style.top = "20px";
-                div.style.right = "20px";
-                div.style.zIndex = "3000";
-                div.style.display = "flex";
-                div.style.flexDirection = "column";
-                div.style.gap = "10px";
-                document.body.appendChild(div);
-                return div;
-            })();
-
-            const toast = document.createElement("div");
-            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-            toast.style.minWidth = "250px";
-            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                toast.style.opacity = "0";
-                toast.style.transform = "translateX(100%)";
-                setTimeout(() => toast.remove(), 500);
-            }, 3000);
-        }
+       // searching
+    enableTableSearch("searchBox", "designationTable");
+    // sorting
+    
+    enableTableSorting("designationTable");
 
 
-        const toasts = document.querySelectorAll('#toast-container .toast');
-        toasts.forEach(function (toast) {
-            setTimeout(() => {
-                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                toast.style.opacity = "0";
-                toast.style.transform = "translateX(100%)";
-                setTimeout(() => toast.remove(), 500);
-            }, 3000); // Auto-hide after 3 seconds
-        });
 
   // ------------------ Edit Designation ------------------
   $(document).on("click", ".edit-designation", function () {

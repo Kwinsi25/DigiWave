@@ -25,6 +25,15 @@ data-template="vertical-menu-template-free">
     font-size: 0.9rem;
     border: none;
 }
+th.sorted-asc::after {
+  content: " ▲";
+  font-size: 12px;
+}
+th.sorted-desc::after {
+  content: " ▼";
+  font-size: 12px;
+}
+
 </style>
   
   {% include 'head.html' %}
@@ -78,6 +87,8 @@ data-template="vertical-menu-template-free">
 
   <!-- Your custom init file -->
   <script src="{% static 'js/flatpickr-init.js' %}"></script>
+  <script src="{% static 'js/table-sorting.js' %}"></script>
+  <script src="{% static 'js/searching.js' %}"></script>
 
 </body>
 </html>

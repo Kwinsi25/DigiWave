@@ -123,6 +123,16 @@ def project_list(request):
     projects = Project.objects.all().prefetch_related('team_members') 
     users = User.objects.all() 
     
+    query = request.POST.get("q", "")
+
+    if query:
+        search_filter = Q()
+        for field in Project._meta.get_fields():
+            if isinstance(field, (CharField, TextField)):
+                field_name = field.name
+                search_filter |= Q(**{f"{field_name}__icontains": query})
+        projects = projects.filter(search_filter)
+
     # Paginate 
     paginator = Paginator(projects, records_per_page) 
     page_obj = paginator.get_page(page_number) # Safe pagination 
@@ -151,6 +161,8 @@ def project_list(request):
                 'completed_count': completed_count,
                 'cancelled_count': cancelled_count,
                 'on_hold_count': on_hold_count,
+                "search_action": reverse("project_list"),
+                "search_placeholder": "Search clients..."
                    })
 
 def save_project(request):
@@ -617,6 +629,16 @@ def host_list(request):
     host_data_list = HostData.objects.prefetch_related('project').all()
     print(host_data_list)
 
+    query = request.POST.get("q", "")
+
+    if query:
+        search_filter = Q()
+        for field in HostData._meta.get_fields():
+            if isinstance(field, (CharField, TextField)):
+                field_name = field.name
+                search_filter |= Q(**{f"{field_name}__icontains": query})
+        host_data_list = host_data_list.filter(search_filter)
+
     # Dashboard counts
     total_servers = host_data_list.count()
     running_servers = host_data_list.filter(status="Active").count()
@@ -640,6 +662,8 @@ def host_list(request):
         'running_servers': running_servers,
         'down_servers': down_servers,
         'expiring_soon': expiring_soon,
+        "search_action": reverse("host_list"),
+        "search_placeholder": "Search clients..."
     })
 
 
@@ -850,6 +874,16 @@ def domain_list(request):
     #For Domain use prefetch_related instead of select_related
     domains = Domain.objects.prefetch_related("project").order_by("id")
 
+    query = request.POST.get("q", "")
+
+    if query:
+        search_filter = Q()
+        for field in Domain._meta.get_fields():
+            if isinstance(field, (CharField, TextField)):
+                field_name = field.name
+                search_filter |= Q(**{f"{field_name}__icontains": query})
+        domains = domains.filter(search_filter)
+
     # Paginate domains
     paginator = Paginator(domains, records_per_page)
     page_obj = paginator.get_page(page_number)
@@ -878,6 +912,8 @@ def domain_list(request):
         "active_domains": active_domains,
         "expired_domains": expired_domains,
         "expiring_soon_domains": expiring_soon_domains,
+        "search_action": reverse("domain_list"),
+        "search_placeholder": "Search clients..."
     })
 
 
@@ -966,7 +1002,7 @@ def add_domain(request):
 
         return JsonResponse({
             "success": True,
-            "message": f"Domain '{domain.domain_name}' added successfully!",
+            "message": f"Domain added successfully!",
             "domain_id": domain.id
         })
 
@@ -1105,7 +1141,7 @@ def update_domain(request, id):
 
             # ==================== SAVE ====================
             domain.save()
-            messages.success(request, f"Domain '{domain.domain_name}' updated successfully!")
+            messages.success(request, f"Domain  updated successfully!")
 
         except Exception as e:
             messages.error(request, f"Error updating domain: {str(e)}")
@@ -1126,7 +1162,7 @@ def delete_domain(request, id):
             domain.delete()
 
             #Add Django success message
-            messages.success(request, f"Domain '{domain_name}' deleted successfully!")
+            messages.success(request, f"Domain deleted successfully!")
 
             #Redirect URL to the domain list page
             return JsonResponse({
@@ -1161,6 +1197,17 @@ def user_list(request):
     if page_number < 1:
         page_number = 1
     users = User.objects.all().order_by('id')
+
+    query = request.POST.get("q", "")
+
+    if query:
+        search_filter = Q()
+        for field in User._meta.get_fields():
+            if isinstance(field, (CharField, TextField)):
+                field_name = field.name
+                search_filter |= Q(**{f"{field_name}__icontains": query})
+        users = users.filter(search_filter)
+
      # Paginate
     paginator = Paginator(users, records_per_page)
     page_obj = paginator.get_page(page_number)
@@ -1185,7 +1232,9 @@ def user_list(request):
         'new_users_this_month': new_users_this_month,
         'inactive_users': inactive_users,
         "designations": designations,
-        "technologies": technologies
+        "technologies": technologies,
+        "search_action": reverse("client_list"),
+        "search_placeholder": "Search clients..."
     }
 
     return render(request, 'user.html', context)
@@ -1567,6 +1616,16 @@ def quotation_list(request):
         page_number = 1
     quotations = Quotation.objects.all()
 
+    query = request.POST.get("q", "")
+
+    if query:
+        search_filter = Q()
+        for field in Quotation._meta.get_fields():
+            if isinstance(field, (CharField, TextField)):
+                field_name = field.name
+                search_filter |= Q(**{f"{field_name}__icontains": query})
+        quotations = quotations.filter(search_filter)
+
      # Paginate
     paginator = Paginator(quotations, records_per_page)
     page_obj = paginator.get_page(page_number)
@@ -1596,6 +1655,8 @@ def quotation_list(request):
         "expired_quotations": expired_quotations,
         "this_month_quotations": this_month_quotations,
         "users": users,
+        "search_action": reverse("client_list"),
+        "search_placeholder": "Search clients..."
     }
     return render(request, "quotation.html", context)
 
@@ -1946,7 +2007,7 @@ def update_quotation(request, id):
             return redirect("quotation_list")
 
         except Exception as e:
-            messages.error(request, f"Error updating quotation: {str(e)}")
+            messages.error(request, str(e))
             return redirect("quotation_list")
 
     # Non-POST: just go back to list (same pattern used elsewhere)
@@ -2304,6 +2365,16 @@ def file_docs(request):
             "file_count": file_count,
             "last_file_name": last_file.name if last_file else "No Files",
         })
+    query = request.POST.get("q", "")
+
+    if query:
+        search_filter = Q()
+        for field in FileDoc._meta.get_fields():
+            if isinstance(field, (CharField, TextField)):
+                field_name = field.name
+                search_filter |= Q(**{f"{field_name}__icontains": query})
+        folder_rows = folder_rows.filter(search_filter)
+
     paginator = Paginator(folder_rows, records_per_page)
     page_obj = paginator.get_page(page_number)
 
@@ -2325,6 +2396,8 @@ def file_docs(request):
         "total_files": total_files,
         "recent_file": recent_file,
         "recent_location": recent_location,
+        "search_action": reverse("client_list"),
+        "search_placeholder": "Search clients..."
     }
     return render(request, 'file_docs.html', context)
 
@@ -2603,6 +2676,16 @@ def payment_list(request):
             "status": project.payment_status,
         })
     print(grouped_data)
+    query = request.POST.get("q", "")
+
+    if query:
+        search_filter = Q()
+        for field in ProjectPayment._meta.get_fields():
+            if isinstance(field, (CharField, TextField)):
+                field_name = field.name
+                search_filter |= Q(**{f"{field_name}__icontains": query})
+        grouped_data = grouped_data.filter(search_filter)
+
     # Manual pagination
     paginator = Paginator(grouped_data, records_per_page)
     page_obj = paginator.get_page(page_number)
@@ -2622,7 +2705,8 @@ def payment_list(request):
         "bank_transfer_count": bank_transfer_count,
         "upi_count": upi_count,
         "cash_count": cash_count,
-        
+        "search_action": reverse("client_list"),
+        "search_placeholder": "Search clients...",
         "records_options": [20, 50, 100, 200, 300],
     }
     return render(request, "payment.html", context)
@@ -2758,6 +2842,16 @@ def designation_list(request):
     if page_number < 1:
         page_number = 1
     designations = Designation.objects.all().order_by('id')
+    query = request.POST.get("q", "")
+
+    if query:
+        search_filter = Q()
+        for field in Designation._meta.get_fields():
+            if isinstance(field, (CharField, TextField)):
+                field_name = field.name
+                search_filter |= Q(**{f"{field_name}__icontains": query})
+        designations = designations.filter(search_filter)
+
     # Manual pagination
     paginator = Paginator(designations, records_per_page)
     page_obj = paginator.get_page(page_number)
@@ -2767,6 +2861,8 @@ def designation_list(request):
         "records_per_page": records_per_page,
        "records_options": [20, 50, 100, 200, 300],
         'total_designations': Designation.objects.count(),
+        "search_action": reverse("client_list"),
+        "search_placeholder": "Search clients..."
     })
 
 
@@ -2862,6 +2958,15 @@ def technology_list(request):
         page_number = 1
 
     technologies = Technology.objects.all().order_by('id')
+    query = request.POST.get("q", "")
+
+    if query:
+        search_filter = Q()
+        for field in Technology._meta.get_fields():
+            if isinstance(field, (CharField, TextField)):
+                field_name = field.name
+                search_filter |= Q(**{f"{field_name}__icontains": query})
+        technologies = technologies.filter(search_filter)
     paginator = Paginator(technologies, records_per_page)
     page_obj = paginator.get_page(page_number)
 
@@ -2870,6 +2975,8 @@ def technology_list(request):
         "records_per_page": records_per_page,
         "records_options": [20, 50, 100, 200, 300],
         'total_technologies': Technology.objects.count(),
+        "search_action": reverse("client_list"),
+        "search_placeholder": "Search clients..."
     })
 
 
@@ -2968,6 +3075,15 @@ def appmode_list(request):
         page_number = 1
 
     app_modes = AppMode.objects.all().order_by('id')
+    query = request.POST.get("q", "")
+
+    if query:
+        search_filter = Q()
+        for field in AppMode._meta.get_fields():
+            if isinstance(field, (CharField, TextField)):
+                field_name = field.name
+                search_filter |= Q(**{f"{field_name}__icontains": query})
+        app_modes = app_modes.filter(search_filter)
     paginator = Paginator(app_modes, records_per_page)
     page_obj = paginator.get_page(page_number)
 
@@ -2976,6 +3092,8 @@ def appmode_list(request):
         "records_per_page": records_per_page,
         "records_options": [20, 50, 100, 200, 300],
         'total_app_modes': AppMode.objects.count(),
+        "search_action": reverse("client_list"),
+        "search_placeholder": "Search clients..."
     })
 
 

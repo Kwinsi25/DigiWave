@@ -131,17 +131,17 @@
                 </div>
 
                 <div class="table-responsive text-nowrap scrollable-table-body">
-                    <table class="table">
+                    <table class="table" id="UserTable">
                         <thead>
                             <tr>
-                                <th>Sr No.</th>
-                                <th>Username</th>
-                                <th>Full Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Designation</th>
-                                <th>Type</th>
-                                <th>Status</th>
+                                <th data-sort="number">Sr No.</th>
+                                <th data-sort="string">Username</th>
+                                <th data-sort="string">Full Name</th>
+                                <th data-sort="string">Email</th>
+                                <th data-sort="number">Phone</th>
+                                <th data-sort="string">Designation</th>
+                                <th data-sort="string">Type</th>
+                                <th data-sort="string">Status</th>
 
                                 <th>Actions</th>
                             </tr>
@@ -1553,6 +1553,13 @@ if (data.employee_type && data.employee_type.toLowerCase() === "salary") {
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+         // searching
+    enableTableSearch("searchBox", "UserTable");
+    // sorting
+    
+    enableTableSorting("UserTable");
+   
+
         // calander
         flatpickr(".flat-date", {
             dateFormat: "Y-m-d",

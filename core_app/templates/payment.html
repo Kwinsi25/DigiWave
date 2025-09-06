@@ -167,13 +167,13 @@
                 </div>
 
                 <div class="table-responsive text-nowrap scrollable-table-body">
-                    <table class="table">
+                    <table class="table" id="paymentTable">
                         <thead>
                             <tr>
-                                <th>Sr No.</th>
-                                <th>Project ID</th>
-                                <th>Project Name</th>
-                                <th>Payment Status</th>
+                                <th data-sort="number">Sr No.</th>
+                                <th data-sort="string">Project ID</th>
+                                <th data-sort="string">Project Name</th>
+                                <th data-sort="string">Payment Status</th>
 
                             </tr>
                         </thead>
@@ -536,68 +536,17 @@
 </div>
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/common.js' %}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
+         // searching
+    enableTableSearch("searchBox", "paymentTable");
+    // sorting
+    
+    enableTableSorting("paymentTable");
+   
 
-
-        // pagination links
-        document.getElementById('recordsPerPage').addEventListener('change', function () {
-            // Always reset to page 1 when changing limit
-            const form = document.getElementById('recordsForm');
-            const hiddenPage = document.createElement('input');
-            hiddenPage.type = 'hidden';
-            hiddenPage.name = 'page';
-            hiddenPage.value = 1;
-            form.appendChild(hiddenPage);
-            form.submit();
-        });
-        // Toast function
-        function showToast(message, type = "info") {
-            const container = document.getElementById("toast-container") || (() => {
-                const div = document.createElement("div");
-                div.id = "toast-container";
-                div.style.position = "fixed";
-                div.style.top = "20px";
-                div.style.right = "20px";
-                div.style.zIndex = "3000";
-                div.style.display = "flex";
-                div.style.flexDirection = "column";
-                div.style.gap = "10px";
-                document.body.appendChild(div);
-                return div;
-            })();
-
-            const toast = document.createElement("div");
-            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-            toast.style.minWidth = "250px";
-            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                toast.style.opacity = "0";
-                toast.style.transform = "translateX(100%)";
-                setTimeout(() => toast.remove(), 500);
-            }, 3000);
-        }
-
-
-        const toasts = document.querySelectorAll('#toast-container .toast');
-        toasts.forEach(function (toast) {
-            setTimeout(() => {
-                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                toast.style.opacity = "0";
-                toast.style.transform = "translateX(100%)";
-                setTimeout(() => toast.remove(), 500);
-            }, 3000); // Auto-hide after 3 seconds
-        });
 
         // Payment Modal Dynamic Fields
         const methodSelect = document.getElementById("paymentMethod");
@@ -727,7 +676,7 @@ $(document).on("click", ".payment-link", function (e) {
                 showToast(data.message || "Payment added successfully!", "success");
 
                 // Reload after short delay
-                setTimeout(() => window.location.reload(), 1000);
+                setTimeout(() => window.location.reload(), 800);
             } else {
                 if (data.errors) {
                     if (data.errors["__all__"]) {

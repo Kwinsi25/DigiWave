@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}All Domains{% endblock %}
-
+{% load static%}
 {% block extra_css %}
 <style>
   .scrollable-table-body {
@@ -126,16 +126,16 @@
     <div class="card">
       <div class="card-body">
 
-        <!-- Add Project Button and Title with Filter -->
+
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h4 class="mb-0">All Domains</h4>
           <div class="d-flex gap-2">
-            <!-- Filter Button -->
+
             <button type="button" class="btn btn-outline-secondary" title="Filter Projects">
               <i class="bx bx-filter-alt"></i>
             </button>
 
-            <!-- Add Project Button -->
+
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDomainDataModal">
               <i class="bx bx-plus"></i> Add Domain
             </button>
@@ -144,16 +144,16 @@
         </div>
 
         <div class="table-responsive text-nowrap scrollable-table-body">
-          <table class="table">
+          <table class="table" id="domainTable">
             <thead>
               <tr>
-                <th>Sr No.</th>
-                <th>Domain Name</th>
-                <th>Project ID</th>
-                <th>Project Name</th>
-                
-                <th>Left Days</th>
-                <th>Registrar</th>
+                <th data-sort="number">Sr No.</th>
+                <th data-sort="string">Domain Name</th>
+                <th data-sort="string">Project ID</th>
+                <th data-sort="string">Project Name</th>
+
+                <th data-sort="string">Left Days</th>
+                <th data-sort="string">Registrar</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -187,7 +187,7 @@
                   <span class="text-muted">No Project</span>
                   {% endif %}
                 </td>
-               
+
                 <td>
                   {% if domain.left_days is not None %}
                   {{ domain.left_days }} days
@@ -215,474 +215,6 @@
 
 
           </table>
-
-          {% block extra_js %}
-          <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-          <!-- Flatpickr CSS -->
-          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
-          <!-- Flatpickr JS -->
-          <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-          <script>
-            // Reusable Flatpickr with Year Dropdown (no arrows)
-            function initFlatpickrWithYearDropdown(selector, defaultDate = null) {
-              const fp = flatpickr(selector, {
-                dateFormat: "Y-m-d",
-                allowInput: true,
-                altInput: true,
-                altFormat: "F j, Y",
-                monthSelectorType: "dropdown",
-                onReady: function (selectedDates, dateStr, instance) {
-                  const yearSelect = document.createElement("select");
-                  yearSelect.classList.add("flatpickr-year-dropdown");
-
-                  // Generate year options (1900 → 2099)
-                  for (let y = 1900; y <= 2099; y++) {
-                    let opt = document.createElement("option");
-                    opt.value = y;
-                    opt.textContent = y;
-                    if (y === instance.currentYear) opt.selected = true;
-                    yearSelect.appendChild(opt);
-                  }
-
-                  // Replace year input with dropdown
-                  const yearInput = instance.currentYearElement;
-                  yearInput.parentNode.replaceChild(yearSelect, yearInput);
-
-                  // Remove arrows ↑ ↓
-                  const container = yearSelect.parentNode;
-                  const upBtn = container.querySelector(".arrowUp");
-                  const downBtn = container.querySelector(".arrowDown");
-                  if (upBtn) upBtn.remove();
-                  if (downBtn) downBtn.remove();
-
-                  // Update Flatpickr on change
-                  yearSelect.addEventListener("change", function () {
-                    instance.changeYear(parseInt(this.value));
-                  });
-                }
-              });
-
-              if (defaultDate) {
-                fp.setDate(defaultDate, true);
-              }
-
-              return fp;
-            }
-
-            document.addEventListener("DOMContentLoaded", function () {
-
-              
-              document.getElementById("domainDataForm").addEventListener("submit", function (e) {
-                e.preventDefault();
-                const form = this;
-                const formData = new FormData(form);
-
-                fetch("{% url 'add_domain' %}", {
-                  method: "POST",
-                  body: formData,
-                  headers: { "X-Requested-With": "XMLHttpRequest" }
-                })
-                  .then(res => res.json())
-                  .then(data => {
-                    if (data.success) {
-                      // Close modal
-                      const modalEl = document.getElementById("addDomainDataModal");
-                      bootstrap.Modal.getInstance(modalEl).hide();
-
-                      // Show success toast
-                      showToast(data.message, "success");
-
-                      // Optional: reload page or update table
-                      setTimeout(() => window.location.reload(), 1000);
-                    } else {
-                      // Show validation errors
-                      if (data.flat_errors) {
-                        data.flat_errors.forEach(msg => showToast(msg, "danger"));
-                      } else if (data.errors) {
-                        Object.entries(data.errors).forEach(([field, msgs]) => {
-                          msgs.forEach(msg => showToast(`${msg}`, "danger"));
-                        });
-                      } else {
-                        showToast("Something went wrong", "danger");
-                      }
-                    }
-                  })
-                  .catch(() => showToast("Unexpected error while adding domain", "danger"));
-              });
-
-
-
-              function showToast(message, type = "info") {
-                const container = document.getElementById("toast-container") || (() => {
-                  const div = document.createElement("div");
-                  div.id = "toast-container";
-                  div.style.position = "fixed";
-                  div.style.top = "20px";
-                  div.style.right = "20px";
-                  div.style.zIndex = "3000";
-                  div.style.display = "flex";
-                  div.style.flexDirection = "column";
-                  div.style.gap = "10px";
-                  document.body.appendChild(div);
-                  return div;
-                })();
-
-                const toast = document.createElement("div");
-                toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-                toast.style.minWidth = "250px";
-                toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-                container.appendChild(toast);
-
-                setTimeout(() => {
-                  toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                  toast.style.opacity = "0";
-                  toast.style.transform = "translateX(100%)";
-                  setTimeout(() => toast.remove(), 500);
-                }, 3000);
-              }
-
-
-              const toasts = document.querySelectorAll('#toast-container .toast');
-              toasts.forEach(function (toast) {
-                setTimeout(() => {
-                  toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                  toast.style.opacity = "0";
-                  toast.style.transform = "translateX(100%)";
-                  setTimeout(() => toast.remove(), 500);
-                }, 3000); // Auto-hide after 3 seconds
-              });
-              // CALANDER
-              flatpickr(".flat-date", {
-                dateFormat: "Y-m-d",
-                allowInput: true,
-                altInput: true,
-                altFormat: "F j, Y",
-                monthSelectorType: "dropdown",   // ✅ Month dropdown
-                onReady: function (selectedDates, dateStr, instance) {
-                  const yearSelect = document.createElement("select");
-                  yearSelect.classList.add("flatpickr-year-dropdown");
-
-                  // Generate year options (1900 → 2099)
-                  for (let y = 1900; y <= 2099; y++) {
-                    let opt = document.createElement("option");
-                    opt.value = y;
-                    opt.textContent = y;
-                    if (y === instance.currentYear) opt.selected = true;
-                    yearSelect.appendChild(opt);
-                  }
-
-                  // Replace year input with dropdown
-                  const yearInput = instance.currentYearElement;
-                  yearInput.parentNode.replaceChild(yearSelect, yearInput);
-
-                  // Remove ↑ ↓ buttons
-                  if (instance.yearElements) {
-                    instance.yearElements.forEach(el => el.style.display = "none");
-                  }
-                  const container = yearSelect.parentNode;
-                  const upBtn = container.querySelector(".arrowUp");
-                  const downBtn = container.querySelector(".arrowDown");
-                  if (upBtn) upBtn.remove();
-                  if (downBtn) downBtn.remove();
-
-                  // Update Flatpickr when year changes
-                  yearSelect.addEventListener("change", function () {
-                    instance.changeYear(parseInt(this.value));
-                  });
-                }
-              });
-
-
-
-            });
-            function formatDate(dateStr) {
-              if (!dateStr) return "-"; // show dash if null
-              const d = new Date(dateStr);
-              return d.toLocaleDateString("en-GB", {  // "01 Sep 2025"
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-              });
-            }
-            $(document).ready(function () {
-              const domainDetailsUrl = "{% url 'get_domain_details' %}";
-
-              // ================= VIEW DOMAIN MODAL =================
-$(document).on("click", ".domain-link", function (e) {
-  e.preventDefault();
-  const domainId = $(this).data("domain-id");
-  if (!domainId) return console.error("Domain ID missing!");
-
-  $.get(domainDetailsUrl, { id: domainId, mode: "view" }, function (res) {
-    if (!res.success) return console.error(res.error);
-    const d = res.domain;
-
-    // ✅ Modal title → list associated projects
-    let titleProjects = "-";
-    if (d.projects?.length) {
-      titleProjects = d.projects.map(p => p.name).join(", ");
-    }
-    // header
-    $("#pd-header-domain-name").text(d.domain_name || "-");
-    // ✅ Projects section
-    if (d.projects && d.projects.length > 0) {
-      let projHtml = d.projects
-        .map(p => `${p.name} <small class="text-muted">(${p.code})</small>`)
-        .join("<br>");
-      $("#dd-projects").html(projHtml);
-    } else {
-      $("#dd-projects").text("-");
-    }
-
-    // ==================== Domain Details ====================
-    $("#dd-domain-name").text(d.domain_name || "-");
-    $("#dd-sub-domain1").text(d.sub_domain1 || "-");
-    $("#dd-sub-domain2").text(d.sub_domain2 || "-");
-    $("#dd-registrar").text(d.registrar || "-");
-    $("#dd-purchase-date").text(formatDate(d.purchase_date));
-    $("#dd-expiry-date").text(formatDate(d.expiry_date));
-
-    $("#dd-renewal-status")
-      .removeClass()
-      .addClass(
-        "badge " +
-          (d.renewal_status === "Pending"
-            ? "bg-label-warning"
-            : d.renewal_status === "Active"
-            ? "bg-label-success"
-            : "bg-label-danger")
-      )
-      .text(d.renewal_status || "-");
-
-    $("#dd-auto-renewal")
-      .removeClass()
-      .addClass("badge " + (d.auto_renewal ? "bg-label-success" : "bg-label-danger"))
-      .text(d.auto_renewal ? "On" : "Off");
-
-    // ==================== Payment Details ====================
-    $("#dd-domain-charge").text(d.domain_charge || "0.00");
-    $("#dd-payment-status")
-      .removeClass()
-      .addClass(
-        "badge " +
-          (d.client_payment_status === "Paid"
-            ? "bg-label-success"
-            : d.client_payment_status === "Pending"
-            ? "bg-label-warning"
-            : "bg-label-danger")
-      )
-      .text(d.client_payment_status || "-");
-
-    $("#dd-payment-method").text(d.payment_method || "-");
-    $("#dd-payment-mode").text(d.payment_mode || "-");
-
-    // Pretty print payment details
-    let paymentHtml = "-";
-    if (d.payment_details) {
-      const details = d.payment_details;
-
-      if (d.payment_method === "Bank Transfer") {
-        paymentHtml = `
-          <table class="table table-sm table-bordered mb-0">
-            <tr><th>Bank Name</th><td>${details.bank_name || "-"}</td></tr>
-            <tr><th>Account No</th><td>${details.account_no || "-"}</td></tr>
-            <tr><th>IFSC Code</th><td>${details.ifsc_code || "-"}</td></tr>
-          </table>`;
-      } else if (d.payment_method === "UPI") {
-        paymentHtml = `
-          <table class="table table-sm table-bordered mb-0">
-            <tr><th>UPI ID</th><td>${details.upi_id || "-"}</td></tr>
-          </table>`;
-      } else if (d.payment_method === "Cheque") {
-        paymentHtml = `
-          <table class="table table-sm table-bordered mb-0">
-            <tr><th>Cheque No</th><td>${details.cheque_no || "-"}</td></tr>
-            <tr><th>Cheque Name</th><td>${details.cheque_name || "-"}</td></tr>
-          </table>`;
-      } else if (d.payment_method === "Other") {
-        paymentHtml = `
-          <table class="table table-sm table-bordered mb-0">
-            <tr><th>Description</th><td>${details.description || "-"}</td></tr>
-          </table>`;
-      } else if (d.payment_method === "Cash") {
-        paymentHtml = `<span class="badge bg-success">Cash Payment</span>`;
-      } else {
-        paymentHtml = `<pre>${JSON.stringify(details, null, 2)}</pre>`;
-      }
-    }
-    $("#dd-payment-details").html(paymentHtml);
-
-    // ==================== Credentials & Security ====================
-    $("#dd-credentials-user").text(d.credentials_user || "-");
-    $("#dd-credentials-pass")
-  .text("********")
-  .attr("data-real-pass", d.credentials_pass || "-")
-  .addClass("masked");
-
-$("#togglePassBtn").html('<i class="bx bx-show"></i>');
-
-    $("#dd-ssl-installed")
-      .removeClass()
-      .addClass("badge " + (d.ssl_installed ? "bg-label-success" : "bg-label-danger"))
-      .text(d.ssl_installed ? "Yes" : "No");
-
-    $("#dd-ssl-expiry").text(formatDate(d.ssl_expiry));
-
-    // ==================== DNS & Services ====================
-    $("#dd-dns-configured")
-      .removeClass()
-      .addClass("badge " + (d.dns_configured ? "bg-label-success" : "bg-label-danger"))
-      .text(d.dns_configured ? "Yes" : "No");
-
-    $("#dd-nameservers").html((d.nameservers || "").replace(/\n/g, "<br>"));
-    $("#dd-linked-services").text(d.linked_services || "-");
-
-    // ==================== Notes ====================
-    $("#dd-notes").text(d.notes || "-");
-
-    // ✅ Show modal
-    $("#domainDetailsModal").modal("show");
-  });
-});
-
-// ================= PASSWORD TOGGLE =================
-$(document).on("click", "#togglePassBtn", function () {
-  const passEl = $("#dd-credentials-pass");
-
-  if (passEl.hasClass("masked")) {
-    // Reveal password
-    passEl.text(passEl.data("real-pass")).removeClass("masked");
-    $(this).html('<i class="bx bx-hide"></i>');
-  } else {
-    // Mask again
-    passEl.text("********").addClass("masked");
-    $(this).html('<i class="bx bx-show"></i>');
-  }
-});
-
-// ================= DATE FORMAT HELPER =================
-function formatDate(dateStr) {
-  if (!dateStr) return "-";
-  const d = new Date(dateStr);
-  if (isNaN(d)) return dateStr; // fallback if invalid
-  return d.toLocaleDateString("en-IN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-              // EDIT modal
-              $(document).on("click", ".edit-domain", function (e) {
-                e.preventDefault();
-                const domainId = $(this).data("domain-id");
-                if (!domainId) return console.error("Domain ID missing!");
-
-                $.get(domainDetailsUrl, { id: domainId, mode: "edit" }, function (res) {
-                  if (!res.success) return console.error(res.error);
-                  const d = res.domain;
-
-                  $("#editDomainForm").attr("action", `/update_domain/${domainId}/`);
-                  $("#edit-domain-name").val(d.domain_name || '');
-                  $("#edit-subdomain1").val(d.sub_domain1 || '');
-                  $("#edit-subdomain2").val(d.sub_domain2 || '');
-                  $("#edit-registrar").val(d.registrar || '');
-                  const editPurchaseDate = initFlatpickrWithYearDropdown("#edit-purchase-date", d.purchase_date);
-                  const editExpiryDate = initFlatpickrWithYearDropdown("#edit-expiry-date", d.expiry_date);
-                  $("#edit-renewal-status").val(d.renewal_status || '');
-                  $("#edit-auto-renewal").val(d.auto_renewal || 'Off');
-                  $("#edit-domain-charge").val(d.domain_charge || '');
-                  $("#edit-dns-configured").prop('checked', d.dns_configured);
-                  $("#edit-nameservers").val(d.nameservers || '');
-                  $("#edit-ssl-installed").prop('checked', d.ssl_installed);
-                  const editsslExpiryDate = initFlatpickrWithYearDropdown("#edit-ssl-expiry", d.ssl_expiry);
-                  $("#edit-credentials-user").val(d.credentials_user || '');
-                  $("#edit-credentials-pass").val(d.credentials_pass || '');
-                  $("#edit-linked-services").val(d.linked_services || '');
-                  $("#edit-client-payment-status").val(d.client_payment_status || 'Pending');
-                  $("#edit-payment-mode").val(d.payment_mode || 'Client');
-                  $("#edit-payment-method").val(d.payment_method || '');
-                  $("#edit-notes").val(d.notes || '');
-
-                  // Projects multi-select
-                  $("#edit-projects option").prop("selected", false);
-                  if (d.projects && d.projects.length > 0) {
-                    d.projects.forEach(p => {
-                      $(`#edit-projects option[value='${p.id}']`).prop("selected", true);
-                    });
-                  }
-
-                  // Show dynamic payment fields
-                  $(".edit-payment-extra").addClass("d-none");
-                  if (d.payment_method === "Bank Transfer") {
-                    $("#edit-bank-name").val(d.payment_details?.bank_name || '');
-                    $("#edit-account-no").val(d.payment_details?.account_no || '');
-                    $("#edit-ifsc-code").val(d.payment_details?.ifsc_code || '');
-                    $("#edit-bank-fields").removeClass("d-none");
-                  } else if (d.payment_method === "UPI") {
-                    $("#edit-upi-id").val(d.payment_details?.upi_id || '');
-                    $("#edit-upi-fields").removeClass("d-none");
-                  } else if (d.payment_method === "Cheque") {
-                    $("#edit-cheque-no").val(d.payment_details?.cheque_no || '');
-                    $("#edit-cheque-name").val(d.payment_details?.cheque_name || '');
-                    $("#edit-cheque-fields").removeClass("d-none");
-                  } else if (d.payment_method === "Other") {
-                    $("#edit-other-details").val(d.payment_details?.description || '');
-                    $("#edit-other-fields").removeClass("d-none");
-                  }
-                  $("#editDomainModal").modal("show");
-                });
-              });
-
-              // DELETE action
-              let domainIdToDelete = null;
-
-              $(document).on("click", ".delete-domain", function (e) {
-                e.preventDefault();
-                domainIdToDelete = $(this).data("domain-id");
-                if (!domainIdToDelete) return console.error("Domain ID missing!");
-
-                // Show Bootstrap modal
-                var deleteModal = new bootstrap.Modal(document.getElementById('deleteDomainModal'));
-                deleteModal.show();
-              });
-
-              // Handle confirm delete
-              $(document).on("click", "#confirmDeleteDomainBtn", function () {
-                if (!domainIdToDelete) return;
-
-                $.ajax({
-                  url: `/delete_domain/${domainIdToDelete}/`,
-                  type: "POST",
-                  data: { csrfmiddlewaretoken: '{{ csrf_token }}' },
-                  success: function (res) {
-                    // Simply refresh the page
-                    location.reload();
-                  },
-                  error: function (err) {
-                    console.error("Error deleting domain.", err);
-                    // Optional: show a Bootstrap alert instead of default alert
-                  }
-                });
-
-                // Hide the modal
-                var deleteModalEl = document.getElementById('deleteDomainModal');
-                var deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
-                deleteModalInstance.hide();
-              });
-
-
-            });
-
-          </script>
-          {% endblock %}
         </div>
         <!-- Records Per Page & Pagination -->
         <div class="d-flex justify-content-between align-items-center mt-3">
@@ -745,17 +277,7 @@ function formatDate(dateStr) {
           </nav>
         </div>
 
-        <script>
-          document.getElementById('recordsPerPage').addEventListener('change', function () {
-            const form = document.getElementById('recordsForm');
-            const hiddenPage = document.createElement('input');
-            hiddenPage.type = 'hidden';
-            hiddenPage.name = 'page';
-            hiddenPage.value = 1;
-            form.appendChild(hiddenPage);
-            form.submit();
-          });
-        </script>
+
 
       </div>
 
@@ -765,9 +287,6 @@ function formatDate(dateStr) {
 
 </div>
 
-</div>
-
-</div>
 
 <!-- Domain Details Modal -->
 <div class="modal fade" id="domainDetailsModal" tabindex="-1" aria-labelledby="domainDetailsModalLabel"
@@ -776,11 +295,10 @@ function formatDate(dateStr) {
     <div class="modal-content">
       <div class="modal-header table-primary text-white">
         <h5 class="modal-title" id="domainDetailsModalLabel">
-            <i class="bx bx-folder-open"></i>
-            <span id="pd-header-domain-name" class="fw-bold text-primary text-uppercase"></span>
+          <i class="bx bx-folder-open"></i>
+          <span id="pd-header-domain-name" class="fw-bold text-primary text-uppercase"></span>
         </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-            aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body px-4 py-3">
         <div class="table-responsive">
@@ -901,9 +419,6 @@ function formatDate(dateStr) {
     </div>
   </div>
 </div>
-
-
-
 
 
 <!-- Add Domain Data Modal -->
@@ -1127,25 +642,7 @@ function formatDate(dateStr) {
         </div>
       </form>
 
-      <script>
-        const methodSelect = document.getElementById("paymentMethod");
-        const bankFields = document.getElementById("bankFields");
-        const upiFields = document.getElementById("upiFields");
-        const chequeFields = document.getElementById("chequeFields");
-        const otherFields = document.getElementById("otherFields");
 
-        methodSelect.addEventListener("change", function () {
-          bankFields.classList.add("d-none");
-          upiFields.classList.add("d-none");
-          chequeFields.classList.add("d-none");
-          otherFields.classList.add("d-none");
-
-          if (this.value === "Bank Transfer") bankFields.classList.remove("d-none");
-          if (this.value === "UPI") upiFields.classList.remove("d-none");
-          if (this.value === "Cheque") chequeFields.classList.remove("d-none");
-          if (this.value === "Other") otherFields.classList.remove("d-none");
-        });
-      </script>
     </div>
   </div>
 </div>
@@ -1375,28 +872,6 @@ function formatDate(dateStr) {
               </tbody>
             </table>
 
-            <script>
-              const editMethodSelect = document.getElementById("edit-payment-method");
-              const editBankFields = document.getElementById("edit-bank-fields");
-              const editUpiFields = document.getElementById("edit-upi-fields");
-              const editChequeFields = document.getElementById("edit-cheque-fields");
-              const editOtherFields = document.getElementById("edit-other-fields");
-
-              function toggleEditPaymentFields() {
-                editBankFields.classList.add("d-none");
-                editUpiFields.classList.add("d-none");
-                editChequeFields.classList.add("d-none");
-                editOtherFields.classList.add("d-none");
-
-                if (editMethodSelect.value === "Bank Transfer") editBankFields.classList.remove("d-none");
-                if (editMethodSelect.value === "UPI") editUpiFields.classList.remove("d-none");
-                if (editMethodSelect.value === "Cheque") editChequeFields.classList.remove("d-none");
-                if (editMethodSelect.value === "Other") editOtherFields.classList.remove("d-none");
-              }
-
-              editMethodSelect.addEventListener("change", toggleEditPaymentFields);
-              toggleEditPaymentFields();
-            </script>
 
           </div>
         </div>
@@ -1431,5 +906,407 @@ function formatDate(dateStr) {
   </div>
 </div>
 
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/common.js' %}"></script>
+<script>
+  // Reusable Flatpickr with Year Dropdown (no arrows)
+  function initFlatpickrWithYearDropdown(selector, defaultDate = null) {
+    const fp = flatpickr(selector, {
+      dateFormat: "Y-m-d",
+      allowInput: true,
+      altInput: true,
+      altFormat: "F j, Y",
+      monthSelectorType: "dropdown",
+      onReady: function (selectedDates, dateStr, instance) {
+        const yearSelect = document.createElement("select");
+        yearSelect.classList.add("flatpickr-year-dropdown");
 
+        // Generate year options (1900 → 2099)
+        for (let y = 1900; y <= 2099; y++) {
+          let opt = document.createElement("option");
+          opt.value = y;
+          opt.textContent = y;
+          if (y === instance.currentYear) opt.selected = true;
+          yearSelect.appendChild(opt);
+        }
+
+        // Replace year input with dropdown
+        const yearInput = instance.currentYearElement;
+        yearInput.parentNode.replaceChild(yearSelect, yearInput);
+
+        // Remove arrows ↑ ↓
+        const container = yearSelect.parentNode;
+        const upBtn = container.querySelector(".arrowUp");
+        const downBtn = container.querySelector(".arrowDown");
+        if (upBtn) upBtn.remove();
+        if (downBtn) downBtn.remove();
+
+        // Update Flatpickr on change
+        yearSelect.addEventListener("change", function () {
+          instance.changeYear(parseInt(this.value));
+        });
+      }
+    });
+
+    if (defaultDate) {
+      fp.setDate(defaultDate, true);
+    }
+
+    return fp;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+
+    // searching
+    enableTableSearch("searchBox", "domainTable");
+    // sorting
+
+    enableTableSorting("domainTable");
+
+
+    document.getElementById("domainDataForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const form = this;
+      const formData = new FormData(form);
+
+      fetch("{% url 'add_domain' %}", {
+        method: "POST",
+        body: formData,
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Close modal
+            const modalEl = document.getElementById("addDomainDataModal");
+            bootstrap.Modal.getInstance(modalEl).hide();
+
+            // Show success toast
+            showToast(data.message, "success");
+
+            // Optional: reload page or update table
+            setTimeout(() => window.location.reload(), 800);
+          } else {
+            // Show validation errors
+            if (data.flat_errors) {
+              data.flat_errors.forEach(msg => showToast(msg, "danger"));
+            } else if (data.errors) {
+              Object.entries(data.errors).forEach(([field, msgs]) => {
+                msgs.forEach(msg => showToast(`${msg}`, "danger"));
+              });
+            } else {
+              showToast("Something went wrong", "danger");
+            }
+          }
+        })
+        .catch(() => showToast("Unexpected error while adding domain", "danger"));
+    });
+
+
+
+
+
+
+  });
+
+  $(document).ready(function () {
+    const domainDetailsUrl = "{% url 'get_domain_details' %}";
+
+    // ================= VIEW DOMAIN MODAL =================
+    $(document).on("click", ".domain-link", function (e) {
+      e.preventDefault();
+      const domainId = $(this).data("domain-id");
+      if (!domainId) return console.error("Domain ID missing!");
+
+      $.get(domainDetailsUrl, { id: domainId, mode: "view" }, function (res) {
+        if (!res.success) return console.error(res.error);
+        const d = res.domain;
+
+        // ✅ Modal title → list associated projects
+        let titleProjects = "-";
+        if (d.projects?.length) {
+          titleProjects = d.projects.map(p => p.name).join(", ");
+        }
+        // header
+        $("#pd-header-domain-name").text(d.domain_name || "-");
+        // ✅ Projects section
+        if (d.projects && d.projects.length > 0) {
+          let projHtml = d.projects
+            .map(p => `${p.name} <small class="text-muted">(${p.code})</small>`)
+            .join("<br>");
+          $("#dd-projects").html(projHtml);
+        } else {
+          $("#dd-projects").text("-");
+        }
+
+        // ==================== Domain Details ====================
+        $("#dd-domain-name").text(d.domain_name || "-");
+        $("#dd-sub-domain1").text(d.sub_domain1 || "-");
+        $("#dd-sub-domain2").text(d.sub_domain2 || "-");
+        $("#dd-registrar").text(d.registrar || "-");
+        $("#dd-purchase-date").text(formatDate(d.purchase_date));
+        $("#dd-expiry-date").text(formatDate(d.expiry_date));
+
+        $("#dd-renewal-status")
+          .removeClass()
+          .addClass(
+            "badge " +
+            (d.renewal_status === "Pending"
+              ? "bg-label-warning"
+              : d.renewal_status === "Active"
+                ? "bg-label-success"
+                : "bg-label-danger")
+          )
+          .text(d.renewal_status || "-");
+
+        $("#dd-auto-renewal")
+          .removeClass()
+          .addClass("badge " + (d.auto_renewal ? "bg-label-success" : "bg-label-danger"))
+          .text(d.auto_renewal ? "On" : "Off");
+
+        // ==================== Payment Details ====================
+        $("#dd-domain-charge").text(d.domain_charge || "0.00");
+        $("#dd-payment-status")
+          .removeClass()
+          .addClass(
+            "badge " +
+            (d.client_payment_status === "Paid"
+              ? "bg-label-success"
+              : d.client_payment_status === "Pending"
+                ? "bg-label-warning"
+                : "bg-label-danger")
+          )
+          .text(d.client_payment_status || "-");
+
+        $("#dd-payment-method").text(d.payment_method || "-");
+        $("#dd-payment-mode").text(d.payment_mode || "-");
+
+        // Pretty print payment details
+        let paymentHtml = "-";
+        if (d.payment_details) {
+          const details = d.payment_details;
+
+          if (d.payment_method === "Bank Transfer") {
+            paymentHtml = `
+          <table class="table table-sm table-bordered mb-0">
+            <tr><th>Bank Name</th><td>${details.bank_name || "-"}</td></tr>
+            <tr><th>Account No</th><td>${details.account_no || "-"}</td></tr>
+            <tr><th>IFSC Code</th><td>${details.ifsc_code || "-"}</td></tr>
+          </table>`;
+          } else if (d.payment_method === "UPI") {
+            paymentHtml = `
+          <table class="table table-sm table-bordered mb-0">
+            <tr><th>UPI ID</th><td>${details.upi_id || "-"}</td></tr>
+          </table>`;
+          } else if (d.payment_method === "Cheque") {
+            paymentHtml = `
+          <table class="table table-sm table-bordered mb-0">
+            <tr><th>Cheque No</th><td>${details.cheque_no || "-"}</td></tr>
+            <tr><th>Cheque Name</th><td>${details.cheque_name || "-"}</td></tr>
+          </table>`;
+          } else if (d.payment_method === "Other") {
+            paymentHtml = `
+          <table class="table table-sm table-bordered mb-0">
+            <tr><th>Description</th><td>${details.description || "-"}</td></tr>
+          </table>`;
+          } else if (d.payment_method === "Cash") {
+            paymentHtml = `<span class="badge bg-success">Cash Payment</span>`;
+          } else {
+            paymentHtml = `<pre>${JSON.stringify(details, null, 2)}</pre>`;
+          }
+        }
+        $("#dd-payment-details").html(paymentHtml);
+
+        // ==================== Credentials & Security ====================
+        $("#dd-credentials-user").text(d.credentials_user || "-");
+        $("#dd-credentials-pass")
+          .text("********")
+          .attr("data-real-pass", d.credentials_pass || "-")
+          .addClass("masked");
+
+        $("#togglePassBtn").html('<i class="bx bx-show"></i>');
+
+        $("#dd-ssl-installed")
+          .removeClass()
+          .addClass("badge " + (d.ssl_installed ? "bg-label-success" : "bg-label-danger"))
+          .text(d.ssl_installed ? "Yes" : "No");
+
+        $("#dd-ssl-expiry").text(formatDate(d.ssl_expiry));
+
+        // ==================== DNS & Services ====================
+        $("#dd-dns-configured")
+          .removeClass()
+          .addClass("badge " + (d.dns_configured ? "bg-label-success" : "bg-label-danger"))
+          .text(d.dns_configured ? "Yes" : "No");
+
+        $("#dd-nameservers").html((d.nameservers || "").replace(/\n/g, "<br>"));
+        $("#dd-linked-services").text(d.linked_services || "-");
+
+        // ==================== Notes ====================
+        $("#dd-notes").text(d.notes || "-");
+
+        // ✅ Show modal
+        $("#domainDetailsModal").modal("show");
+      });
+    });
+
+    // ================= PASSWORD TOGGLE =================
+    $(document).on("click", "#togglePassBtn", function () {
+      const passEl = $("#dd-credentials-pass");
+
+      if (passEl.hasClass("masked")) {
+        // Reveal password
+        passEl.text(passEl.data("real-pass")).removeClass("masked");
+        $(this).html('<i class="bx bx-hide"></i>');
+      } else {
+        // Mask again
+        passEl.text("********").addClass("masked");
+        $(this).html('<i class="bx bx-show"></i>');
+      }
+    });
+
+
+    // EDIT modal
+    $(document).on("click", ".edit-domain", function (e) {
+      e.preventDefault();
+      const domainId = $(this).data("domain-id");
+      if (!domainId) return console.error("Domain ID missing!");
+
+      $.get(domainDetailsUrl, { id: domainId, mode: "edit" }, function (res) {
+        if (!res.success) return console.error(res.error);
+        const d = res.domain;
+
+        $("#editDomainForm").attr("action", `/update_domain/${domainId}/`);
+        $("#edit-domain-name").val(d.domain_name || '');
+        $("#edit-subdomain1").val(d.sub_domain1 || '');
+        $("#edit-subdomain2").val(d.sub_domain2 || '');
+        $("#edit-registrar").val(d.registrar || '');
+        const editPurchaseDate = initFlatpickrWithYearDropdown("#edit-purchase-date", d.purchase_date);
+        const editExpiryDate = initFlatpickrWithYearDropdown("#edit-expiry-date", d.expiry_date);
+        $("#edit-renewal-status").val(d.renewal_status || '');
+        $("#edit-auto-renewal").val(d.auto_renewal || 'Off');
+        $("#edit-domain-charge").val(d.domain_charge || '');
+        $("#edit-dns-configured").prop('checked', d.dns_configured);
+        $("#edit-nameservers").val(d.nameservers || '');
+        $("#edit-ssl-installed").prop('checked', d.ssl_installed);
+        const editsslExpiryDate = initFlatpickrWithYearDropdown("#edit-ssl-expiry", d.ssl_expiry);
+        $("#edit-credentials-user").val(d.credentials_user || '');
+        $("#edit-credentials-pass").val(d.credentials_pass || '');
+        $("#edit-linked-services").val(d.linked_services || '');
+        $("#edit-client-payment-status").val(d.client_payment_status || 'Pending');
+        $("#edit-payment-mode").val(d.payment_mode || 'Client');
+        $("#edit-payment-method").val(d.payment_method || '');
+        $("#edit-notes").val(d.notes || '');
+
+        // Projects multi-select
+        $("#edit-projects option").prop("selected", false);
+        if (d.projects && d.projects.length > 0) {
+          d.projects.forEach(p => {
+            $(`#edit-projects option[value='${p.id}']`).prop("selected", true);
+          });
+        }
+
+        // Show dynamic payment fields
+        $(".edit-payment-extra").addClass("d-none");
+        if (d.payment_method === "Bank Transfer") {
+          $("#edit-bank-name").val(d.payment_details?.bank_name || '');
+          $("#edit-account-no").val(d.payment_details?.account_no || '');
+          $("#edit-ifsc-code").val(d.payment_details?.ifsc_code || '');
+          $("#edit-bank-fields").removeClass("d-none");
+        } else if (d.payment_method === "UPI") {
+          $("#edit-upi-id").val(d.payment_details?.upi_id || '');
+          $("#edit-upi-fields").removeClass("d-none");
+        } else if (d.payment_method === "Cheque") {
+          $("#edit-cheque-no").val(d.payment_details?.cheque_no || '');
+          $("#edit-cheque-name").val(d.payment_details?.cheque_name || '');
+          $("#edit-cheque-fields").removeClass("d-none");
+        } else if (d.payment_method === "Other") {
+          $("#edit-other-details").val(d.payment_details?.description || '');
+          $("#edit-other-fields").removeClass("d-none");
+        }
+        $("#editDomainModal").modal("show");
+      });
+    });
+
+    // DELETE action
+    let domainIdToDelete = null;
+
+    $(document).on("click", ".delete-domain", function (e) {
+      e.preventDefault();
+      domainIdToDelete = $(this).data("domain-id");
+      if (!domainIdToDelete) return console.error("Domain ID missing!");
+
+      // Show Bootstrap modal
+      var deleteModal = new bootstrap.Modal(document.getElementById('deleteDomainModal'));
+      deleteModal.show();
+    });
+
+    // Handle confirm delete
+    $(document).on("click", "#confirmDeleteDomainBtn", function () {
+      if (!domainIdToDelete) return;
+
+      $.ajax({
+        url: `/delete_domain/${domainIdToDelete}/`,
+        type: "POST",
+        data: { csrfmiddlewaretoken: '{{ csrf_token }}' },
+        success: function (res) {
+          // Simply refresh the page
+          location.reload();
+        },
+        error: function (err) {
+          console.error("Error deleting domain.", err);
+          // Optional: show a Bootstrap alert instead of default alert
+        }
+      });
+
+      // Hide the modal
+      var deleteModalEl = document.getElementById('deleteDomainModal');
+      var deleteModalInstance = bootstrap.Modal.getInstance(deleteModalEl);
+      deleteModalInstance.hide();
+    });
+
+
+  });
+
+  const methodSelect = document.getElementById("paymentMethod");
+  const bankFields = document.getElementById("bankFields");
+  const upiFields = document.getElementById("upiFields");
+  const chequeFields = document.getElementById("chequeFields");
+  const otherFields = document.getElementById("otherFields");
+
+  methodSelect.addEventListener("change", function () {
+    bankFields.classList.add("d-none");
+    upiFields.classList.add("d-none");
+    chequeFields.classList.add("d-none");
+    otherFields.classList.add("d-none");
+
+    if (this.value === "Bank Transfer") bankFields.classList.remove("d-none");
+    if (this.value === "UPI") upiFields.classList.remove("d-none");
+    if (this.value === "Cheque") chequeFields.classList.remove("d-none");
+    if (this.value === "Other") otherFields.classList.remove("d-none");
+  });
+  const editMethodSelect = document.getElementById("edit-payment-method");
+  const editBankFields = document.getElementById("edit-bank-fields");
+  const editUpiFields = document.getElementById("edit-upi-fields");
+  const editChequeFields = document.getElementById("edit-cheque-fields");
+  const editOtherFields = document.getElementById("edit-other-fields");
+
+  function toggleEditPaymentFields() {
+    editBankFields.classList.add("d-none");
+    editUpiFields.classList.add("d-none");
+    editChequeFields.classList.add("d-none");
+    editOtherFields.classList.add("d-none");
+
+    if (editMethodSelect.value === "Bank Transfer") editBankFields.classList.remove("d-none");
+    if (editMethodSelect.value === "UPI") editUpiFields.classList.remove("d-none");
+    if (editMethodSelect.value === "Cheque") editChequeFields.classList.remove("d-none");
+    if (editMethodSelect.value === "Other") editOtherFields.classList.remove("d-none");
+  }
+
+  editMethodSelect.addEventListener("change", toggleEditPaymentFields);
+  toggleEditPaymentFields();
+
+</script>
+{% endblock %}
 {% endblock %}

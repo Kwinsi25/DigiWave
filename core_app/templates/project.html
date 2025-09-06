@@ -6,10 +6,13 @@
 {% block extra_css %}
 <style>
     select.readonly {
-    pointer-events: none;   /* blocks click */
-    background-color: #eceef1 !important;  /* your requested color */
-    color: #495057;         /* optional: text color like Bootstrap disabled */
-}
+        pointer-events: none;
+        /* blocks click */
+        background-color: #eceef1 !important;
+        /* your requested color */
+        color: #495057;
+        /* optional: text color like Bootstrap disabled */
+    }
 
     .alert-success {
         background-color: #017004 !important;
@@ -172,15 +175,15 @@
                 </div>
 
                 <div class="table-responsive text-nowrap scrollable-table-body">
-                    <table class="table">
+                    <table class="table" id="projectTable">
                         <thead>
                             <tr>
-                                <th>Sr No.</th>
-                                <th>Project ID</th>
-                                <th>Project Name</th>
-                                <th>Start Date</th>
-                                <th>App Mode</th>
-                                <th>Status</th>
+                                <th data-sort="number">Sr No.</th>
+                                <th data-sort="string">Project ID</th>
+                                <th data-sort="string">Project Name</th>
+                                <th data-sort="string">Start Date</th>
+                                <th data-sort="string">App Mode</th>
+                                <th data-sort="string">Status</th>
                                 <th>Team Members</th>
                                 <th>Actions</th>
                             </tr>
@@ -199,13 +202,13 @@
                                     </a>
                                 </td>
                                 <td>{{ project.start_date }}</td>
-                               <td>
+                                <td>
                                     {% if project.app_modes.all %}
-                                        {% for mode in project.app_modes.all %}
-                                            {{ mode.name }}{% if not forloop.last %}<br/> {% endif %}
-                                        {% endfor %}
+                                    {% for mode in project.app_modes.all %}
+                                    {{ mode.name }}{% if not forloop.last %}<br /> {% endif %}
+                                    {% endfor %}
                                     {% else %}
-                                        -
+                                    -
                                     {% endif %}
                                 </td>
 
@@ -223,35 +226,32 @@
                                     {% endif %}
 
                                 </td>
-                               <td>
-  <ul class="list-unstyled d-flex align-items-center avatar-group mb-0">
-    {% for member in project.team_members.all|slice:":4" %}
-      <li data-bs-toggle="tooltip"
-          title="{{ member.first_name }} {{ member.last_name }}"
-          class="avatar avatar-xs pull-up view-user" data-user-id="{{ member.id }}"
-          style="margin-left: -8px; cursor:pointer; border:2px solid #fff; border-radius:50%;">
-        {% if member.profile_picture %}
-          <img src="{{ member.profile_picture.url }}" 
-               alt="{{ member.first_name }}"
-               class="rounded-circle"
-               style="width:30px; height:30px;" />
-        {% else %}
-          <img src="{% static 'img/avatars/default-avatar.png' %}"
-               alt="{{ member.first_name }}"
-               class="rounded-circle"
-               style="width:30px; height:30px;" />
-        {% endif %}
-      </li>
-    {% endfor %}
+                                <td>
+                                    <ul class="list-unstyled d-flex align-items-center avatar-group mb-0">
+                                        {% for member in project.team_members.all|slice:":4" %}
+                                        <li data-bs-toggle="tooltip"
+                                            title="{{ member.first_name }} {{ member.last_name }}"
+                                            class="avatar avatar-xs pull-up view-user" data-user-id="{{ member.id }}"
+                                            style="margin-left: -8px; cursor:pointer; border:2px solid #fff; border-radius:50%;">
+                                            {% if member.profile_picture %}
+                                            <img src="{{ member.profile_picture.url }}" alt="{{ member.first_name }}"
+                                                class="rounded-circle" style="width:30px; height:30px;" />
+                                            {% else %}
+                                            <img src="{% static 'img/avatars/default-avatar.png' %}"
+                                                alt="{{ member.first_name }}" class="rounded-circle"
+                                                style="width:30px; height:30px;" />
+                                            {% endif %}
+                                        </li>
+                                        {% endfor %}
 
-    {% if project.team_members.count > 4 %}
-      <li class="avatar avatar-xs" 
-          style="margin-left: -8px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; background:#eee; border-radius:50%; border:2px solid #fff; font-size:12px; font-weight:600;">
-        +{{ project.team_members.count|add:"-4" }}
-      </li>
-    {% endif %}
-  </ul>
-</td>
+                                        {% if project.team_members.count > 4 %}
+                                        <li class="avatar avatar-xs"
+                                            style="margin-left: -8px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; background:#eee; border-radius:50%; border:2px solid #fff; font-size:12px; font-weight:600;">
+                                            +{{ project.team_members.count|add:"-4" }}
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </td>
 
                                 <td>
 
@@ -383,342 +383,343 @@
 
 
 
-        <!-- Add Project Modal -->
-        <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true"
-            data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header table-primary text-white">
-                        <h5 class="modal-title" id="addProjectModalLabel">
-                            <i class="bx bx-plus me-2"></i> Add New Project
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
+    <!-- Add Project Modal -->
+    <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true"
+        data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header table-primary text-white">
+                    <h5 class="modal-title" id="addProjectModalLabel">
+                        <i class="bx bx-plus me-2"></i> Add New Project
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
 
-                    <form id="projectForm" method="POST" action="{% url 'save_project' %}">
-                        {% csrf_token %}
-                        <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
-                            <div class="table-responsive">
-                                <table class="table table-bordered align-middle">
-                                    <tbody>
+                <form id="projectForm" method="POST" action="{% url 'save_project' %}">
+                    {% csrf_token %}
+                    <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle">
+                                <tbody>
 
-                                        <!-- ==================== Quotation Details ==================== -->
-                                        <tr class="table-light">
-        <th colspan="4"><i class="bx bx-file me-2"></i> Quotation Details</th>
-    </tr>
-
-                                        <tr>
-                                            <th>Quotation</th>
-                                            <td colspan="3">
-                                                <select class="form-select" name="quotation" id="quotationSelect">
-                                                    <option value="">-- Select Quotation --</option>
-                                                    {% for q in quotations %}
-                                                    <option value="{{ q.id }}">{{ q.quotation_no }} - {{ q.client_name }}
-                                                    </option>
-                                                    {% endfor %}
-                                                </select>
-                                                
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th>Inquiry Date</th>
-                                            <td>
-                                                <input type="text" class="form-control flat-date" name="inquiry_date"
-                                                    placeholder="Select inquiry date">
-                                                
-                                            </td>
-                                            <th>Lead Source</th>
-                                            <td>
-                                                <input type="text" class="form-control" name="lead_source"
-                                                    placeholder="Enter lead source">
-                                                
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th>Quotation Sent</th>
-                                            <td>
-                                                <select class="form-select" name="quotation_sent">
-                                                    <option value="">-- Select --</option>
-                                                    <option value="Yes">Yes</option>
-                                                    <option value="No">No</option>
-                                                </select>
-                                                
-                                            </td>
-                                            <th>Demo Given</th>
-                                            <td>
-                                                <select class="form-select" name="demo_given">
-                                                    <option value="">-- Select --</option>
-                                                    <option value="Yes">Yes</option>
-                                                    <option value="No">No</option>
-                                                </select>
-                                                
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th>Quotation Amount (₹)</th>
-                                            <td>
-                                                <input type="number" step="0.01" class="form-control"
-                                                    name="quotation_amount" placeholder="Enter quotation amount">
-                                                
-                                            </td>
-                                            <th>Approval Amount (₹)</th>
-                                            <td>
-                                                <input type="number" step="0.01" class="form-control" name="approval_amount"
-                                                    placeholder="Enter approval amount">
-                                                
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th>Client Industry</th>
-                                            <td>
-                                                <input type="text" class="form-control" name="client_industry"
-                                                    placeholder="Enter client industry">
-                                                
-                                            </td>
-                                            <th>Client</th>
-                                            <td>
-                                                <input type="text" class="form-control" name="client_name"
-                                                    placeholder="Enter client name">
-                                                
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th>Contract Signed</th>
-                                            <td colspan="3">
-                                                <select class="form-select" name="contract_signed">
-                                                    <option value="">-- Select --</option>
-                                                    <option value="Yes">Yes</option>
-                                                    <option value="No">No</option>
-                                                </select>
-                                                
-                                            </td>
-                                        </tr>
-
-                                        <!-- ==================== Project Details ==================== -->
+                                    <!-- ==================== Quotation Details ==================== -->
                                     <tr class="table-light">
-        <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Details</th>
-    </tr>
+                                        <th colspan="4"><i class="bx bx-file me-2"></i> Quotation Details</th>
+                                    </tr>
 
-                                        <tr>
-                                            <th>Project Name</th>
-                                            <td>
-                                                <input type="text" class="form-control" name="project_name"
-                                                    placeholder="Enter project name">
-                                                
-                                            </td>
-                                            <th>Project Type</th>
-                                            <td>
-                                                <select class="form-select" name="project_type">
-                                                    <option value="">-- Select Project Type --</option>
-                                                    <option value="Hourly">Hourly</option>
-                                                    <option value="Fixed">Fix</option>
-                                                    <option value="Salary">Salary</option>
-                                                </select>
-                                                
-                                            </td>
-                                        </tr>
+                                    <tr>
+                                        <th>Quotation</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="quotation" id="quotationSelect">
+                                                <option value="">-- Select Quotation --</option>
+                                                {% for q in quotations %}
+                                                <option value="{{ q.id }}">{{ q.quotation_no }} - {{ q.client_name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
 
-                                        <tr>
-                                            <th>Start Date</th>
-                                            <td>
-                                                <input type="text" class="form-control flat-date" name="start_date"
-                                                    placeholder="Select start date">
-                                                
-                                            </td>
-                                            <th>Deadline</th>
-                                            <td>
-                                                <input type="text" class="form-control flat-date" name="deadline"
-                                                    placeholder="Select deadline date">
-                                                
-                                            </td>
-                                        </tr>
+                                        </td>
+                                    </tr>
 
-                                        <tr>
-                                            <th>Technologies</th>
-                                            <td>
-                                                <select class="form-select" name="technologies" multiple>
-                                                    {% for tech in technologies %}
-                                                    <option value="{{ tech.id }}">{{ tech.name }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                                <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
-                                                    multiple</small>
-                                                
-                                            </td>
-                                            <th>App Mode</th>
-                                            <td>
-                                                <select class="form-select" name="app_mode" multiple>
-                                                   {% for mode in app_modes %}
-                                                    <option value="{{ mode.id }}">{{ mode.name }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                                <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
-                                                    multiple</small>
-                                            </td>
-                                        </tr>
+                                    <tr>
+                                        <th>Inquiry Date</th>
+                                        <td>
+                                            <input type="text" class="form-control flat-date" name="inquiry_date"
+                                                placeholder="Select inquiry date">
 
-                                        <tr>
-                                            <th>Status</th>
-                                            <td>
-                                                <select class="form-select" name="status">
-                                                    <option value="">-- Select --</option>
-                                                    <option value="In Progress">In Progress</option>
-                                                    <option value="Completed">Completed</option>
-                                                    <option value="On Hold">On Hold</option>
-                                                    <option value="Cancelled">Cancelled</option>
-                                                </select>
-                                                
-                                            </td>
-                                            <th>Team Members</th>
-                                            <td>
-                                                <select class="form-select" name="team_members" multiple>
-                                                    {% for user in users %}
-                                                    <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}
-                                                    </option>
-                                                    {% endfor %}
-                                                </select>
-                                                <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
-                                                    multiple</small>
-                                                
-                                            </td>
-                                        </tr>
+                                        </td>
+                                        <th>Lead Source</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="lead_source"
+                                                placeholder="Enter lead source">
 
-                                        <!-- Payment, Links, Financials, Free Service -->
-                                        <tr>
-                                            <th>Payment (₹)</th>
-                                            <td>
-                                                <input type="number" class="form-control" name="payment_value"
-                                                    placeholder="Enter total payment value" min="0" readonly>
-                                                
-                                            </td>
-                                            <th>Payment Status</th>
-                                            <td>
-                                                <select class="form-select" name="payment_status">
-                                                    <option value="Pending">Pending</option>
-                                                    <option value="Advanced">Advanced</option>
-                                                    <option value="Paid">Received</option>
-                                                </select>
-                                                
-                                            </td>
-                                        </tr>
+                                        </td>
+                                    </tr>
 
-                                        <tr>
-                                            <th>Live Link</th>
-                                            <td>
-                                                <input type="url" class="form-control" name="live_link"
-                                                    placeholder="https://example.com">
-                                                
-                                            </td>
-                                            <th>Postman Collection</th>
-                                            <td>
-                                                <input type="url" class="form-control" name="postman_collection"
-                                                    placeholder="https://example.com/postman.json">
-                                                
-                                            </td>
-                                        </tr>
+                                    <tr>
+                                        <th>Quotation Sent</th>
+                                        <td>
+                                            <select class="form-select" name="quotation_sent">
+                                                <option value="">-- Select --</option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                            </select>
 
-                                        <tr>
-                                            <th>Data Folder</th>
-                                            <td>
-                                                <input type="url" class="form-control" name="data_folder"
-                                                    placeholder="https://example.com/data/">
-                                                
-                                            </td>
-                                            <th>Other Link</th>
-                                            <td>
-                                                <input type="url" class="form-control" name="other_link"
-                                                    placeholder="https://example.com/other">
-                                                
-                                            </td>
-                                        </tr>
+                                        </td>
+                                        <th>Demo Given</th>
+                                        <td>
+                                            <select class="form-select" name="demo_given">
+                                                <option value="">-- Select --</option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                            </select>
 
-                                        <tr>
-                                            <th>Other Expense (₹)</th>
-                                            <td>
-                                                <input type="number"  class="form-control" name="other_expense"
-                                                    placeholder="Enter expense amount">
-                                                
-                                            </td>
-                                            <th>Developer Charge (₹)</th>
-                                            <td>
-                                                <input type="number"  class="form-control"
-                                                    name="developer_charge" placeholder="Enter developer charge">
-                                                
-                                            </td>
-                                        </tr>
+                                        </td>
+                                    </tr>
 
-                                        <tr>
-                                            <th>Server Charge (₹)</th>
-                                            <td>
-                                                <input type="number"  class="form-control" name="server_charge"
-                                                    placeholder="Enter server charge">
-                                                
-                                            </td>
-                                            <th>3rd Party API Charge (₹)</th>
-                                            <td>
-                                                <input type="number"  class="form-control"
-                                                    name="third_party_api_charge" placeholder="Enter 3rd party API charge">
-                                                
-                                            </td>
-                                        </tr>
+                                    <tr>
+                                        <th>Quotation Amount (₹)</th>
+                                        <td>
+                                            <input type="number" step="0.01" class="form-control"
+                                                name="quotation_amount" placeholder="Enter quotation amount">
 
-                                        <tr>
-                                            <th>Mediator Charge (₹)</th>
-                                            <td>
-                                                <input type="number"  class="form-control" name="mediator_charge"
-                                                    placeholder="Enter mediator charge">
-                                                
-                                            </td>
-                                            <!-- <th>Income (₹)</th>
+                                        </td>
+                                        <th>Approval Amount (₹)</th>
+                                        <td>
+                                            <input type="number" step="0.01" class="form-control" name="approval_amount"
+                                                placeholder="Enter approval amount">
+
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Client Industry</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="client_industry"
+                                                placeholder="Enter client industry">
+
+                                        </td>
+                                        <th>Client</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="client_name"
+                                                placeholder="Enter client name">
+
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Contract Signed</th>
+                                        <td colspan="3">
+                                            <select class="form-select" name="contract_signed">
+                                                <option value="">-- Select --</option>
+                                                <option value="Yes">Yes</option>
+                                                <option value="No">No</option>
+                                            </select>
+
+                                        </td>
+                                    </tr>
+
+                                    <!-- ==================== Project Details ==================== -->
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Details</th>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Project Name</th>
+                                        <td>
+                                            <input type="text" class="form-control" name="project_name"
+                                                placeholder="Enter project name">
+
+                                        </td>
+                                        <th>Project Type</th>
+                                        <td>
+                                            <select class="form-select" name="project_type">
+                                                <option value="">-- Select Project Type --</option>
+                                                <option value="Hourly">Hourly</option>
+                                                <option value="Fixed">Fix</option>
+                                                <option value="Salary">Salary</option>
+                                            </select>
+
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Start Date</th>
+                                        <td>
+                                            <input type="text" class="form-control flat-date" name="start_date"
+                                                placeholder="Select start date">
+
+                                        </td>
+                                        <th>Deadline</th>
+                                        <td>
+                                            <input type="text" class="form-control flat-date" name="deadline"
+                                                placeholder="Select deadline date">
+
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Technologies</th>
+                                        <td>
+                                            <select class="form-select" name="technologies" multiple>
+                                                {% for tech in technologies %}
+                                                <option value="{{ tech.id }}">{{ tech.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
+                                                multiple</small>
+
+                                        </td>
+                                        <th>App Mode</th>
+                                        <td>
+                                            <select class="form-select" name="app_mode" multiple>
+                                                {% for mode in app_modes %}
+                                                <option value="{{ mode.id }}">{{ mode.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
+                                                multiple</small>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Status</th>
+                                        <td>
+                                            <select class="form-select" name="status">
+                                                <option value="">-- Select --</option>
+                                                <option value="In Progress">In Progress</option>
+                                                <option value="Completed">Completed</option>
+                                                <option value="On Hold">On Hold</option>
+                                                <option value="Cancelled">Cancelled</option>
+                                            </select>
+
+                                        </td>
+                                        <th>Team Members</th>
+                                        <td>
+                                            <select class="form-select" name="team_members" multiple>
+                                                {% for user in users %}
+                                                <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                            <small class="text-muted">Hold CTRL (Windows) or CMD (Mac) to select
+                                                multiple</small>
+
+                                        </td>
+                                    </tr>
+
+                                    <!-- Payment, Links, Financials, Free Service -->
+                                    <tr>
+                                        <th>Payment (₹)</th>
+                                        <td>
+                                            <input type="number" class="form-control" name="payment_value"
+                                                placeholder="Enter total payment value" min="0" readonly>
+
+                                        </td>
+                                        <th>Payment Status</th>
+                                        <td>
+                                            <select class="form-select" name="payment_status">
+                                                <option value="Pending">Pending</option>
+                                                <option value="Advanced">Advanced</option>
+                                                <option value="Paid">Received</option>
+                                            </select>
+
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Live Link</th>
+                                        <td>
+                                            <input type="url" class="form-control" name="live_link"
+                                                placeholder="https://example.com">
+
+                                        </td>
+                                        <th>Postman Collection</th>
+                                        <td>
+                                            <input type="url" class="form-control" name="postman_collection"
+                                                placeholder="https://example.com/postman.json">
+
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Data Folder</th>
+                                        <td>
+                                            <input type="url" class="form-control" name="data_folder"
+                                                placeholder="https://example.com/data/">
+
+                                        </td>
+                                        <th>Other Link</th>
+                                        <td>
+                                            <input type="url" class="form-control" name="other_link"
+                                                placeholder="https://example.com/other">
+
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Other Expense (₹)</th>
+                                        <td>
+                                            <input type="number" class="form-control" name="other_expense"
+                                                placeholder="Enter expense amount">
+
+                                        </td>
+                                        <th>Developer Charge (₹)</th>
+                                        <td>
+                                            <input type="number" class="form-control" name="developer_charge"
+                                                placeholder="Enter developer charge">
+
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Server Charge (₹)</th>
+                                        <td>
+                                            <input type="number" class="form-control" name="server_charge"
+                                                placeholder="Enter server charge">
+
+                                        </td>
+                                        <th>3rd Party API Charge (₹)</th>
+                                        <td>
+                                            <input type="number" class="form-control" name="third_party_api_charge"
+                                                placeholder="Enter 3rd party API charge">
+
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Mediator Charge (₹)</th>
+                                        <td>
+                                            <input type="number" class="form-control" name="mediator_charge"
+                                                placeholder="Enter mediator charge">
+
+                                        </td>
+                                        <!-- <th>Income (₹)</th>
                                             <td>
                                                 <input type="number" class="form-control" name="income"
                                                     placeholder="Enter income">
                                                 
                                             </td> -->
-                                        </tr>
+                                    </tr>
 
-                                       
-                                        <tr>
-                                            <th>Completed Date</th>
-                                            <td>
-                                                <input type="text" class="form-control flat-date" name="completed_date"
-                                                    placeholder="Select completed date">
-                                                
-                                            </td>
-                                            
-                                            <th>Free Service</th>
-                                            <td >
-                                                <textarea class="form-control" name="free_service" rows="2"
-                                                    placeholder="Describe free services included"></textarea>
-                                                
-                                            </td>
-                                        </tr>   
- <tr>
-                                            <th>Notes</th>
-                                            <td colspan="3">
-                                                <textarea class="form-control" name="notes" rows="3" placeholder="Add any notes for this project"></textarea>
-                                            </td>
-                                        </tr>
 
-                                    </tbody>
-                                </table>
-                            </div>
+                                    <tr>
+                                        <th>Completed Date</th>
+                                        <td>
+                                            <input type="text" class="form-control flat-date" name="completed_date"
+                                                placeholder="Select completed date">
+
+                                        </td>
+
+                                        <th>Free Service</th>
+                                        <td>
+                                            <textarea class="form-control" name="free_service" rows="2"
+                                                placeholder="Describe free services included"></textarea>
+
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Notes</th>
+                                        <td colspan="3">
+                                            <textarea class="form-control" name="notes" rows="3"
+                                                placeholder="Add any notes for this project"></textarea>
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
                         </div>
+                    </div>
 
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Save Project</button>
-                        </div>
-                    </form>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Project</button>
+                    </div>
+                </form>
 
-                </div>
             </div>
         </div>
+    </div>
 
 
 
@@ -750,7 +751,7 @@
                                     <td id="pd-quotation-reference" colspan="3"></td>
                                 </tr>
                                 <tr>
-                                     <th>Client Name</th>
+                                    <th>Client Name</th>
                                     <td id="pd-client-name" colspan="3"></td>
                                 </tr>
                                 <tr>
@@ -904,9 +905,9 @@
                                 <tbody>
 
                                     <!-- ==================== Quotation Details ==================== -->
-                                   <tr class="table-light">
-    <th colspan="4"><i class="bx bx-file me-2"></i> Quotation Details</th>
-</tr>
+                                    <tr class="table-light">
+                                        <th colspan="4"><i class="bx bx-file me-2"></i> Quotation Details</th>
+                                    </tr>
 
                                     <tr>
                                         <th>Quotation</th>
@@ -918,7 +919,7 @@
                                                 </option>
                                                 {% endfor %}
                                             </select>
-                                            
+
                                         </td>
                                     </tr>
 
@@ -983,8 +984,8 @@
 
                                     <!-- ==================== Project Details ==================== -->
                                     <tr class="table-light">
-    <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Details</th>
-</tr>
+                                        <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project Details</th>
+                                    </tr>
 
                                     <tr>
                                         <th>Project Name</th>
@@ -1015,7 +1016,7 @@
                                         <td>
                                             <select class="form-select" name="technologies" id="edit-technologies"
                                                 multiple>
-                                               
+
                                                 {% for tech in technologies %}
                                                 <option value="{{ tech.id }}">{{ tech.name }}</option>
                                                 {% endfor %}
@@ -1026,7 +1027,7 @@
                                         <td>
 
                                             <select class="form-select" name="app_mode" id="edit-app-mode" multiple>
-                                               
+
                                                 {% for mode in app_modes %}
                                                 <option value="{{ mode.id }}">{{ mode.name }}</option>
                                                 {% endfor %}
@@ -1061,7 +1062,8 @@
                                     <tr>
                                         <th>Payment (₹)</th>
                                         <td><input type="number" class="form-control" name="payment_value"
-                                                id="edit-payment-value" placeholder="Enter payment amount" readonly></td>
+                                                id="edit-payment-value" placeholder="Enter payment amount" readonly>
+                                        </td>
                                         <th>Payment Status</th>
                                         <td>
                                             <select class="form-select" name="payment_status" id="edit-payment-status">
@@ -1094,25 +1096,23 @@
                                     <!-- Financials -->
                                     <tr>
                                         <th>Other Expense (₹)</th>
-                                        <td><input type="number"  class="form-control" name="other_expense"
+                                        <td><input type="number" class="form-control" name="other_expense"
                                                 id="edit-other-expense" placeholder="Enter expense"></td>
                                         <th>Developer Charge (₹)</th>
-                                        <td><input type="number"  class="form-control"
-                                                name="developer_charge" id="edit-developer-charge"
-                                                placeholder="Enter developer charge"></td>
+                                        <td><input type="number" class="form-control" name="developer_charge"
+                                                id="edit-developer-charge" placeholder="Enter developer charge"></td>
                                     </tr>
                                     <tr>
                                         <th>Server Charge (₹)</th>
-                                        <td><input type="number"  class="form-control" name="server_charge"
+                                        <td><input type="number" class="form-control" name="server_charge"
                                                 id="edit-server-charge" placeholder="Enter server charge"></td>
                                         <th>3rd Party API Charge (₹)</th>
-                                        <td><input type="number"  class="form-control"
-                                                name="third_party_api_charge" id="edit-third-party-charge"
-                                                placeholder="Enter API charge"></td>
+                                        <td><input type="number" class="form-control" name="third_party_api_charge"
+                                                id="edit-third-party-charge" placeholder="Enter API charge"></td>
                                     </tr>
                                     <tr>
                                         <th>Mediator Charge (₹)</th>
-                                        <td><input type="number"  class="form-control" name="mediator_charge"
+                                        <td><input type="number" class="form-control" name="mediator_charge"
                                                 id="edit-mediator-charge" placeholder="Enter mediator charge"></td>
                                         <!-- <th>Income (₹)</th>
                                         <td><input type="number"  class="form-control" name="income"
@@ -1121,24 +1121,24 @@
                                     <!-- Completion and Free Service -->
                                     <tr>
                                         <th>Completed Date</th>
-                                        <td ><input type="text" class="form-control flat-date" name="completed_date"
+                                        <td><input type="text" class="form-control flat-date" name="completed_date"
                                                 id="edit-completed-date" placeholder="Select completed date"></td>
                                         <th>Free Service</th>
-                                        <td><textarea class="form-control" name="free_service"
-                                                id="edit-free-service" rows="2"
-                                                placeholder="Describe free services if any"></textarea></td>
+                                        <td><textarea class="form-control" name="free_service" id="edit-free-service"
+                                                rows="2" placeholder="Describe free services if any"></textarea></td>
                                     </tr>
 
 
                                     <!-- notes -->
                                     <tr>
-                                        
-                                        
+
+
                                         <th>Notes</th>
-                                        <td colspan="3"><textarea class="form-control" name="notes" rows="3"  id="edit-notes" placeholder="Add any notes for this project"></textarea>
-                                           
+                                        <td colspan="3"><textarea class="form-control" name="notes" rows="3"
+                                                id="edit-notes" placeholder="Add any notes for this project"></textarea>
+
                                     </tr>
-                                    
+
                                 </tbody>
                             </table>
                         </div>
@@ -1236,128 +1236,77 @@
 </div>
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/common.js' %}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // pagination links
-        document.getElementById('recordsPerPage').addEventListener('change', function () {
-            // Always reset to page 1 when changing limit
-            const form = document.getElementById('recordsForm');
-            const hiddenPage = document.createElement('input');
-            hiddenPage.type = 'hidden';
-            hiddenPage.name = 'page';
-            hiddenPage.value = 1;
-            form.appendChild(hiddenPage);
-            form.submit();
-        });
-        // Toast function
-        function showToast(message, type = "info") {
-            const container = document.getElementById("toast-container") || (() => {
-                const div = document.createElement("div");
-                div.id = "toast-container";
-                div.style.position = "fixed";
-                div.style.top = "20px";
-                div.style.right = "20px";
-                div.style.zIndex = "3000";
-                div.style.display = "flex";
-                div.style.flexDirection = "column";
-                div.style.gap = "10px";
-                document.body.appendChild(div);
-                return div;
-            })();
+        // searhing
+        enableTableSearch("searchBox", "projectTable");
+        // sorting
 
-            const toast = document.createElement("div");
-            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-            toast.style.minWidth = "250px";
-            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                toast.style.opacity = "0";
-                toast.style.transform = "translateX(100%)";
-                setTimeout(() => toast.remove(), 500);
-            }, 3000);
-        }
-
-
-        const toasts = document.querySelectorAll('#toast-container .toast');
-        toasts.forEach(function (toast) {
-            setTimeout(() => {
-                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                toast.style.opacity = "0";
-                toast.style.transform = "translateX(100%)";
-                setTimeout(() => toast.remove(), 500);
-            }, 3000); // Auto-hide after 3 seconds
-        });
+        enableTableSorting("projectTable");
 
         // Function to handle form submission via AJAX
-    function handleProjectFormSubmit(form) {
-        form.addEventListener("submit", function (e) {
-            e.preventDefault();
-            let formData = new FormData(form);
+        function handleProjectFormSubmit(form) {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                let formData = new FormData(form);
 
-            fetch(form.action, {
-                method: "POST",
-                body: formData,
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                // Clear old errors
-                form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
-
-                if (data.success) {
-                    // Close modal
-                    let modalEl = document.getElementById("addProjectModal");
-                    let modal = bootstrap.Modal.getInstance(modalEl);
-                    modal.hide();
-
-                    // Show success toast
-                    showToast(data.message, "success");
-
-                    // Refresh after short delay
-                    setTimeout(() => window.location.reload(), 1500);
-                } else {
-                    // Show validation errors
-                    if (data.errors["__all__"]) {
-                        showToast(data.errors["__all__"].join(", "), "danger");
-                    } else {
-                        for (let field in data.errors) {
-                            let input = form.querySelector(`[name="${field}"]`);
-                            if (input) input.classList.add("is-invalid");
-                        }
+                fetch(form.action, {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
                     }
-                }
-            })
-            .catch(err => console.error("Error:", err));
-        });
-    }
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        // Clear old errors
+                        form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
 
-    // Attach listener when modal is shown
-    let addProjectModalEl = document.getElementById("addProjectModal");
-    addProjectModalEl.addEventListener('shown.bs.modal', function () {
-        let form = document.getElementById("projectForm");
-        // Avoid attaching multiple times
-        if (!form.dataset.listenerAttached) {
-            handleProjectFormSubmit(form);
-            form.dataset.listenerAttached = "true";
+                        if (data.success) {
+                            // Close modal
+                            let modalEl = document.getElementById("addProjectModal");
+                            let modal = bootstrap.Modal.getInstance(modalEl);
+                            modal.hide();
+
+                            // Show success toast
+                            showToast(data.message, "success");
+
+                            // Refresh after short delay
+                            setTimeout(() => window.location.reload(), 800);
+                        } else {
+                            // Show validation errors
+                            if (data.errors["__all__"]) {
+                                showToast(data.errors["__all__"].join(", "), "danger");
+                            } else {
+                                for (let field in data.errors) {
+                                    let input = form.querySelector(`[name="${field}"]`);
+                                    if (input) input.classList.add("is-invalid");
+                                }
+                            }
+                        }
+                    })
+                    .catch(err => console.error("Error:", err));
+            });
         }
-    });
-    function makeSelectReadonly(select) {
-    ["mousedown", "keydown", "wheel"].forEach(evt => {
-        select.addEventListener(evt, e => e.preventDefault());
-    });
-    select.classList.add("readonly"); // apply the style
-}
+
+        // Attach listener when modal is shown
+        let addProjectModalEl = document.getElementById("addProjectModal");
+        addProjectModalEl.addEventListener('shown.bs.modal', function () {
+            let form = document.getElementById("projectForm");
+            // Avoid attaching multiple times
+            if (!form.dataset.listenerAttached) {
+                handleProjectFormSubmit(form);
+                form.dataset.listenerAttached = "true";
+            }
+        });
+        function makeSelectReadonly(select) {
+            ["mousedown", "keydown", "wheel"].forEach(evt => {
+                select.addEventListener(evt, e => e.preventDefault());
+            });
+            select.classList.add("readonly"); // apply the style
+        }
 
         // Auto-fill when quotation is selected
         document.getElementById('quotationSelect').addEventListener('change', function () {
@@ -1437,7 +1386,7 @@
                     quotationInput.readOnly = true;
                     quotationSelect.disabled = true;
                     makeSelectReadonly(demoGiven);
-makeSelectReadonly(contractSigned);
+                    makeSelectReadonly(contractSigned);
 
                     // demoGiven.addEventListener("mousedown", e => e.preventDefault());
 
@@ -1475,7 +1424,7 @@ makeSelectReadonly(contractSigned);
                 $("#pd-project-name").text(p.project_name);
                 $('#pd-project-type').text(p.project_type);
                 $("#pd-technologies").text(p.technologies.join(", ") || "-");
-               $("#pd-app-mode").text((p.app_modes_names || []).join(", ") || "-");
+                $("#pd-app-mode").text((p.app_modes_names || []).join(", ") || "-");
 
                 $("#pd-lead-source").text(p.lead_source);
                 // Status Badge (same as Django template)
@@ -1586,7 +1535,7 @@ makeSelectReadonly(contractSigned);
 
                 $("#projectDetailsModal").modal("show");
             });
-            
+
             $.get("{% url 'get_project_p_l_detail' %}", { id: projectId }, function (res) {
                 if (res.success) {
                     const d = res.data;
@@ -1680,7 +1629,7 @@ makeSelectReadonly(contractSigned);
                 if (p.start_date) $("#edit-start-date")[0]._flatpickr.setDate(p.start_date, true);
                 if (p.deadline) $("#edit-deadline")[0]._flatpickr.setDate(p.deadline, true);
                 $("#edit-status").val(p.status);
-              
+
 
                 $("#edit-payment-value").val(p.payment_value);
                 $("#edit-payment-status").val(p.payment_status);
@@ -1712,7 +1661,7 @@ makeSelectReadonly(contractSigned);
                 // $("#edit-technologies").val(p.technologies_ids);
                 $("#edit-technologies").val(p.technologies_ids.map(id => id.toString()));
                 $("#edit-team-members").val(p.team_members_ids.map(id => id.toString()));
-                  // App Mode
+                // App Mode
                 $("#edit-app-mode").val(p.app_modes_ids.map(id => id.toString()));
                 // If project has a quotation → lock quotation fields
                 if (p.quotation_id) {
@@ -1729,7 +1678,7 @@ makeSelectReadonly(contractSigned);
                     $("#edit-quotation-sent").prop("disabled", true);
                     $("#edit-demo-given").prop("disabled", true);
                     $("#edit-quotation-amount").prop("readonly", true);
-                   
+
                     $("#edit-contract-signed").prop("disabled", true);
                     $("#edit-client-name").prop("readonly", true);
                 } else {
@@ -1747,7 +1696,7 @@ makeSelectReadonly(contractSigned);
                     $("#edit-quotation-sent").prop("disabled", false);
                     $("#edit-demo-given").prop("disabled", false);
                     $("#edit-quotation-amount").prop("readonly", false);
-                   
+
                     $("#edit-contract-signed").prop("disabled", false);
                     $("#edit-client-name").prop("readonly", false);
                 }
@@ -1779,7 +1728,7 @@ makeSelectReadonly(contractSigned);
                 .then(data => {
                     // Clear old validation errors
                     form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
-                    
+
 
                     if (data.success) {
                         // Close modal
@@ -1791,9 +1740,9 @@ makeSelectReadonly(contractSigned);
                         showToast(data.message, "success");
 
                         // Refresh after a short delay
-                        setTimeout(() => window.location.reload(), 1000);
+                        setTimeout(() => window.location.reload(), 800);
                     } else {
-                        
+
 
                         if (data.errors["__all__"]) {
                             showToast(data.errors["__all__"].join(", "), "danger");
@@ -1813,7 +1762,7 @@ makeSelectReadonly(contractSigned);
             // Get input references (EDIT fields)
             let leadInput = document.getElementById('edit-lead-source');
             let quotationInput = document.getElementById('edit-quotation-amount');
-            
+
             let inquiryInput = document.getElementById('edit-inquiry-date');
             let quotationSelect = document.getElementById('edit-quotation-sent');
             let demoGiven = document.getElementById('edit-demo-given');
@@ -1824,7 +1773,7 @@ makeSelectReadonly(contractSigned);
                 // Reset values
                 leadInput.value = '';
                 quotationInput.value = '';
-                
+
                 quotationSelect.value = '';
                 demoGiven.value = '';
                 clientName.value = '';
@@ -1845,7 +1794,7 @@ makeSelectReadonly(contractSigned);
                 // Reset readonly/disabled
                 leadInput.readOnly = false;
                 quotationInput.readOnly = false;
-              
+
                 quotationSelect.disabled = false;
                 demoGiven.disabled = false;
                 clientName.readOnly = false;
@@ -1859,7 +1808,7 @@ makeSelectReadonly(contractSigned);
                     // Fill values
                     leadInput.value = data.lead_source || '';
                     quotationInput.value = data.grand_total || '';
-                 
+
                     quotationSelect.value = "Yes";
                     demoGiven.value = "Yes";
                     clientName.value = data.client_name || '';
@@ -1885,12 +1834,12 @@ makeSelectReadonly(contractSigned);
                     // Lock fields (readonly/disabled)
                     leadInput.readOnly = true;
                     quotationInput.readOnly = true;
-               
+
                     quotationSelect.disabled = true;
                     // demoGiven.addEventListener("mousedown", e => e.preventDefault());
                     // contractSigned.addEventListener("mousedown", e => e.preventDefault());
                     makeSelectReadonly(demoGiven);
-makeSelectReadonly(contractSigned);
+                    makeSelectReadonly(contractSigned);
 
                     clientName.readOnly = true;
 
@@ -1929,7 +1878,7 @@ makeSelectReadonly(contractSigned);
                 success: function (response) {
                     if (response.success) {
                         showToast(response.message, "success");
-                        setTimeout(() => window.location.reload(), 1000);
+                        setTimeout(() => window.location.reload(), 800);
                     } else {
                         showToast(response.message || "Something went wrong.", "danger");
                     }

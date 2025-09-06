@@ -150,15 +150,15 @@
                 </div>
 
                 <div class="table-responsive text-nowrap scrollable-table-body">
-                    <table class="table">
+                    <table class="table" id="projectPaymentTable">
                         <thead>
                             <tr>
-                                <th>Sr No.</th>
-                                <th>Project ID</th>
-                                <th>Project Name</th>
-                                <th>Duration</th>
-                                <th>Expense</th>
-                                <th>Income</th>
+                                <th data-sort="number">Sr No.</th>
+                                <th data-sort="string">Project ID</th>
+                                <th data-sort="string">Project Name</th>
+                                <th data-sort="string">Duration</th>
+                                <th data-sort="number">Expense</th>
+                                <th data-sort="number">Income</th>
                                
                             </tr>
                         </thead>
@@ -393,20 +393,16 @@
     </div>
 </div>
 </div>
+{% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/common.js' %}"></script>
 <script>
      document.addEventListener("DOMContentLoaded", function () {
-        // pagination links
-        document.getElementById('recordsPerPage').addEventListener('change', function () {
-            // Always reset to page 1 when changing limit
-            const form = document.getElementById('recordsForm');
-            const hiddenPage = document.createElement('input');
-            hiddenPage.type = 'hidden';
-            hiddenPage.name = 'page';
-            hiddenPage.value = 1;
-            form.appendChild(hiddenPage);
-            form.submit();
-        });
+         // searching
+    enableTableSearch("searchBox", "projectPaymentTable");
+    // sorting
+    
+    enableTableSorting("projectPaymentTable");
         // Payment Details Modal Population
     const paymentDetailsUrl = "{% url 'get_project_p_l_detail' %}";
 
@@ -513,4 +509,5 @@ $profitEl
 });
 })
 </script>
+{% endblock %}
 {% endblock %}

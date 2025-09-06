@@ -1,8 +1,18 @@
 {% extends "base.html" %}
 {% load filename_filters %}
+{% load static %}
 {% block title %}Files & Docs{% endblock %}
 {% block extra_css %}
 <style>
+     /* Hover animation */
+    .folder-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .folder-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
     .scrollable-table-body {
         max-height: 400px;
         overflow-y: auto;
@@ -26,58 +36,58 @@
     <div class="container-xxl flex-grow-1 container-p-y">
 
         <!-- Stats Cards -->
-<div class="row mb-4">
-    <!-- Total Folders (main + subfolders) -->
-    <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card h-100 shadow-sm border-0">
-            <div class="card-body d-flex align-items-center justify-content-between">
-                <div>
-                    <h6>Total Folders</h6>
-                    <h4 class="fw-bold text-success">{{ total_folders }}</h4>
-                </div>
-                <div class="avatar bg-success text-white rounded-circle p-2">
-                    <i class="bx bx-archive fs-4"></i>
+        <div class="row mb-4">
+            <!-- Total Folders (main + subfolders) -->
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6>Total Folders</h6>
+                            <h4 class="fw-bold text-success">{{ total_folders }}</h4>
+                        </div>
+                        <div class="avatar bg-success text-white rounded-circle p-2">
+                            <i class="bx bx-archive fs-4"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Total Files (all files) -->
-    <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card h-100 shadow-sm border-0">
-            <div class="card-body d-flex align-items-center justify-content-between">
-                <div>
-                    <h6>Total Files</h6>
-                    <h4 class="fw-bold text-warning">{{ total_files }}</h4>
-                </div>
-                <div class="avatar bg-warning text-white rounded-circle p-2">
-                    <i class="bx bx-file fs-4"></i>
+            <!-- Total Files (all files) -->
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6>Total Files</h6>
+                            <h4 class="fw-bold text-warning">{{ total_files }}</h4>
+                        </div>
+                        <div class="avatar bg-warning text-white rounded-circle p-2">
+                            <i class="bx bx-file fs-4"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Recent Upload -->
-    <div class="col-md-6 col-sm-6 mb-3">
-        <div class="card h-100 shadow-sm border-0">
-            <div class="card-body d-flex align-items-center justify-content-between">
-                <div>
-                    <h6>Recent Upload</h6>
-                    {% if recent_file %}
-                        <p class="fw-bold text-primary">
-                            {{ recent_file.name }} <br> ({{ recent_location }})
-                        </p>
-                    {% else %}
-                        <p class="fw-bold text-primary">No recent files</p>
-                    {% endif %}
-                </div>
-                <div class="avatar bg-danger text-white rounded-circle p-2">
-                    <i class="bx bx-upload fs-4"></i>
+            <!-- Recent Upload -->
+            <div class="col-md-6 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6>Recent Upload</h6>
+                            {% if recent_file %}
+                            <p class="fw-bold text-primary">
+                                {{ recent_file.name }} <br> ({{ recent_location }})
+                            </p>
+                            {% else %}
+                            <p class="fw-bold text-primary">No recent files</p>
+                            {% endif %}
+                        </div>
+                        <div class="avatar bg-danger text-white rounded-circle p-2">
+                            <i class="bx bx-upload fs-4"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
 
         <!-- Folder Table -->
@@ -91,7 +101,7 @@
                 </div>
 
 
-                <div class="row g-3">
+                <div class="row g-3" id="fileTable">
                     {% for folder in page_obj %}
                     <div class="col-md-2 col-sm-4 col-6">
                         <div class="card folder-card text-center position-relative" style="border-radius: 18px;"
@@ -154,76 +164,6 @@
                     <div class="col-12 text-center text-muted">No Folders</div>
                     {% endfor %}
                 </div>
-                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                <script>
-                    let folderToDeleteId = null;
-
-                    // Open modal on Delete Folder click
-                    $(document).on("click", ".delete-folder-btn", function (e) {
-                        e.preventDefault();
-                        folderToDeleteId = $(this).data("folder-id");
-                        if (!folderToDeleteId) return;
-
-                        // Show modal
-                        const deleteModal = new bootstrap.Modal(document.getElementById('deleteFileModal'));
-                        deleteModal.show();
-                    });
-
-                    // Confirm deletion using delegated event
-                    $(document).on("click", "#confirmDeleteBtn", function () {
-                        if (!folderToDeleteId) return;
-
-                        $.ajax({
-                            url: `/delete_folder/${folderToDeleteId}/`,
-                            type: "POST",
-                            data: {
-                                csrfmiddlewaretoken: '{{ csrf_token }}'
-                            },
-                            success: function (res) {
-                                if (res.success) {
-                                    showToast(res.message, "success");
-                                    // remove folder card instead of reload
-                                    $(`.delete-folder-btn[data-folder-id="${folderToDeleteId}"]`).closest(".col-md-2").remove();
-                                } else {
-                                    showToast(res.message || "Failed to delete folder.", "danger");
-                                }
-                            },
-                            error: function (err) {
-                                showToast("Error deleting folder.");
-                                console.error(err);
-                            },
-                            complete: function () {
-                                folderToDeleteId = null;
-                                const deleteModalEl = document.getElementById('deleteFileModal');
-                                const modalInstance = bootstrap.Modal.getInstance(deleteModalEl);
-                                if (modalInstance) modalInstance.hide();
-                            }
-                        });
-                    });
-
-                    // copy link
-                    $(document).on("click", ".copy-link-btn", function () {
-                        const link = window.location.origin + $(this).data("link");
-                        navigator.clipboard.writeText(link).then(() => {
-                            showToast("Link copied ", "success");
-                        });
-                    });
-
-
-                </script>
-
-                <style>
-                    /* Hover animation */
-                    .folder-card {
-                        transition: transform 0.2s ease, box-shadow 0.2s ease;
-                    }
-
-                    .folder-card:hover {
-                        transform: translateY(-6px);
-                        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-                    }
-                </style>
-
 
 
 
@@ -320,17 +260,7 @@
                     </nav>
                 </div>
 
-                <script>
-                    document.getElementById('recordsPerPage').addEventListener('change', function () {
-                        const form = document.getElementById('recordsForm');
-                        const hiddenPage = document.createElement('input');
-                        hiddenPage.type = 'hidden';
-                        hiddenPage.name = 'page';
-                        hiddenPage.value = 1;
-                        form.appendChild(hiddenPage);
-                        form.submit();
-                    });
-                </script>
+
             </div>
         </div>
 
@@ -403,160 +333,8 @@
                             <button type="submit" class="btn btn-primary">Upload Files</button>
                         </div>
                     </form>
-                    <script>
-                        function showToast(message, type = "info") {
-                            const container = document.getElementById("toast-container") || (() => {
-                                const div = document.createElement("div");
-                                div.id = "toast-container";
-                                div.style.position = "fixed";
-                                div.style.top = "20px";
-                                div.style.right = "20px";
-                                div.style.zIndex = "3000";
-                                div.style.display = "flex";
-                                div.style.flexDirection = "column";
-                                div.style.gap = "10px";
-                                document.body.appendChild(div);
-                                return div;
-                            })();
-
-                            const toast = document.createElement("div");
-                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-                            toast.style.minWidth = "250px";
-                            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-                            container.appendChild(toast);
-
-                            setTimeout(() => {
-                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                toast.style.opacity = "0";
-                                toast.style.transform = "translateX(100%)";
-                                setTimeout(() => toast.remove(), 500);
-                            }, 3000);
-                        }
-                        // folder selcetion
-                        function filterFolders() {
-                            const projectSelect = document.getElementById("projectSelect");
-                            const folderSelect = document.getElementById("folderSelect");
-
-                            if (!projectSelect || !folderSelect) return;
-
-                            const selectedProjectId = projectSelect.value;
-
-                            Array.from(folderSelect.options).forEach(option => {
-                                if (!option.value) return; // skip placeholder
-                                const folderProjectId = option.getAttribute("data-project") || "";
-
-                                if (!selectedProjectId && !folderProjectId) {
-                                    option.style.display = "";
-                                } else if (selectedProjectId && folderProjectId === selectedProjectId) {
-                                    option.style.display = "";
-                                } else {
-                                    option.style.display = "none";
-                                }
-                            });
-
-                            folderSelect.value = "";
-                        }
-
-                        // -----------------------------
-                        //Bind Events
-                        // -----------------------------
-                        document.addEventListener("DOMContentLoaded", filterFolders);
-                        document.getElementById("projectSelect")?.addEventListener("change", filterFolders);
-
-                        // sub folder selection
-                        function filterSubfolders() {
-                            const folderSelect = document.getElementById("folderSelect");
-                            const subfolderSelect = document.getElementById("subfolderSelect");
-
-                            if (!folderSelect || !subfolderSelect) return;
-
-                            const selectedFolderId = folderSelect.value;
-                            const selectedProjectId = folderSelect.selectedOptions[0]?.getAttribute("data-project") || "";
-
-                            Array.from(subfolderSelect.options).forEach(option => {
-                                if (!option.value) return; // skip placeholder
-                                const subfolderFolderId = option.getAttribute("data-folder");
-
-                                // Show only subfolders of the selected folder
-                                if (!selectedFolderId && !subfolderFolderId) {
-                                    option.style.display = "";
-                                } else if (selectedFolderId && subfolderFolderId === selectedFolderId) {
-                                    option.style.display = "";
-                                } else {
-                                    option.style.display = "none";
-                                }
-                            });
-
-                            subfolderSelect.value = ""; // reset selection
-                        }
-
-                        // Bind the event when folder changes
-                        document.getElementById("folderSelect")?.addEventListener("change", filterSubfolders);
-
-                        // Also filter when modal opens (optional)
-                        document.getElementById("addFileModal")?.addEventListener("show.bs.modal", filterSubfolders);
-
-                        // Initial filter on page load
-                        document.addEventListener("DOMContentLoaded", filterSubfolders);
-
-                        // Also when modal is opened
-                        document.getElementById("addFileModal")?.addEventListener("show.bs.modal", filterFolders);
 
 
-                        // Filter folders by project
-                        document.getElementById("projectSelect").addEventListener("change", function () {
-                            const selectedProjectId = this.value; // string
-                            const folderSelect = document.getElementById("folderSelect");
-
-                            Array.from(folderSelect.options).forEach(option => {
-                                if (!option.value) return; // skip placeholder
-                                const folderProjectId = option.getAttribute("data-project") || "";
-
-                                // Case 1: No project selected -> show only folders with no project
-                                if (!selectedProjectId && !folderProjectId) {
-                                    option.style.display = "";
-                                }
-                                // Case 2: Project selected -> show only folders with same project_id
-                                else if (selectedProjectId && folderProjectId === selectedProjectId) {
-                                    option.style.display = "";
-                                }
-                                else {
-                                    option.style.display = "none";
-                                }
-                            });
-
-                            folderSelect.value = "";
-                        });
-
-                        // Upload files
-                        document.getElementById("addFileForm").addEventListener("submit", function (e) {
-                            e.preventDefault();
-                            const form = new FormData(this);
-                            // Show loader
-                            const loader = document.getElementById("fileUploadLoader");
-                            loader.style.display = "block";
-                            fetch("{% url 'add_file' %}", { method: "POST", body: form })
-                                .then(res => res.json())
-                                .then(data => {
-                                    loader.style.display = "none";  // Hide loader
-                                    if (data.success) {
-                                        showToast("Files uploaded successfully!", "success");
-                                        bootstrap.Modal.getInstance(document.getElementById("addFileModal")).hide();
-                                        setTimeout(() => window.location.reload(), 1000);
-                                    } else { showToast(data.error || "Upload failed!", "danger"); }
-                                }).catch(() => {
-                                    loader.style.display = "none";  // Hide loader
-                                    showToast("Error uploading files", "danger");
-                                });
-                        });
-
-                    </script>
                     <div id="fileUploadLoader" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%;
                         background: rgba(255,255,255,0.7); z-index: 5000; text-align:center; padding-top:40px;">
                         <div class="spinner-border text-primary" role="status">
@@ -587,146 +365,7 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="button" class="btn btn-primary" id="confirmAddFolderBtn">Create Folder</button>
                     </div>
-                    <script>
-                        function showToast(message, type = "info") {
-                            const container = document.getElementById("toast-container") || (() => {
-                                const div = document.createElement("div");
-                                div.id = "toast-container";
-                                div.style.position = "fixed";
-                                div.style.top = "20px";
-                                div.style.right = "20px";
-                                div.style.zIndex = "3000";
-                                div.style.display = "flex";
-                                div.style.flexDirection = "column";
-                                div.style.gap = "10px";
-                                document.body.appendChild(div);
-                                return div;
-                            })();
 
-                            const toast = document.createElement("div");
-                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-                            toast.style.minWidth = "250px";
-                            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
-
-                            container.appendChild(toast);
-
-                            setTimeout(() => {
-                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                toast.style.opacity = "0";
-                                toast.style.transform = "translateX(100%)";
-                                setTimeout(() => toast.remove(), 500);
-                            }, 3000);
-                        }
-
-                        function filterFolders() {
-                            const projectSelect = document.getElementById("projectSelect");
-                            const folderSelect = document.getElementById("folderSelect");
-
-                            if (!projectSelect || !folderSelect) return;
-
-                            const selectedProjectId = projectSelect.value;
-
-                            Array.from(folderSelect.options).forEach(option => {
-                                if (!option.value) return; // skip placeholder
-                                const folderProjectId = option.getAttribute("data-project") || "";
-
-                                if (!selectedProjectId && !folderProjectId) {
-                                    option.style.display = "";
-                                } else if (selectedProjectId && folderProjectId === selectedProjectId) {
-                                    option.style.display = "";
-                                } else {
-                                    option.style.display = "none";
-                                }
-                            });
-
-                            folderSelect.value = "";
-                        }
-
-                        // -----------------------------
-                        // 🔹 Bind Events
-                        // -----------------------------
-                        document.addEventListener("DOMContentLoaded", filterFolders);
-                        document.getElementById("projectSelect")?.addEventListener("change", filterFolders);
-
-                        // Also when modal is opened
-                        document.getElementById("addFileModal")?.addEventListener("show.bs.modal", filterFolders);
-
-                        // Filter folders by project
-                        document.getElementById("projectSelect").addEventListener("change", function () {
-                            const selectedProjectId = this.value; // string
-                            const folderSelect = document.getElementById("folderSelect");
-
-                            Array.from(folderSelect.options).forEach(option => {
-                                if (!option.value) return; // skip placeholder
-                                const folderProjectId = option.getAttribute("data-project") || "";
-
-                                // Case 1: No project selected -> show only folders with no project
-                                if (!selectedProjectId && !folderProjectId) {
-                                    option.style.display = "";
-                                }
-                                // Case 2: Project selected -> show only folders with same project_id
-                                else if (selectedProjectId && folderProjectId === selectedProjectId) {
-                                    option.style.display = "";
-                                }
-                                else {
-                                    option.style.display = "none";
-                                }
-                            });
-
-                            folderSelect.value = "";
-                        });
-
-
-                        // Create folder
-                        document.getElementById("confirmAddFolderBtn").addEventListener("click", function () {
-                            const folderName = document.getElementById("newFolderName").value.trim();
-                            const projectId = document.getElementById("projectSelect").value || null;
-
-                            if (!folderName) {
-                                showToast("Folder name is required!", "warning");
-                                setTimeout(() => window.location.reload(), 1000);
-                                return;
-                            }
-
-                            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-                            fetch("{% url 'create_folder' %}", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRFToken": csrftoken
-                                },
-                                body: JSON.stringify({ name: folderName, project_id: projectId })
-                            })
-                                .then(res => res.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        const folderSelect = document.getElementById("folderSelect");
-                                        const option = document.createElement("option");
-                                        option.value = data.folder_id;
-                                        option.setAttribute("data-project", projectId || "");
-                                        option.text = data.folder_name + (data.project_name ? ` (${data.project_name})` : '');
-                                        folderSelect.add(option);
-                                        folderSelect.value = data.folder_id;
-
-                                        showToast("Folder created successfully!", "success");
-
-                                        bootstrap.Modal.getInstance(document.getElementById("addFolderModal")).hide();
-
-                                        document.getElementById("newFolderName").value = "";
-                                    } else {
-                                        showToast(data.error, "danger");
-                                    }
-                                })
-                                .catch(() => showToast("Error creating folder", "danger"));
-                        });
-
-                    </script>
                 </div>
             </div>
         </div>
@@ -750,75 +389,15 @@
                         <button type="button" class="btn btn-primary" id="confirmAddSubFolderBtn">Create
                             SubFolder</button>
                     </div>
-                    <script>
-                        document.addEventListener("DOMContentLoaded", function () {
-                            document.getElementById("folderSelect").addEventListener("change", function () {
-                                const folderId = this.value;
-                                const subfolderSelect = document.getElementById("subfolderSelect");
 
-                                for (let option of subfolderSelect.options) {
-                                    const optionFolderId = option.getAttribute("data-folder");
-                                    if (!optionFolderId || optionFolderId === folderId) {
-                                        option.style.display = "block";
-                                    } else {
-                                        option.style.display = "none";
-                                    }
-                                }
-                                subfolderSelect.value = ""; // reset subfolder
-                            });
-
-                            const btn = document.getElementById("confirmAddSubFolderBtn");
-                            if (!btn) return; // safety check
-                            btn.addEventListener("click", function () {
-                                const subFolderName = document.getElementById("newSubFolderName").value.trim();
-                                const parentFolderId = document.getElementById("folderSelect").value;
-
-                                if (!subFolderName || !parentFolderId) {
-                                    showToast("SubFolder name and parent folder are required!", "warning");
-                                    return;
-                                }
-
-                                const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-                                fetch("{% url 'create_subfolder' %}", {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                        "X-CSRFToken": csrftoken
-                                    },
-                                    body: JSON.stringify({ name: subFolderName, folder_id: parentFolderId })
-                                })
-                                    .then(res => res.json())
-                                    .then(data => {
-                                        if (data.success) {
-                                            const subfolderSelect = document.getElementById("subfolderSelect");
-                                            const option = document.createElement("option");
-                                            option.value = data.subfolder_id;
-                                            option.setAttribute("data-folder", parentFolderId);
-                                            option.text = subFolderName + " (" + data.folder_name + ")";
-                                            subfolderSelect.add(option);
-                                            subfolderSelect.value = data.subfolder_id;
-
-                                            showToast("SubFolder created successfully!", "success");
-                                            bootstrap.Modal.getInstance(document.getElementById("addSubFolderModal")).hide();
-                                            document.getElementById("newSubFolderName").value = "";
-                                        } else {
-                                            showToast(data.error, "danger");
-                                        }
-                                    })
-                                    .catch(() => showToast("Error creating subfolder", "danger"));
-                            });
-                        });
-
-                    </script>
                 </div>
             </div>
         </div>
 
         <!-- detail view -->
 
-        <div class="modal fade" id="viewProjectModal" tabindex="-1"  aria-hidden="true"
-            data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal fade" id="viewProjectModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+            data-bs-keyboard="false">
             <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header table-info text-white">
@@ -839,106 +418,203 @@
                         <h6>Files</h6>
                         <div id="projectFolders" class="d-flex flex-wrap gap-3"></div>
                     </div>
-                    <script>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- File Preview Modal -->
+        <div class="modal fade" id="viewFileModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+            data-bs-keyboard="false">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header table-info text-white">
+                        <h5 class="modal-title" id="fileTitle"></h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body" id="filePreview"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- view sub folder data -->
+        <div class="modal fade" id="viewSubfolderModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+            data-bs-keyboard="false">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header table-info text-white">
+                        <h5 class="modal-title">SubFolder Files</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="viewSubfolderContainer"></div>
+                </div>
+            </div>
+        </div>
 
 
-                        
+        <!-- Delete File Modal -->
+        <div class="modal fade" id="deleteFileModal" tabindex="-1" aria-labelledby="deleteFileLabel" aria-hidden="true"
+            data-bs-backdrop="false" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content text-center">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title w-100" id="deleteFileLabel">Confirm Delete</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete this?
+                    </div>
+                    <div class="modal-footer justify-content-center border-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                    </div>
+                </div>
+            </div>
 
-                        function showToast(message, type = "info") {
-                            const container = document.getElementById("toast-container") || (() => {
-                                const div = document.createElement("div");
-                                div.id = "toast-container";
-                                div.style.position = "fixed";
-                                div.style.top = "20px";
-                                div.style.right = "20px";
-                                div.style.zIndex = "3000";
-                                div.style.display = "flex";
-                                div.style.flexDirection = "column";
-                                div.style.gap = "10px";
-                                document.body.appendChild(div);
-                                return div;
-                            })();
+        </div>
 
-                            const toast = document.createElement("div");
-                            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
-                            toast.style.minWidth = "250px";
-                            toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    `;
 
-                            container.appendChild(toast);
 
-                            setTimeout(() => {
-                                toast.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                                toast.style.opacity = "0";
-                                toast.style.transform = "translateX(100%)";
-                                setTimeout(() => toast.remove(), 500);
-                            }, 3000);
+
+    </div>
+</div>
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/common.js' %}"></script>
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.startsWith(name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    let deleteType = null; // "file" or "subfolder"
+    let deleteId = null;
+
+    function confirmDelete(type, id) {
+        deleteType = type;
+        deleteId = id;
+        const deleteModal = new bootstrap.Modal(document.getElementById("deleteFileModal"));
+        deleteModal.show();
+    }
+
+    document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
+        if (!deleteType || !deleteId) return;
+
+        let url = "";
+        if (deleteType === "file") url = `/delete_file/${deleteId}/`;
+        else if (deleteType === "subfolder") url = `/delete_subfolder/${deleteId}/`;
+
+        fetch(url, {
+            method: "POST",
+            headers: { "X-CSRFToken": getCookie("csrftoken") }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast("Deleted successfully","success");
+
+                    // Partial UI refresh
+                    if (deleteType === "file") {
+                        const fileCard = document.querySelector(`[data-file-id='${deleteId}']`)?.closest(".file-card");
+                        if (fileCard) fileCard.remove();
+                        const container = document.getElementById("viewSubfolderContainer").querySelector(".d-flex");
+                        if (container && container.children.length === 0) {
+                            container.innerHTML = "<p class='text-muted text-center'>No files in this subfolder</p>";
                         }
-
-                        function getFileExtension(filename) {
-                            return filename.split('.').pop().toLowerCase();
+                    } else if (deleteType === "subfolder") {
+                        const folderCard = document.querySelector(`[data-folder-id='${deleteId}']`)?.closest(".card");
+                        if (folderCard) folderCard.remove();
+                        const container = document.getElementById("projectFolders");
+                        if (container && container.children.length === 0) {
+                            container.innerHTML = "<p class='text-muted text-center'>No subfolders or files</p>";
                         }
+                    }
 
-                        document.addEventListener("click", function (e) {
-                            // 🔹 Ignore clicks inside the dropdown menu entirely
-                            if (e.target.closest(".dropdown-menu")) return;
+                } else {
+                    showToast(data.error || "Failed to delete","danger");
+                }
 
-                            // 🔹 Name click
-                            if (e.target.classList.contains("view-folder")) {
-                                openFolderModal(e.target.dataset.folderId);
-                                return; // stop further handling
-                            }
+                const modalEl = document.getElementById("deleteFileModal");
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+            })
+            .catch(() => showToast("Error deleting","danger"));
+    });
 
-                            // 🔹 Click anywhere on card (except dropdown)
-                            const card = e.target.closest(".folder-card");
-                            if (card) {
-                                const folderId = card.querySelector(".view-folder")?.dataset.folderId;
-                                if (folderId) openFolderModal(folderId);
-                            }
-                            // 🔹 Subfolder click
-                            if (e.target.classList.contains("view-subfolder")) {
-                                const subfolderId = e.target.dataset.subfolderId;
-                                if (subfolderId) openSubfolderModal(subfolderId);
-                                return;
-                            }
 
-                            const subfolderCard = e.target.closest(".subfolder-card");
-                            if (subfolderCard) {
-                                const subfolderId = subfolderCard.querySelector(".view-subfolder")?.dataset.subfolderId;
-                                if (subfolderId) openSubfolderModal(subfolderId);
-                            }
+    function getFileExtension(filename) {
+        return filename.split('.').pop().toLowerCase();
+    }
 
-                        });
+    document.addEventListener("click", function (e) {
+        // 🔹 Ignore clicks inside the dropdown menu entirely
+        if (e.target.closest(".dropdown-menu")) return;
 
-                        // open folder
-                        function openFolderModal(folderId) {
-    if (!folderId) return;
+        // 🔹 Name click
+        if (e.target.classList.contains("view-folder")) {
+            openFolderModal(e.target.dataset.folderId);
+            return; // stop further handling
+        }
 
-    fetch(`/get_files/?id=${folderId}`)
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById("projectTitle").innerText = data.name;
-            document.getElementById("projectId").innerText = data.project;
+        // 🔹 Click anywhere on card (except dropdown)
+        const card = e.target.closest(".folder-card");
+        if (card) {
+            const folderId = card.querySelector(".view-folder")?.dataset.folderId;
+            if (folderId) openFolderModal(folderId);
+        }
+        // 🔹 Subfolder click
+        if (e.target.classList.contains("view-subfolder")) {
+            const subfolderId = e.target.dataset.subfolderId;
+            if (subfolderId) openSubfolderModal(subfolderId);
+            return;
+        }
 
-            const container = document.getElementById("projectFolders");
-            container.innerHTML = "";
+        const subfolderCard = e.target.closest(".subfolder-card");
+        if (subfolderCard) {
+            const subfolderId = subfolderCard.querySelector(".view-subfolder")?.dataset.subfolderId;
+            if (subfolderId) openSubfolderModal(subfolderId);
+        }
 
-            // Folders
-            // Folders
-data.subfolders.forEach(sf => {
-    const folderCard = document.createElement("div");
-    folderCard.className = "card folder-card m-2 position-relative";
-    folderCard.style.width = "120px"; // Adjust width
+    });
 
-    folderCard.innerHTML = `
+    // open folder
+    function openFolderModal(folderId) {
+        if (!folderId) return;
+
+        fetch(`/get_files/?id=${folderId}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("projectTitle").innerText = data.name;
+                document.getElementById("projectId").innerText = data.project;
+
+                const container = document.getElementById("projectFolders");
+                container.innerHTML = "";
+
+                // Folders
+                // Folders
+                data.subfolders.forEach(sf => {
+                    const folderCard = document.createElement("div");
+                    folderCard.className = "card folder-card m-2 position-relative";
+                    folderCard.style.width = "120px"; // Adjust width
+
+                    folderCard.innerHTML = `
         <div class="card-body p-3 position-relative">
             <!-- Count Badge (top-left) -->
             <span class="badge bg-primary position-absolute top-0 start-0 m-1">
-                ${sf.file_count  || 0}
+                ${sf.file_count || 0}
             </span>
 
             <!-- Three-dot menu (top-right) -->
@@ -973,34 +649,34 @@ data.subfolders.forEach(sf => {
         </div>
     `;
 
-    // Folder click
-    folderCard.querySelector(".view-folder").addEventListener("click", () => openSubfolderModal(sf.id));
+                    // Folder click
+                    folderCard.querySelector(".view-folder").addEventListener("click", () => openSubfolderModal(sf.id));
 
-    // Subfolder delete button
-folderCard.querySelector(".delete-folder")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    confirmDelete("subfolder", sf.id);
-});
+                    // Subfolder delete button
+                    folderCard.querySelector(".delete-folder")?.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        confirmDelete("subfolder", sf.id);
+                    });
 
-    container.appendChild(folderCard);
-});
+                    container.appendChild(folderCard);
+                });
 
-// Files
-data.files.forEach(f => {
-    const fileCard = document.createElement("div");
-    fileCard.className = "card file-card m-2 position-relative";
-    fileCard.style.width = "120px";
+                // Files
+                data.files.forEach(f => {
+                    const fileCard = document.createElement("div");
+                    fileCard.className = "card file-card m-2 position-relative";
+                    fileCard.style.width = "120px";
 
-    const fileExt = f.name.split('.').pop().toLowerCase();
-    let iconClass = "bx bx-file";
-    let iconColor = "#6b7280"; // default gray
+                    const fileExt = f.name.split('.').pop().toLowerCase();
+                    let iconClass = "bx bx-file";
+                    let iconColor = "#6b7280"; // default gray
 
-    if (["jpg","jpeg","png","gif","webp"].includes(fileExt)) iconClass = "bx bxs-image";
-    else if (fileExt === "pdf") iconClass = "bx bxs-file-pdf";
-    else if (["mp4","webm"].includes(fileExt)) iconClass = "bx bxs-video";
-    else if (["mp3","wav"].includes(fileExt)) iconClass = "bx bxs-music";
+                    if (["jpg", "jpeg", "png", "gif", "webp"].includes(fileExt)) iconClass = "bx bxs-image";
+                    else if (fileExt === "pdf") iconClass = "bx bxs-file-pdf";
+                    else if (["mp4", "webm"].includes(fileExt)) iconClass = "bx bxs-video";
+                    else if (["mp3", "wav"].includes(fileExt)) iconClass = "bx bxs-music";
 
-    fileCard.innerHTML = `
+                    fileCard.innerHTML = `
         <div class="card-body p-3 position-relative">
             <!-- Three-dot menu -->
             <div class="dropdown position-absolute top-0 end-0 m-1">
@@ -1033,94 +709,94 @@ data.files.forEach(f => {
         </div>
     `;
 
-    fileCard.querySelector(".view-file").addEventListener("click", () => openFilePreview(f));
-    // File delete button
-fileCard.querySelector(".delete-file")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    confirmDelete("file", f.id);
-});
-    container.appendChild(fileCard);
-});
+                    fileCard.querySelector(".view-file").addEventListener("click", () => openFilePreview(f));
+                    // File delete button
+                    fileCard.querySelector(".delete-file")?.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        confirmDelete("file", f.id);
+                    });
+                    container.appendChild(fileCard);
+                });
 
-            new bootstrap.Modal(document.getElementById("viewProjectModal")).show();
-        })
-        .catch(() => showToast("Error loading folder details"));
-}
-
-                        // preview of folder file
-                        function openFilePreview(file) {
-    const folderModalEl = document.getElementById("viewProjectModal");
-    const folderModal = bootstrap.Modal.getInstance(folderModalEl);
-    const subfolderModalEl = document.getElementById("viewSubfolderModal");
-    const subfolderModal = bootstrap.Modal.getInstance(subfolderModalEl);
-
-    // 🔹 Track which modal is currently open
-    let activeModal = null;
-    if (subfolderModalEl && subfolderModalEl.classList.contains("show")) activeModal = subfolderModal;
-    else if (folderModalEl && folderModalEl.classList.contains("show")) activeModal = folderModal;
-
-    // 🔹 Hide the active modal
-    if (activeModal) activeModal.hide();
-
-    const fileUrl = file.file_url;
-    const fileExt = getFileExtension(fileUrl);
-    let previewHtml = "";
-
-    if (["jpg","jpeg","png","gif","webp"].includes(fileExt)) {
-        previewHtml = `<img src="${fileUrl}" class="img-fluid" alt="Preview">`;
-    } else if (fileExt === "pdf") {
-        previewHtml = `<iframe src="${fileUrl}" width="100%" height="600px" style="border:none;"></iframe>`;
-    } else if (["mp4","webm"].includes(fileExt)) {
-        previewHtml = `<video controls class="w-100"><source src="${fileUrl}" type="video/${fileExt}"></video>`;
-    } else if (["mp3","wav"].includes(fileExt)) {
-        previewHtml = `<audio controls class="w-100"><source src="${fileUrl}" type="audio/${fileExt}"></audio>`;
-    } else {
-        previewHtml = `<p class="text-muted">Preview not supported. <a href="${fileUrl}" target="_blank">Download</a></p>`;
+                new bootstrap.Modal(document.getElementById("viewProjectModal")).show();
+            })
+            .catch(() => showToast("Error loading folder details","danger"));
     }
 
-    document.getElementById("fileTitle").innerText = file.name;
-    document.getElementById("filePreview").innerHTML = previewHtml;
+    // preview of folder file
+    function openFilePreview(file) {
+        const folderModalEl = document.getElementById("viewProjectModal");
+        const folderModal = bootstrap.Modal.getInstance(folderModalEl);
+        const subfolderModalEl = document.getElementById("viewSubfolderModal");
+        const subfolderModal = bootstrap.Modal.getInstance(subfolderModalEl);
 
-    const fileModalEl = document.getElementById("viewFileModal");
-    const fileModal = new bootstrap.Modal(fileModalEl);
+        // 🔹 Track which modal is currently open
+        let activeModal = null;
+        if (subfolderModalEl && subfolderModalEl.classList.contains("show")) activeModal = subfolderModal;
+        else if (folderModalEl && folderModalEl.classList.contains("show")) activeModal = folderModal;
 
-    fileModal.show();
+        // 🔹 Hide the active modal
+        if (activeModal) activeModal.hide();
 
-    // 🔹 Restore only the modal that was active before preview
-    fileModalEl.addEventListener("hidden.bs.modal", () => {
-        if (activeModal) activeModal.show();
-    }, { once: true });
-}
+        const fileUrl = file.file_url;
+        const fileExt = getFileExtension(fileUrl);
+        let previewHtml = "";
 
-                        // open sub folder
-function openSubfolderModal(subfolderId) {
-    if (!subfolderId) return;
+        if (["jpg", "jpeg", "png", "gif", "webp"].includes(fileExt)) {
+            previewHtml = `<img src="${fileUrl}" class="img-fluid" alt="Preview">`;
+        } else if (fileExt === "pdf") {
+            previewHtml = `<iframe src="${fileUrl}" width="100%" height="600px" style="border:none;"></iframe>`;
+        } else if (["mp4", "webm"].includes(fileExt)) {
+            previewHtml = `<video controls class="w-100"><source src="${fileUrl}" type="video/${fileExt}"></video>`;
+        } else if (["mp3", "wav"].includes(fileExt)) {
+            previewHtml = `<audio controls class="w-100"><source src="${fileUrl}" type="audio/${fileExt}"></audio>`;
+        } else {
+            previewHtml = `<p class="text-muted">Preview not supported. <a href="${fileUrl}" target="_blank">Download</a></p>`;
+        }
 
-    fetch(`/get_subfolder_files/?id=${subfolderId}`)
-        .then(res => res.json())
-        .then(data => {
-            const container = document.getElementById("viewSubfolderContainer");
-            container.innerHTML = "";
+        document.getElementById("fileTitle").innerText = file.name;
+        document.getElementById("filePreview").innerHTML = previewHtml;
 
-            // Header
-            container.innerHTML += `
+        const fileModalEl = document.getElementById("viewFileModal");
+        const fileModal = new bootstrap.Modal(fileModalEl);
+
+        fileModal.show();
+
+        // 🔹 Restore only the modal that was active before preview
+        fileModalEl.addEventListener("hidden.bs.modal", () => {
+            if (activeModal) activeModal.show();
+        }, { once: true });
+    }
+
+    // open sub folder
+    function openSubfolderModal(subfolderId) {
+        if (!subfolderId) return;
+
+        fetch(`/get_subfolder_files/?id=${subfolderId}`)
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById("viewSubfolderContainer");
+                container.innerHTML = "";
+
+                // Header
+                container.innerHTML += `
                 <p><b>SubFolder Name:</b> ${data.name}</p>
                 <p><b>Parent Folder:</b> ${data.folder}</p>
                 <hr>
             `;
 
-            // Explorer-like view
-            const explorerDiv = document.createElement("div");
-            explorerDiv.className = "d-flex flex-wrap gap-3";
+                // Explorer-like view
+                const explorerDiv = document.createElement("div");
+                explorerDiv.className = "d-flex flex-wrap gap-3";
 
-            // 🔹 Files
-            if (data.files && data.files.length) {
-                data.files.forEach(f => {
-    const fileDiv = document.createElement("div");
-    fileDiv.className = "file-card text-center p-2 border rounded position-relative";
-    fileDiv.style.width = "100px";
+                // 🔹 Files
+                if (data.files && data.files.length) {
+                    data.files.forEach(f => {
+                        const fileDiv = document.createElement("div");
+                        fileDiv.className = "file-card text-center p-2 border rounded position-relative";
+                        fileDiv.style.width = "100px";
 
-    fileDiv.innerHTML = `
+                        fileDiv.innerHTML = `
         <!-- Three-dot menu -->
         <div class="dropdown position-absolute top-0 end-0 m-1">
             <a href="#" class="text-dark" data-bs-toggle="dropdown" onclick="event.stopPropagation();">
@@ -1138,165 +814,413 @@ function openSubfolderModal(subfolderId) {
         <p class="mb-0 fw-bold text-truncate file-preview-name">${f.name}</p>
     `;
 
-    // Only attach preview to elements outside dropdown
-    fileDiv.querySelector(".file-preview-icon").addEventListener("click", () => openFilePreview(f));
-    fileDiv.querySelector(".file-preview-name").addEventListener("click", () => openFilePreview(f));
+                        // Only attach preview to elements outside dropdown
+                        fileDiv.querySelector(".file-preview-icon").addEventListener("click", () => openFilePreview(f));
+                        fileDiv.querySelector(".file-preview-name").addEventListener("click", () => openFilePreview(f));
 
-    // Delete file
-    const deleteBtn = fileDiv.querySelector(".delete-file");
-    deleteBtn.addEventListener("click", (e) => {
-        e.preventDefault();        // prevent default link behavior
-        e.stopPropagation();       // prevent preview
-        confirmDelete("file", f.id);
+                        // Delete file
+                        const deleteBtn = fileDiv.querySelector(".delete-file");
+                        deleteBtn.addEventListener("click", (e) => {
+                            e.preventDefault();        // prevent default link behavior
+                            e.stopPropagation();       // prevent preview
+                            confirmDelete("file", f.id);
+                        });
+
+                        explorerDiv.appendChild(fileDiv);
+                    });
+
+                }
+
+                if (!data.files.length) {
+                    explorerDiv.innerHTML = "<p class='text-muted text-center'>No files in this subfolder</p>";
+                }
+
+                container.appendChild(explorerDiv);
+
+                // Show modal
+                new bootstrap.Modal(document.getElementById("viewSubfolderModal")).show();
+            })
+            .catch(() => showToast("Error loading subfolder files"));
+    }
+
+
+    let folderToDeleteId = null;
+
+    // Open modal on Delete Folder click
+    $(document).on("click", ".delete-folder-btn", function (e) {
+        e.preventDefault();
+        folderToDeleteId = $(this).data("folder-id");
+        if (!folderToDeleteId) return;
+
+        // Show modal
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteFileModal'));
+        deleteModal.show();
     });
 
-    explorerDiv.appendChild(fileDiv);
-});
+    // Confirm deletion using delegated event
+    $(document).on("click", "#confirmDeleteBtn", function () {
+        if (!folderToDeleteId) return;
 
-}
-
-            if (!data.files.length) {
-                explorerDiv.innerHTML = "<p class='text-muted text-center'>No files in this subfolder</p>";
+        $.ajax({
+            url: `/delete_folder/${folderToDeleteId}/`,
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function (res) {
+                if (res.success) {
+                    showToast(res.message, "success");
+                    // remove folder card instead of reload
+                    $(`.delete-folder-btn[data-folder-id="${folderToDeleteId}"]`).closest(".col-md-2").remove();
+                } else {
+                    showToast(res.message || "Failed to delete folder.", "danger");
+                }
+            },
+            error: function (err) {
+                showToast("Error deleting folder.","danger");
+                console.error(err);
+            },
+            complete: function () {
+                folderToDeleteId = null;
+                const deleteModalEl = document.getElementById('deleteFileModal');
+                const modalInstance = bootstrap.Modal.getInstance(deleteModalEl);
+                if (modalInstance) modalInstance.hide();
             }
+        });
+    });
 
-            container.appendChild(explorerDiv);
-
-            // Show modal
-            new bootstrap.Modal(document.getElementById("viewSubfolderModal")).show();
-        })
-        .catch(() => showToast("Error loading subfolder files"));
-}
-
-                    </script>
-                </div>
-            </div>
-        </div>
-
-        <!-- File Preview Modal -->
-        <div class="modal fade" id="viewFileModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header table-info text-white">
-                        <h5 class="modal-title" id="fileTitle"></h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                     
-                    <div class="modal-body" id="filePreview"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- view sub folder data -->
-        <div class="modal fade" id="viewSubfolderModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header table-info text-white">
-                        <h5 class="modal-title">SubFolder Files</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body" id="viewSubfolderContainer"></div>
-                </div>
-            </div>
-        </div>
+    // copy link
+    $(document).on("click", ".copy-link-btn", function () {
+        const link = window.location.origin + $(this).data("link");
+        navigator.clipboard.writeText(link).then(() => {
+            showToast("Link copied ", "success");
+        });
+    });
 
 
-        <!-- Delete File Modal -->
-        <div class="modal fade" id="deleteFileModal" tabindex="-1" aria-labelledby="deleteFileLabel" aria-hidden="true"
-            data-bs-backdrop="false" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content text-center">
-                    <div class="modal-header border-0">
-                        <h5 class="modal-title w-100" id="deleteFileLabel">Confirm Delete</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to delete this?
-                    </div>
-                    <div class="modal-footer justify-content-center border-0">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
-                    </div>
-                </div>
-            </div>
-            <script>
-                function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
-            if (cookie.startsWith(name + "=")) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    // folder selcetion
+    
+    function filterFolders() {
+        const projectSelect = document.getElementById("projectSelect");
+        const folderSelect = document.getElementById("folderSelect");
+
+        if (!projectSelect || !folderSelect) return;
+
+        const selectedProjectId = projectSelect.value;
+
+        Array.from(folderSelect.options).forEach(option => {
+            if (!option.value) return; // skip placeholder
+            const folderProjectId = option.getAttribute("data-project") || "";
+
+            if (!selectedProjectId && !folderProjectId) {
+                option.style.display = "";
+            } else if (selectedProjectId && folderProjectId === selectedProjectId) {
+                option.style.display = "";
+            } else {
+                option.style.display = "none";
             }
-        }
+        });
+
+        folderSelect.value = "";
     }
-    return cookieValue;
-}
 
-               let deleteType = null; // "file" or "subfolder"
-let deleteId = null;
+    // -----------------------------
+    //Bind Events
+    // -----------------------------
+    document.addEventListener("DOMContentLoaded", filterFolders);
+    document.getElementById("projectSelect")?.addEventListener("change", filterFolders);
 
-function confirmDelete(type, id) {
-    deleteType = type;
-    deleteId = id;
-    const deleteModal = new bootstrap.Modal(document.getElementById("deleteFileModal"));
-    deleteModal.show();
-}
+    // sub folder selection
+    function filterSubfolders() {
+        const folderSelect = document.getElementById("folderSelect");
+        const subfolderSelect = document.getElementById("subfolderSelect");
 
-document.getElementById("confirmDeleteBtn").addEventListener("click", () => {
-    if (!deleteType || !deleteId) return;
+        if (!folderSelect || !subfolderSelect) return;
 
-    let url = "";
-    if (deleteType === "file") url = `/delete_file/${deleteId}/`;
-    else if (deleteType === "subfolder") url = `/delete_subfolder/${deleteId}/`;
+        const selectedFolderId = folderSelect.value;
+        const selectedProjectId = folderSelect.selectedOptions[0]?.getAttribute("data-project") || "";
 
-    fetch(url, {
-        method: "POST",
-        headers: { "X-CSRFToken": getCookie("csrftoken") }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showToast("Deleted successfully");
+        Array.from(subfolderSelect.options).forEach(option => {
+            if (!option.value) return; // skip placeholder
+            const subfolderFolderId = option.getAttribute("data-folder");
 
-            // Partial UI refresh
-            if (deleteType === "file") {
-                const fileCard = document.querySelector(`[data-file-id='${deleteId}']`)?.closest(".file-card");
-                if (fileCard) fileCard.remove();
-                const container = document.getElementById("viewSubfolderContainer").querySelector(".d-flex");
-                if (container && container.children.length === 0) {
-                    container.innerHTML = "<p class='text-muted text-center'>No files in this subfolder</p>";
-                }
-            } else if (deleteType === "subfolder") {
-                const folderCard = document.querySelector(`[data-folder-id='${deleteId}']`)?.closest(".card");
-                if (folderCard) folderCard.remove();
-                const container = document.getElementById("projectFolders");
-                if (container && container.children.length === 0) {
-                    container.innerHTML = "<p class='text-muted text-center'>No subfolders or files</p>";
-                }
+            // Show only subfolders of the selected folder
+            if (!selectedFolderId && !subfolderFolderId) {
+                option.style.display = "";
+            } else if (selectedFolderId && subfolderFolderId === selectedFolderId) {
+                option.style.display = "";
+            } else {
+                option.style.display = "none";
             }
+        });
 
-        } else {
-            showToast(data.error || "Failed to delete");
+        subfolderSelect.value = ""; // reset selection
+    }
+
+    // Bind the event when folder changes
+    document.getElementById("folderSelect")?.addEventListener("change", filterSubfolders);
+
+    // Also filter when modal opens (optional)
+    document.getElementById("addFileModal")?.addEventListener("show.bs.modal", filterSubfolders);
+
+    // Initial filter on page load
+    document.addEventListener("DOMContentLoaded", filterSubfolders);
+
+    // Also when modal is opened
+    document.getElementById("addFileModal")?.addEventListener("show.bs.modal", filterFolders);
+
+
+    // Filter folders by project
+    document.getElementById("projectSelect").addEventListener("change", function () {
+        const selectedProjectId = this.value; // string
+        const folderSelect = document.getElementById("folderSelect");
+
+        Array.from(folderSelect.options).forEach(option => {
+            if (!option.value) return; // skip placeholder
+            const folderProjectId = option.getAttribute("data-project") || "";
+
+            // Case 1: No project selected -> show only folders with no project
+            if (!selectedProjectId && !folderProjectId) {
+                option.style.display = "";
+            }
+            // Case 2: Project selected -> show only folders with same project_id
+            else if (selectedProjectId && folderProjectId === selectedProjectId) {
+                option.style.display = "";
+            }
+            else {
+                option.style.display = "none";
+            }
+        });
+
+        folderSelect.value = "";
+    });
+
+    // Upload files
+    document.getElementById("addFileForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const form = new FormData(this);
+        // Show loader
+        const loader = document.getElementById("fileUploadLoader");
+        loader.style.display = "block";
+        fetch("{% url 'add_file' %}", { method: "POST", body: form })
+            .then(res => res.json())
+            .then(data => {
+                loader.style.display = "none";  // Hide loader
+                if (data.success) {
+                    showToast("Files uploaded successfully!", "success");
+                    bootstrap.Modal.getInstance(document.getElementById("addFileModal")).hide();
+                    setTimeout(() => window.location.reload(), 800);
+                } else { showToast(data.error || "Upload failed!", "danger"); }
+            }).catch(() => {
+                loader.style.display = "none";  // Hide loader
+                showToast("Error uploading files", "danger");
+            });
+    });
+
+
+
+    function filterFolders() {
+        const projectSelect = document.getElementById("projectSelect");
+        const folderSelect = document.getElementById("folderSelect");
+
+        if (!projectSelect || !folderSelect) return;
+
+        const selectedProjectId = projectSelect.value;
+
+        Array.from(folderSelect.options).forEach(option => {
+            if (!option.value) return; // skip placeholder
+            const folderProjectId = option.getAttribute("data-project") || "";
+
+            if (!selectedProjectId && !folderProjectId) {
+                option.style.display = "";
+            } else if (selectedProjectId && folderProjectId === selectedProjectId) {
+                option.style.display = "";
+            } else {
+                option.style.display = "none";
+            }
+        });
+
+        folderSelect.value = "";
+    }
+
+    // -----------------------------
+    // 🔹 Bind Events
+    // -----------------------------
+    document.addEventListener("DOMContentLoaded", filterFolders);
+    document.getElementById("projectSelect")?.addEventListener("change", filterFolders);
+
+    // Also when modal is opened
+    document.getElementById("addFileModal")?.addEventListener("show.bs.modal", filterFolders);
+
+    // Filter folders by project
+    document.getElementById("projectSelect").addEventListener("change", function () {
+        const selectedProjectId = this.value; // string
+        const folderSelect = document.getElementById("folderSelect");
+
+        Array.from(folderSelect.options).forEach(option => {
+            if (!option.value) return; // skip placeholder
+            const folderProjectId = option.getAttribute("data-project") || "";
+
+            // Case 1: No project selected -> show only folders with no project
+            if (!selectedProjectId && !folderProjectId) {
+                option.style.display = "";
+            }
+            // Case 2: Project selected -> show only folders with same project_id
+            else if (selectedProjectId && folderProjectId === selectedProjectId) {
+                option.style.display = "";
+            }
+            else {
+                option.style.display = "none";
+            }
+        });
+
+        folderSelect.value = "";
+    });
+
+
+    // Create folder
+    document.getElementById("confirmAddFolderBtn").addEventListener("click", function () {
+        const folderName = document.getElementById("newFolderName").value.trim();
+        const projectId = document.getElementById("projectSelect").value || null;
+
+        if (!folderName) {
+            showToast("Folder name is required!", "warning");
+            setTimeout(() => window.location.reload(), 800);
+            return;
         }
 
-        const modalEl = document.getElementById("deleteFileModal");
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        modal.hide();
-    })
-    .catch(() => showToast("Error deleting"));
-});
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch("{% url 'create_folder' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken
+            },
+            body: JSON.stringify({ name: folderName, project_id: projectId })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const folderSelect = document.getElementById("folderSelect");
+                    const option = document.createElement("option");
+                    option.value = data.folder_id;
+                    option.setAttribute("data-project", projectId || "");
+                    option.text = data.folder_name + (data.project_name ? ` (${data.project_name})` : '');
+                    folderSelect.add(option);
+                    folderSelect.value = data.folder_id;
+
+                    showToast("Folder created successfully!", "success");
+
+                    bootstrap.Modal.getInstance(document.getElementById("addFolderModal")).hide();
+
+                    document.getElementById("newFolderName").value = "";
+                } else {
+                    showToast(data.error, "danger");
+                }
+            })
+            .catch(() => showToast("Error creating folder", "danger"));
+    });
 
 
-            </script>
-        </div>
+    document.addEventListener("DOMContentLoaded", function () {
+        // searching
 
+        document.getElementById("searchBox").addEventListener("keyup", function () {
+            let query = this.value.toLowerCase();
+            let rows = document.querySelectorAll("#fileTable tbody tr");
 
+            rows.forEach(row => {
+                let text = row.innerText.toLowerCase();
 
+                if (query && text.includes(query)) {
+                    row.style.display = "";
 
-    </div>
-</div>
+                    // highlight all td except last column (actions)
+                    let cells = row.querySelectorAll("td");
+                    cells.forEach((td, index) => {
+                        if (index === cells.length - 1) return; // skip last column
+
+                        let original = td.getAttribute("data-original") || td.innerText;
+                        td.setAttribute("data-original", original); // keep safe copy
+                        let regex = new RegExp(`(${query})`, "gi");
+                        td.innerHTML = original.replace(regex, "<mark>$1</mark>");
+                    });
+
+                } else if (!query) {
+                    // reset everything
+                    row.style.display = "";
+                    let cells = row.querySelectorAll("td");
+                    cells.forEach((td, index) => {
+                        if (index === cells.length - 1) return; // skip last column
+                        let original = td.getAttribute("data-original") || td.innerText;
+                        td.innerHTML = original;
+                        location.reload();
+                    });
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+
+        document.getElementById("folderSelect").addEventListener("change", function () {
+            const folderId = this.value;
+            const subfolderSelect = document.getElementById("subfolderSelect");
+
+            for (let option of subfolderSelect.options) {
+                const optionFolderId = option.getAttribute("data-folder");
+                if (!optionFolderId || optionFolderId === folderId) {
+                    option.style.display = "block";
+                } else {
+                    option.style.display = "none";
+                }
+            }
+            subfolderSelect.value = ""; // reset subfolder
+        });
+
+        const btn = document.getElementById("confirmAddSubFolderBtn");
+        if (!btn) return; // safety check
+        btn.addEventListener("click", function () {
+            const subFolderName = document.getElementById("newSubFolderName").value.trim();
+            const parentFolderId = document.getElementById("folderSelect").value;
+
+            if (!subFolderName || !parentFolderId) {
+                showToast("SubFolder name and parent folder are required!", "warning");
+                return;
+            }
+
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch("{% url 'create_subfolder' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrftoken
+                },
+                body: JSON.stringify({ name: subFolderName, folder_id: parentFolderId })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const subfolderSelect = document.getElementById("subfolderSelect");
+                        const option = document.createElement("option");
+                        option.value = data.subfolder_id;
+                        option.setAttribute("data-folder", parentFolderId);
+                        option.text = subFolderName + " (" + data.folder_name + ")";
+                        subfolderSelect.add(option);
+                        subfolderSelect.value = data.subfolder_id;
+
+                        showToast("SubFolder created successfully!", "success");
+                        bootstrap.Modal.getInstance(document.getElementById("addSubFolderModal")).hide();
+                        document.getElementById("newSubFolderName").value = "";
+                    } else {
+                        showToast(data.error, "danger");
+                    }
+                })
+                .catch(() => showToast("Error creating subfolder", "danger"));
+        });
+    });
+
+</script>
+{% endblock %}
 {% endblock %}
