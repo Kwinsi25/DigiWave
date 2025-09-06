@@ -192,12 +192,15 @@
 
                                 </td>
                                 <td>
-                                    {% if row.project.total_paid >= row.project.approval_amount %}
-                                    <span class="badge bg-label-success">Paid</span>
+                                    {% if row.status == "Paid" %}
+                                        <span class="badge bg-label-success">Paid</span>
+                                    {% elif row.status == "Advanced" %}
+                                        <span class="badge bg-label-warning">Advanced</span>
                                     {% else %}
-                                    <span class="badge bg-label-danger">Not Paid</span>
+                                        <span class="badge bg-label-danger">Pending</span>
                                     {% endif %}
                                 </td>
+
                             </tr>
                             {% empty %}
                             <tr>

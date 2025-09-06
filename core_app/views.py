@@ -588,6 +588,7 @@ def get_project_p_l_detail(request):
         "approval_amount": approval_amount,
         "total_paid": total_paid,
         "remaining_amount": remaining_amount,
+        "profit_loss":project.profit_loss,
         "payments": payments_data,
         "expenses": expenses_data,
         "total_expense": total_expense,
@@ -2595,15 +2596,13 @@ def payment_list(request):
         # Collect all methods
         methods = list(project_payments.values_list("payment_method", flat=True).distinct())
 
-        # Determine payment status (if any paid)
-        is_paid = project_payments.filter(amount__gt=0).exists()
 
         grouped_data.append({
             "project": project,
             "methods": ", ".join(methods),
-            "status": "PAID" if is_paid else "NOT PAID",
+            "status": project.payment_status,
         })
-
+    print(grouped_data)
     # Manual pagination
     paginator = Paginator(grouped_data, records_per_page)
     page_obj = paginator.get_page(page_number)

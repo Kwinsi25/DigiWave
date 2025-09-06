@@ -287,6 +287,7 @@ class Project(models.Model):
     server_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     third_party_api_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     mediator_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True) 
+    profit_loss = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     # income = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     # Free service
@@ -363,8 +364,31 @@ class Project(models.Model):
        
         super().save(*args, **kwargs)
        
+        #update payment and status value
         self.payment_value = self.total_paid
-        super().save(update_fields=["payment_value"])
+        if not self.approval_amount:  # if no approval amount, default pending
+            self.payment_status = "Pending"
+        else:
+            if self.payment_value <= 0:
+                self.payment_status = "Pending"
+            elif 0 < self.payment_value < self.approval_amount:
+                self.payment_status = "Advanced"
+            elif self.payment_value >= self.approval_amount:
+                self.payment_status = "Paid"
+
+        # ==== Calculate profit/loss ====
+        total_expense = sum(filter(None, [
+            self.developer_charge,
+            self.server_charge,
+            self.third_party_api_charge,
+            self.mediator_charge,
+            self.other_expense,
+        ]))
+        income = self.approval_amount or 0
+        self.profit_loss = income - total_expense
+
+        super().save(update_fields=["payment_value", "payment_status", "profit_loss"])
+        
         
     # ==== Payment Helpers ====
     @property
@@ -377,6 +401,7 @@ class Project(models.Model):
             return self.approval_amount - self.total_paid
         return None
 
+    
     def __str__(self):
         return f"{self.project_id} - {self.project_name}"
 
@@ -396,7 +421,7 @@ class ProjectPayment(models.Model):
     project = models.ForeignKey("Project", on_delete=models.CASCADE, related_name="payments")
     milestone_name = models.CharField(max_length=255, blank=True, null=True)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    payment_date = models.DateField(auto_now_add=True)
+    payment_date = models.DateField(blank=True, null=True)
     payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True)
 
     # Dynamic details

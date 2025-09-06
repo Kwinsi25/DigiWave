@@ -309,68 +309,80 @@
         <div class="modal-body px-4 py-3">
             <div class="table-responsive">
 
-            <!-- ================= Project Summary ================= -->
-            <h6 class="fw-bold mb-3"><i class="bx bx-briefcase me-1"></i> Project Summary</h6>
-            <table class="table table-bordered table-sm mb-4">
-                <tbody>
-                <tr>
-                    <th>Project ID</th>
-                    <td id="pd-project-id"></td>
-                    <th>Project Name</th>
-                    <td id="pd-project-name"></td>
-                </tr>
-                <tr>
-                    <th>Approval Amount</th>
-                    <td id="pd-approval-amount"></td>
-                    <th>Total Income</th>
-                    <td id="pd-total-paid"></td>
-                </tr>
-                <tr>
-                    <th>Remaining Amount</th>
-                    <td id="pd-remaining-amount"></td>
-                    <th>Total Expense</th>
-                    <td id="pd-total-expense"></td>
-                </tr>
-                </tbody>
-            </table>
+           <!-- ================= Project Summary ================= -->
+<h6 class="fw-bold mb-3"><i class="bx bx-briefcase me-1"></i> Project Summary</h6>
+<table class="table table-bordered table-sm mb-4">
+    <tbody>
+        <tr>
+            <th>Project ID</th>
+            <td id="pd-project-id"></td>
+        </tr>
+        <tr>
+           <th>Project Name</th>
+           <td id="pd-project-name"></td>
 
-            <!-- ================= Payment Breakdown ================= -->
-            <h6 class="fw-bold mb-3"><i class="bx bx-money me-1"></i> Payment Breakdown</h6>
-            <table class="table table-bordered table-striped align-middle">
-                <thead class="table-light">
-                <tr>
-                    <th>Milestone</th>
-                    <th>Amount (₹)</th>
-                    <th>Payment Date</th>
-                    <th>Method</th>
-                    <th>Details</th>
-                
-                </tr>
-                </thead>
-                <tbody id="payment-details-body">
-                <!-- Filled dynamically -->
-                
-                </tbody>
-            </table>
+       </tr>
+    </tbody>
+</table>
 
-           <!-- ================= Expense Breakdown ================= -->
-            <h6 class="fw-bold mb-3"><i class="bx bx-receipt me-1"></i> Expense Breakdown</h6>
-            <table class="table table-bordered table-striped align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Other</th>
-                        <th>Developer</th>
-                        <th>Server</th>
-                        <th>Third Party API</th>
-                        <th>Mediator</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr id="expense-values-row">
-                        <!-- Filled dynamically -->
-                    </tr>
-                </tbody>
-            </table>
+<!-- ================= Financial Summary ================= -->
+<h6 class="fw-bold mb-3"><i class="bx bx-calculator me-1"></i> Financial Summary</h6>
+<table class="table table-bordered table-sm mb-4">
+    <tbody>
+        <tr>
+            <th>Approval Amount</th>
+            <td id="pd-approval-amount"></td>
+            <th>Total Income</th>
+            <td id="pd-total-paid"></td>
+        </tr>
+        <tr>
+            <th>Remaining Amount</th>
+            <td id="pd-remaining-amount"></td>
+            <th>Total Expense</th>
+            <td id="pd-total-expense"></td>
+        </tr>
+        <tr>
+            <th>Profit/Loss</th>
+            <td colspan="3" id="pd-profit-loss" class="fw-bold"></td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- ================= Payment Breakdown ================= -->
+<h6 class="fw-bold mb-3"><i class="bx bx-money me-1"></i> Payment Breakdown</h6>
+<table class="table table-bordered table-striped align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Milestone</th>
+            <th>Amount (₹)</th>
+            <th>Payment Date</th>
+            <th>Method</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody id="payment-details-body">
+        <!-- Filled dynamically -->
+    </tbody>
+</table>
+
+<!-- ================= Expense Breakdown ================= -->
+<h6 class="fw-bold mb-3"><i class="bx bx-receipt me-1"></i> Expense Breakdown</h6>
+<table class="table table-bordered table-striped align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>Other</th>
+            <th>Developer</th>
+            <th>Server</th>
+            <th>Third Party API</th>
+            <th>Mediator</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr id="expense-values-row">
+            <!-- Filled dynamically -->
+        </tr>
+    </tbody>
+</table>
 
 
             </div>
@@ -420,8 +432,7 @@
             .addClass("text-primary fw-bold");
 
         $("#pd-total-paid")
-            .text(`₹${project.total_paid}`)
-            .addClass("text-success fw-bold");
+            .text(`₹${project.total_paid}`);
 
         $("#pd-remaining-amount")
             .text(project.remaining_amount === 0 ? "-" : `₹${project.remaining_amount}`)
@@ -464,17 +475,37 @@ project.payments.forEach((p) => {
 // === Fill expenses ===
 // === Fill expenses in single row ===
 $("#expense-values-row").html(`
-    <td class="text-danger fw-bold">₹${project.expenses.Other}</td>
-    <td class="text-danger fw-bold">₹${project.expenses.Developer}</td>
-    <td class="text-danger fw-bold">₹${project.expenses.Server}</td>
-    <td class="text-danger fw-bold">₹${project.expenses["Third Party API"]}</td>
-    <td class="text-danger fw-bold">₹${project.expenses.Mediator}</td>
-    
+    <td class="text-danger fw-bold">${project.expenses.Other > 0 ? `₹${project.expenses.Other}` : '-'}</td>
+    <td class="text-danger fw-bold">${project.expenses.Developer > 0 ? `₹${project.expenses.Developer}` : '-'}</td>
+    <td class="text-danger fw-bold">${project.expenses.Server > 0 ? `₹${project.expenses.Server}` : '-'}</td>
+    <td class="text-danger fw-bold">${project.expenses["Third Party API"] > 0 ? `₹${project.expenses["Third Party API"]}` : '-'}</td>
+    <td class="text-danger fw-bold">${project.expenses.Mediator > 0 ? `₹${project.expenses.Mediator}` : '-'}</td>
 `);
 
 
 // Set total expense
-$("#pd-total-expense").addClass("text-danger fw-bold").text(`₹${project.total_expense}`);
+$("#pd-total-expense").text(`₹${project.total_expense}`);
+
+// set profit loss
+let profitLoss = Number(project.profit_loss) || 0;
+
+let formatted;
+if (profitLoss > 0) {
+    formatted = `+₹${profitLoss.toFixed(2)}`;   // Profit with +
+} else if (profitLoss < 0) {
+    formatted = `-₹${Math.abs(profitLoss).toFixed(2)}`; // Loss with -
+} else {
+    formatted = `₹0.00`; // Neutral
+}
+
+let $profitEl = $("#pd-profit-loss");
+
+// Reset any old classes first
+$profitEl.removeClass("fw-bold text-success text-danger");
+
+$profitEl
+    .text(formatted)
+    .addClass("fw-bold " + (profitLoss > 0 ? "text-success" : profitLoss < 0 ? "text-danger" : "text-muted"));
 
         // Show modal
         $("#projectDetailsModal").modal("show");
