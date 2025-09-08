@@ -20,8 +20,8 @@
    {% if request.user.is_active and request.user.is_staff and request.user.is_superuser %}
    <!-- admin dashboard -->
   <ul class="menu-inner py-1">
-    <li class="menu-item active">
-      <a href="#" class="menu-link">
+    <li class="menu-item">
+      <a href="{% url 'admin_dashboard' %}" class="menu-link">
         <i class="menu-icon tf-icons bx bx-home-circle"></i>
         <div data-i18n="Dashboard">Dashboard</div>
       </a>
@@ -158,8 +158,8 @@
   {% elif request.user.is_active and request.user.is_staff and not request.user.is_superuser %}  
   <!-- employee dashboard -->
   <ul class="menu-inner py-1">
-    <li class="menu-item active">
-      <a href="#" class="menu-link">
+    <li class="menu-item">
+      <a href="{% url 'dashboard' %}" class="menu-link">
         <i class="menu-icon tf-icons bx bx-home-circle"></i>
         <div data-i18n="Dashboard">Dashboard</div>
       </a>
@@ -293,7 +293,28 @@ document.addEventListener("DOMContentLoaded", function () {
     if (p.length > 1 && p.endsWith("/")) p = p.slice(0, -1);
     return p;
   };
-  const currentPath = norm(location.pathname);
+const currentPath = norm(location.pathname);
+// --- IF ON DASHBOARD
+if (currentPath === "/" || currentPath.endsWith("dashboard")) {
+  // remove any open/active classes
+  document.querySelectorAll("#layout-menu li.menu-item.open").forEach(item => {
+    item.classList.remove("open","active");
+  });
+
+  // make first menu-item (Dashboard) active
+  const menuInner = document.querySelector("#layout-menu .menu-inner");
+  if (menuInner) {
+    const firstMenuItem = menuInner.querySelector("li.menu-item:first-child");
+    if (firstMenuItem) {
+      firstMenuItem.classList.add("active");
+      const link = firstMenuItem.querySelector("a.menu-link");
+      if (link) link.classList.add("active");
+    }
+  }
+
+  return; // skip the rest of the script
+}
+
 
   // Assign stable data-id to each top-level accordion
   const toggles = Array.from(document.querySelectorAll("#layout-menu .menu-link.menu-toggle"));
@@ -306,6 +327,10 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll("#layout-menu li.menu-item.open").forEach(item => {
     item.classList.remove("open", "active");
   });
+
+  // Remove all existing active classes first
+document.querySelectorAll("#layout-menu li.menu-item").forEach(li => li.classList.remove("active", "open"));
+document.querySelectorAll("#layout-menu .menu-link").forEach(a => a.classList.remove("active"));
 
   // Find link that matches current path
   let matchedLink = null;

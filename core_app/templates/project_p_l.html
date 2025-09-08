@@ -159,6 +159,7 @@
                                 <th data-sort="string">Duration</th>
                                 <th data-sort="number">Expense</th>
                                 <th data-sort="number">Income</th>
+                                <th data-sort="number">Profit / Loss</th>
                                
                             </tr>
                         </thead>
@@ -178,6 +179,10 @@
                                  <td>{% if project.duration %}{{ project.duration }}{% else %}-{% endif %}</td>
                                 <td>{{ project.expense }}</td>
                                 <td>{{ project.income|floatformat:2 }}</td>
+                                <td class="{% if project.profit_loss > 0 %}text-success{% elif project.profit_loss < 0 %}text-danger{% endif %}">
+    {% if project.profit_loss > 0 %}+{% endif %}
+    {{ project.profit_loss|floatformat:2 }}
+</td>
 
                             </tr>
                             {% empty %}

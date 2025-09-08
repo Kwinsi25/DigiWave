@@ -529,7 +529,8 @@ def get_project_p_l(request):
         # add to totals
         total_ex += Decimal(expense)
         total_income += income
-        
+        # calculate profit/loss per project
+        profit_loss = income - Decimal(expense)
         project_list.append({
             "id": p.id,
             "project_id": p.project_id,
@@ -537,6 +538,7 @@ def get_project_p_l(request):
             "duration": duration_str,
             "expense": Decimal(expense),
             "income": income,
+            "profit_loss": profit_loss,
         })
 
      # Paginate 
