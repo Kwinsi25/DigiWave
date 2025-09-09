@@ -88,7 +88,7 @@
         <!-- Project Status Cards -->
         <div class="row mb-4">
             <!-- Total Projects -->
-            <div class="col-md-4 col-sm-6 mb-3">
+            <div class="col-md-3 col-sm-6 mb-3">
                 <div class="card h-100 shadow-sm border-0">
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
@@ -103,7 +103,7 @@
             </div>
 
             <!-- total expense -->
-            <div class="col-md-4 col-sm-6 mb-3">
+            <div class="col-md-3 col-sm-6 mb-3">
                 <div class="card h-100 shadow-sm border-0">
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
@@ -118,7 +118,7 @@
             </div>
 
             <!-- total income -->
-            <div class="col-md-4 col-sm-6 mb-3">
+            <div class="col-md-3 col-sm-6 mb-3">
                 <div class="card h-100 shadow-sm border-0">
                     <div class="card-body d-flex align-items-center justify-content-between">
                         <div>
@@ -132,7 +132,33 @@
                 </div>
             </div>
 
-           
+           <!-- Net Profit -->
+          <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="mb-1">Net Profit</h6>
+                    <h4 class="fw-bold 
+                    {% if net_profit > 0 %}text-success
+                    {% elif net_profit < 0 %}text-danger
+                    {% else %}text-secondary{% endif %}">
+                    {% if net_profit > 0 %}+{% endif %}{{ net_profit|floatformat:2 }}
+                    </h4>
+                </div>
+                <div class="avatar 
+                    {% if net_profit > 0 %}bg-success
+                    {% elif net_profit < 0 %}bg-danger
+                    {% else %}bg-secondary{% endif %}
+                    text-white rounded-circle p-2">
+                    <i class="bx 
+                    {% if net_profit > 0 %}bx-trending-up
+                    {% elif net_profit < 0 %}bx-trending-down
+                    {% else %}bx-minus{% endif %} fs-4"></i>
+                </div>
+                </div>
+            </div>
+            </div>
+
         </div>
 
         <!-- All Projects Table -->

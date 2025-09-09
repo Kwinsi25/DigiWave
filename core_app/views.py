@@ -488,7 +488,7 @@ def get_project_p_l(request):
     project_list = []
     total_ex = Decimal(0)
     total_income = Decimal(0)
-
+    
     for p in projects:
         duration_str = ""
         if p.start_date:
@@ -529,6 +529,7 @@ def get_project_p_l(request):
         # add to totals
         total_ex += Decimal(expense)
         total_income += income
+        
         # calculate profit/loss per project
         profit_loss = income - Decimal(expense)
         project_list.append({
@@ -548,11 +549,14 @@ def get_project_p_l(request):
 
     # Count stats
     total_projects = projects.count()
-
+    # net profit
+    net_profit = total_income - total_ex
+    
     return render(request, "project_p_l.html", {
         "page_obj": page_obj,
         "total_expense": total_ex,
         "total_income": total_income,
+        "net_profit" : net_profit,
         'records_per_page': records_per_page, 
         'records_options': [20, 50, 100, 200, 300],
         'total_projects': total_projects,
