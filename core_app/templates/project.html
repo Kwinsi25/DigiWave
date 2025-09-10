@@ -637,7 +637,20 @@
 
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <th>Frontend Link</th>
+                                        <td>
+                                            <input type="url" class="form-control" name="frontend_link"
+                                                placeholder="https://example.com/other">
 
+                                        </td>
+                                        <th>Backend Link</th>
+                                        <td>
+                                            <input type="url" class="form-control" name="backend_link"
+                                                placeholder="https://example.com/other">
+
+                                        </td>
+                                    </tr>
                                     <tr>
                                         <th>Other Expense (₹)</th>
                                         <td>
@@ -870,6 +883,15 @@
                                     <td id="pd-other-link" colspan="3"></td>
                                 </tr>
                                 <tr>
+                                    <th>Frontend Link</th>
+                                    <td id="pd-frontend-link" colspan="3"></td>
+                                </tr>
+                                <tr>
+                                    <th>backend Link</th>
+                                    <td id="pd-backend-link" colspan="3"></td>
+
+                                </tr>
+                                <tr>
                                     <th>Notes</th>
                                     <td id="pd-notes" colspan="3"></td>
                                 </tr>
@@ -1093,6 +1115,14 @@
                                         <td><input type="url" class="form-control" name="other_link"
                                                 id="edit-other-link" placeholder="Enter other link"></td>
                                     </tr>
+                                    <tr>
+                                        <th>Frontend Link</th>
+                                        <td><input type="url" class="form-control" name="frontend_link"
+                                                id="edit-frontend-link" placeholder="Enter frontend link"></td>
+                                        <th>Backend Link</th>
+                                        <td><input type="url" class="form-control" name="backend_link"
+                                                id="edit-backend-link" placeholder="Enter backend link"></td>
+                                    </tr>
                                     <!-- Financials -->
                                     <tr>
                                         <th>Other Expense (₹)</th>
@@ -1310,97 +1340,120 @@
 
         // Auto-fill when quotation is selected
         document.getElementById('quotationSelect').addEventListener('change', function () {
-            let quotationId = this.value;
+    let quotationId = this.value;
 
-            // Get input references
-            let leadInput = document.querySelector('input[name="lead_source"]');
-            let quotationInput = document.querySelector('input[name="quotation_amount"]');
-            let inquiryInput = document.querySelector('input[name="inquiry_date"]');
-            let quotationSelect = document.querySelector('select[name="quotation_sent"]');
-            let demoGiven = document.querySelector('select[name="demo_given"]');
-            let clientName = document.querySelector('input[name="client_name"]');
-            let contractSigned = document.querySelector('select[name="contract_signed"]');
-            if (!quotationId) {
-                // If quotation deselected → reset readonly/disabled
-                // Reset values
-                leadInput.value = '';
-                quotationInput.value = '';
-                quotationSelect.value = '';
-                clientName.value = '';
-                if (typeof demoGiven !== "undefined") demoGiven.value = '';
-                if (typeof contractSigned !== "undefined") contractSigned.value = '';
+    // Get input references
+    let leadInput = document.querySelector('input[name="lead_source"]');
+    let quotationInput = document.querySelector('input[name="quotation_amount"]');
+    let inquiryInput = document.querySelector('input[name="inquiry_date"]');
+    let quotationSelect = document.querySelector('select[name="quotation_sent"]');
+    let demoGiven = document.querySelector('select[name="demo_given"]');
+    let clientName = document.querySelector('input[name="client_name"]');
+    let contractSigned = document.querySelector('select[name="contract_signed"]');
+
+    if (!quotationId) {
+        // If quotation deselected → reset values & enable inputs
+        leadInput.value = '';
+        leadInput.readOnly = false;
+
+        quotationInput.value = '';
+        quotationInput.readOnly = false;
+
+        inquiryInput.value = '';
+        if (inquiryInput._flatpickr) {
+            inquiryInput._flatpickr.clear();
+            inquiryInput._flatpickr.input.disabled = false;
+            inquiryInput._flatpickr.altInput.disabled = false;
+        } else {
+            inquiryInput.disabled = false;
+        }
+
+        quotationSelect.value = '';
+        quotationSelect.disabled = false;
+
+        demoGiven.value = '';
+        demoGiven.disabled = false;
+
+        clientName.value = '';
+        clientName.disabled = false;
+
+        contractSigned.value = '';
+        contractSigned.disabled = false;
+
+        return;
+    }
+
+    // Fetch quotation data
+    fetch(`/get_quotation/?id=${quotationId}`)
+        .then(res => res.json())
+        .then(data => {
+            // Inquiry Date
+            if (data.date) {
+                let d = new Date(data.date);
+                if (inquiryInput._flatpickr) {
+                    inquiryInput._flatpickr.setDate(d, true);
+                    inquiryInput._flatpickr.input.disabled = true;
+                    inquiryInput._flatpickr.altInput.disabled = true;
+                } else {
+                    let month = (d.getMonth() + 1).toString().padStart(2, '0');
+                    let day = d.getDate().toString().padStart(2, '0');
+                    inquiryInput.value = `${d.getFullYear()}-${month}-${day}`;
+                    inquiryInput.disabled = true;
+                }
+            } else {
+                inquiryInput.value = '';
                 if (inquiryInput._flatpickr) {
                     inquiryInput._flatpickr.clear();
-                    inquiryInput._flatpickr.input.disabled = false;    // enable hidden input
-                    inquiryInput._flatpickr.altInput.disabled = false; // enable visible input
-                } else {
-                    inquiryInput.value = '';
-                    inquiryInput.disabled = false;
-                }
-                // reradonly
-                leadInput.readOnly = false;
-                quotationInput.readOnly = false;
-                quotationSelect.disabled = false;
-                demoGiven.disabled = false;
-                clientName.disabled = false;
-                contractSigned.disabled = false;
-                if (inquiryInput._flatpickr) {
-                    inquiryInput._flatpickr.input.disabled = false;    // hidden input
-                    inquiryInput._flatpickr.altInput.disabled = false; // visible input
+                    inquiryInput._flatpickr.input.disabled = false;
+                    inquiryInput._flatpickr.altInput.disabled = false;
                 } else {
                     inquiryInput.disabled = false;
                 }
-                return;
             }
 
-            fetch(`/get_quotation/?id=${quotationId}`)  // Django view returning JSON
-                .then(res => res.json())
-                .then(data => {
-                    // Fill values
-                    leadInput.value = data.lead_source || '';
-                    quotationInput.value = data.grand_total || '';
-                    quotationSelect.value = "Yes";
-                    demoGiven.value = "Yes"
-                    clientName.value = data.client_name || '';
-                    contractSigned.value = "Yes"
-                    if (data.date) {
-                        let d = new Date(data.date);
-                        // Use Flatpickr API if available
-                        if (inquiryInput._flatpickr) {
-                            inquiryInput._flatpickr.setDate(d, true);
-                        } else {
-                            let month = (d.getMonth() + 1).toString().padStart(2, '0');
-                            let day = d.getDate().toString().padStart(2, '0');
-                            inquiryInput.value = `${d.getFullYear()}-${month}-${day}`;
-                        }
-                    } else {
-                        if (inquiryInput._flatpickr) {
-                            inquiryInput._flatpickr.clear();
-                        } else {
-                            inquiryInput.value = '';
-                        }
-                    }
+            // Lead Source
+            leadInput.value = data.lead_source || '';
+            leadInput.readOnly = !!data.lead_source;
 
-                    // Make fields readonly/disabled
-                    leadInput.readOnly = true;
-                    quotationInput.readOnly = true;
-                    quotationSelect.disabled = true;
-                    makeSelectReadonly(demoGiven);
-                    makeSelectReadonly(contractSigned);
+            // Quotation Sent
+            quotationSelect.value = data.quotation_sent ? data.quotation_sent : 'Yes';
+            quotationSelect.disabled = false;
 
-                    // demoGiven.addEventListener("mousedown", e => e.preventDefault());
 
-                    // contractSigned.addEventListener("mousedown", e => e.preventDefault());
+            // Demo Given
+            demoGiven.value = data.demo_given ? data.demo_given : 'Yes';
+            demoGiven.disabled = false;
 
-                    clientName.disabled = true;
-                    if (inquiryInput._flatpickr) {
-                        inquiryInput._flatpickr.input.disabled = true;
-                        inquiryInput._flatpickr.altInput.disabled = true;
-                    } else {
-                        inquiryInput.disabled = true;
-                    }
-                });
+            // Quotation Amount
+            quotationInput.value = data.grand_total || '';
+            quotationInput.readOnly = !!data.grand_total;
+
+            // Client Name
+            clientName.value = data.client_name || '';
+            clientName.readOnly = !!data.client_name;
+
+            // Contract Signed
+            contractSigned.value = data.contract_signed ? data.contract_signed : 'Yes';
+            contractSigned.disabled = false;
+            
+            // You can prefill Approval Amount if needed, but keep editable
+            // let approvalAmountInput = document.querySelector('input[name="approval_amount"]');
+            // approvalAmountInput.value = data.approval_amount || '';
+            // approvalAmountInput.readOnly = !!data.approval_amount;
+        })
+        .catch(err => {
+            console.error('Failed to fetch quotation data:', err);
+            // If fetch fails, allow manual entry
+            leadInput.readOnly = false;
+            quotationInput.readOnly = false;
+            inquiryInput.disabled = false;
+            quotationSelect.disabled = false;
+            demoGiven.disabled = false;
+            clientName.disabled = false;
+            contractSigned.disabled = false;
         });
+});
+
 
 
         // View modal fill
@@ -1471,7 +1524,7 @@
                 $("#pd-quotation-reference").text(
                     p.quotation ? `${p.quotation} (${p.client_name})` : "-"
                 );
-
+                 $("#pd-client-name").text(p.c_name);
                 $("#pd-approval-amount").text(p.approval_amount ? `₹${p.approval_amount}` : "-");
                 $("#pd-deadline").text(formatDate(p.deadline));
                 $("#pd-completed-date").text(formatDate(p.completed_date));
@@ -1487,19 +1540,26 @@
                 }
 
                 let paymentBadge = '';
+                let paymentText = p.payment_status;
+
                 if (p.payment_status === "Pending") {
                     paymentBadge = "badge bg-label-warning";
                 } else if (p.payment_status === "Advanced") {
                     paymentBadge = "badge bg-label-info";
-                } else if (p.payment_status === "Paid") {     //make received
+                } else if (p.payment_status === "Paid") {
                     paymentBadge = "badge bg-label-success";
+                    paymentText = "Received";   // ✅ show "Received" instead of "Paid"
                 } else {
                     paymentBadge = "badge bg-label-secondary";
                 }
-                $("#pd-payment-status").html(`<span class="${paymentBadge}">${p.payment_value} ${p.payment_status}</span>`);
+
+                $("#pd-payment-status").html(
+                    `<span class="${paymentBadge}">${p.payment_value} ${paymentText}</span>`
+                );
+
 
                 $("#pd-client-industry").text(p.client_industry);
-                $("#pd-client-name").text(p.client_name || "-");
+               
                 if (p.live_link) {
                     $("#pd-live-link").html(`<a href="${p.live_link}" target="_blank">${p.live_link}</a>`);
                 } else {
@@ -1528,7 +1588,17 @@
                 } else {
                     $("#pd-other-link").text("");
                 }
-                $("#pd-notes").val(p.notes);
+                if (p.frontend_link) {
+                    $("#pd-frontend-link").html(`<a href="${p.frontend_link}" target="_blank">${p.frontend_link}</a>`);
+                } else {
+                    $("#pd-frontend-link").text("");
+                }
+                if (p.backend_link) {
+                    $("#pd-backend-link").html(`<a href="${p.backend_link}" target="_blank">${p.backend_link}</a>`);
+                } else {
+                    $("#pd-backend-link").text("");
+                }
+                $("#pd-notes").text(p.notes);
                 $("#pd-start-date").text(formatDate(p.start_date));
 
 
@@ -1637,6 +1707,8 @@
                 $("#edit-postman-collection").val(p.postman_collection);
                 $("#edit-data-folder").val(p.data_folder);
                 $("#edit-other-link").val(p.other_link);
+                $("#edit-frontend-link").val(p.frontend_link);
+                $("#edit-backend-link").val(p.backend_link);
                 $("#edit-other-expense").val(p.other_expense);
                 $("#edit-developer-charge").val(p.developer_charge);
                 $("#edit-server-charge").val(p.server_charge);
@@ -1655,7 +1727,7 @@
                 $("#edit-client-industry").val(p.client_industry);
                 $("#edit-notes").val(p.notes);
                 $("#edit-contract-signed").val(p.contract_signed);
-                $("#edit-client-name").val(p.client_name);
+                $("#edit-client-name").val(p.c_name);
                 // For multi-select team members use the numeric ids returned
                 // $("#edit-team-members").val(p.team_members_ids || []);
                 // $("#edit-technologies").val(p.technologies_ids);

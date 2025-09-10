@@ -395,8 +395,8 @@
                   <th>Bank Details</th>
                   <td colspan="3">
                     <input type="text" class="form-control mb-2" name="bank_name" placeholder="Bank Name">
-                    <input type="text" class="form-control mb-2" name="account_no" placeholder="Account Number">
-                    <input type="text" class="form-control" name="ifsc_code" placeholder="IFSC Code">
+                    <!-- <input type="text" class="form-control mb-2" name="account_no" placeholder="Account Number">
+                    <input type="text" class="form-control" name="ifsc_code" placeholder="IFSC Code"> -->
                   </td>
                 </tr>
 
@@ -611,9 +611,9 @@ $(document).on("click", ".payment-link", function (e) {
             if (p.method === "Bank Transfer") {
                 extraDetails = `
                     <strong>Bank:</strong> ${p.details.bank_name || ""}<br>
-                    <strong>Acc:</strong> ${p.details.account_no || ""}<br>
-                    <strong>IFSC:</strong> ${p.details.ifsc_code || ""}
-                `;
+                    `;
+                    // <strong>Acc:</strong> ${p.details.account_no || ""}<br>
+                    // <strong>IFSC:</strong> ${p.details.ifsc_code || ""}
             } else if (p.method === "UPI") {
                 extraDetails = `<strong>UPI:</strong> ${p.details.upi_id || ""}`;
             } else if (p.method === "Cheque") {

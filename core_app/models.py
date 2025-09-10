@@ -297,6 +297,8 @@ class Project(models.Model):
     postman_collection = models.URLField(blank=True, null=True)
     data_folder = models.URLField(blank=True, null=True)
     other_link = models.URLField(blank=True, null=True)
+    frontend_link = models.URLField(blank=True, null=True)
+    backend_link = models.URLField(blank=True, null=True)
 
     #New Sales/Lead Tracking Fields
     inquiry_date = models.DateField(blank=True, null=True)
@@ -310,6 +312,7 @@ class Project(models.Model):
     completed_date = models.DateField(blank=True, null=True)
     client_industry = models.CharField(max_length=255, blank=True, null=True)
     contract_signed = models.CharField(max_length=3, choices=YES_NO_CHOICES, blank=True, null=True)
+    client_name = models.CharField(max_length=255, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -376,16 +379,7 @@ class Project(models.Model):
             elif self.payment_value >= self.approval_amount:
                 self.payment_status = "Paid"
 
-        # ==== Calculate profit/loss ====
-        total_expense = sum(filter(None, [
-            self.developer_charge,
-            self.server_charge,
-            self.third_party_api_charge,
-            self.mediator_charge,
-            self.other_expense,
-        ]))
-        income = self.approval_amount or 0
-        self.profit_loss = income - total_expense
+      
 
         super().save(update_fields=["payment_value", "payment_status", "profit_loss"])
         
@@ -440,7 +434,7 @@ class ProjectPayment(models.Model):
         details = self.payment_details or {}
 
         if self.payment_method == "Bank Transfer":
-            required_fields = ["bank_name", "account_no", "ifsc_code"]
+            required_fields = ["bank_name"]
         elif self.payment_method == "UPI":
             required_fields = ["upi_id"]
         elif self.payment_method == "Cheque":
@@ -518,7 +512,7 @@ class HostData(models.Model):
 
 
     def __str__(self):
-        return f"{self.hosting_provider or 'No Provider'} - {self.server_ip}"
+        return f"{self.hosting_provider or 'No Provider'} - {self.server_ip} - {self.created_at}"
 
     @property
     def left_days(self):
@@ -635,7 +629,7 @@ class Domain(models.Model):
 
     def __str__(self):
         project_list = ", ".join([p.project_id for p in self.project.all()]) or "No Project"
-        return f"{self.domain_name or 'No Domain'} ({project_list})"
+        return f"{self.domain_name or 'No Domain'} ({project_list}) - {self.created_at}"
 
 # -----------------------------
 # Quotation model

@@ -183,8 +183,8 @@
                                 <th data-sort="string">Project ID</th>
                                 <th data-sort="string">Project Name</th>
                                 <th data-sort="string">Duration</th>
-                                <th data-sort="number">Expense</th>
                                 <th data-sort="number">Income</th>
+                                <th data-sort="number">Expense</th>
                                 <th data-sort="number">Profit / Loss</th>
                                
                             </tr>
@@ -203,8 +203,8 @@
                                     </a>
                                 </td>
                                  <td>{% if project.duration %}{{ project.duration }}{% else %}-{% endif %}</td>
+                                 <td>{{ project.income|floatformat:2 }}</td>
                                 <td>{{ project.expense }}</td>
-                                <td>{{ project.income|floatformat:2 }}</td>
                                 <td class="{% if project.profit_loss > 0 %}text-success{% elif project.profit_loss < 0 %}text-danger{% endif %}">
     {% if project.profit_loss > 0 %}+{% endif %}
     {{ project.profit_loss|floatformat:2 }}
@@ -476,8 +476,9 @@ project.payments.forEach((p) => {
     if (p.method === "Bank Transfer") {
         extraDetails = `
             <strong>Bank:</strong> ${p.details.bank_name || ""}<br>
-            <strong>Acc:</strong> ${p.details.account_no || ""}<br>
-            <strong>IFSC:</strong> ${p.details.ifsc_code || ""}`;
+            `;
+            // <strong>Acc:</strong> ${p.details.account_no || ""}<br>
+            // <strong>IFSC:</strong> ${p.details.ifsc_code || ""}
     } else if (p.method === "UPI") {
         extraDetails = `<strong>UPI:</strong> ${p.details.upi_id || ""}`;
     } else if (p.method === "Cheque") {

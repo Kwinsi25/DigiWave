@@ -10,12 +10,8 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date
 from collections import defaultdict
 import json
+from django.db.models import Max
 from datetime import date
-# from reportlab.lib.pagesizes import A4
-# from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, Image
-# from reportlab.lib.units import mm
-# from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-# from reportlab.lib import colors
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout as django_logout
 from django.views.decorators.csrf import csrf_exempt
@@ -120,7 +116,7 @@ def project_list(request):
         page_number = 1 
     if page_number < 1: 
         page_number = 1 
-    projects = Project.objects.all().prefetch_related('team_members') 
+    projects = Project.objects.all().prefetch_related('team_members').order_by('-created_at')
     users = User.objects.all() 
     
     query = request.POST.get("q", "")
@@ -206,8 +202,9 @@ def save_project(request):
                 postman_collection=data.get("postman_collection"),
                 data_folder=data.get("data_folder"),
                 other_link=data.get("other_link"),
-                
-                
+                frontend_link=data.get("frontend_link"),
+                backend_link=data.get("backend_link"),
+
                 inquiry_date = datetime.strptime(inquiry_date_str, "%Y-%m-%d").date() if inquiry_date_str else None,
 
                 lead_source=data.get("lead_source"),
@@ -222,6 +219,7 @@ def save_project(request):
 
                 client_industry=data.get("client_industry"),
                 contract_signed=data.get("contract_signed"),
+                client_name = data.get("client_name"),
                 notes=data.get("notes"),
                 quotation=quotation
             )
@@ -338,14 +336,15 @@ def get_project_details(request):
         "postman_collection": project.postman_collection,
         "data_folder": project.data_folder,
         "other_link": project.other_link,
-        
+        "frontend_link": project.frontend_link,
+        "backend_link": project.backend_link,
         "inquiry_date": project.inquiry_date.strftime('%Y-%m-%d') if project.inquiry_date else None,
         "lead_source": project.lead_source,
         "quotation_sent": project.quotation_sent,
         "demo_given": project.demo_given,
         "quotation_amount": str(project.quotation_amount) if project.quotation_amount is not None else '',
         "quotation": project.quotation.quotation_no if project.quotation else None,
-        # "client_name": project.quotation.client_name if project.quotation else None,
+        "c_name": project.client_name,
         "approval_amount": str(project.approval_amount) if project.approval_amount is not None else '',
         "completed_date": project.completed_date.strftime('%Y-%m-%d') if project.completed_date else None,
         "client_industry": project.client_industry,
@@ -396,6 +395,9 @@ def update_project(request, id):
             project.postman_collection = data.get("postman_collection")
             project.data_folder = data.get("data_folder")
             project.other_link = data.get("other_link")
+            project.frontend_link = data.get("frontend_link")
+            project.backend_link = data.get("backend_link")
+
 
             # Financials
             project.other_expense = to_decimal(data.get("other_expense"))
@@ -422,6 +424,7 @@ def update_project(request, id):
             if data.get("client_industry") is not None:
                 project.client_industry = data.get("client_industry")
 
+            project.client_name = data.get("client_name")
 
             project.approval_amount = to_decimal(data.get("approval_amount"))
             # Completion / client info
@@ -598,7 +601,7 @@ def get_project_p_l_detail(request):
         "Mediator": float(project.mediator_charge or 0),
     }
     total_expense = sum(expenses_data.values())
-
+    profit_loss = total_paid - total_expense
 
     data = {
         "project_id": project.project_id,
@@ -606,7 +609,7 @@ def get_project_p_l_detail(request):
         "approval_amount": approval_amount,
         "total_paid": total_paid,
         "remaining_amount": remaining_amount,
-        "profit_loss":project.profit_loss,
+        "profit_loss":profit_loss,
         "payments": payments_data,
         "expenses": expenses_data,
         "total_expense": total_expense,
@@ -632,7 +635,8 @@ def host_list(request):
         page_number = 1
 
     projects = Project.objects.all()
-    host_data_list = HostData.objects.prefetch_related('project').all()
+    host_data_list = HostData.objects.prefetch_related('project').order_by('-created_at')
+
     print(host_data_list)
 
     query = request.POST.get("q", "")
@@ -878,7 +882,7 @@ def domain_list(request):
     host_data_list = HostData.objects.prefetch_related("project").all()
 
     #For Domain use prefetch_related instead of select_related
-    domains = Domain.objects.prefetch_related("project").order_by("id")
+    domains = Domain.objects.prefetch_related("project").order_by('-created_at')
 
     query = request.POST.get("q", "")
 
@@ -1202,7 +1206,7 @@ def user_list(request):
         page_number = 1
     if page_number < 1:
         page_number = 1
-    users = User.objects.all().order_by('id')
+    users = User.objects.all().order_by('-created_at')
 
     query = request.POST.get("q", "")
 
@@ -1620,7 +1624,7 @@ def quotation_list(request):
         page_number = 1
     if page_number < 1:
         page_number = 1
-    quotations = Quotation.objects.all()
+    quotations = Quotation.objects.order_by('-created_at')
 
     query = request.POST.get("q", "")
 
@@ -2138,7 +2142,7 @@ def client_list(request):
         page_number = 1
     if page_number < 1:
         page_number = 1
-    clients = Client.objects.all().order_by('id')
+    clients = Client.objects.all().order_by('-created_at')
 
     query = request.POST.get("q", "")
 
@@ -2661,7 +2665,17 @@ def payment_list(request):
     projects = Project.objects.order_by('id').all()
 
     # Get distinct projects that have payments
-    project_ids = ProjectPayment.objects.values_list("project_id", flat=True).distinct()
+    # project_ids = ProjectPayment.objects.values_list("project_id", flat=True).distinct()
+
+    latest_payments = (
+        ProjectPayment.objects
+        .values('project_id')
+        .annotate(latest_created=Max('created_at'))
+        .order_by('-latest_created')
+    )
+
+    project_ids = [item['project_id'] for item in latest_payments]
+
     
     grouped_data = []
     for pid in project_ids:
@@ -2734,8 +2748,10 @@ def add_payment(request):
             if payment_method == "Bank Transfer":
                 payment_details = {
                     "bank_name": request.POST.get("bank_name"),
-                    "account_no": request.POST.get("account_no"),
-                    "ifsc_code": request.POST.get("ifsc_code")
+                    # "account_no": request.POST.get("account_no"),
+                    # "ifsc_code": request.POST.get("ifsc_code")
+                    "account_no": None,
+                    "ifsc_code": None
                 }
             elif payment_method == "UPI":
                 payment_details = {
@@ -2847,7 +2863,7 @@ def designation_list(request):
         page_number = 1
     if page_number < 1:
         page_number = 1
-    designations = Designation.objects.all().order_by('id')
+    designations = Designation.objects.all().order_by('-id')
     query = request.POST.get("q", "")
 
     if query:
@@ -2963,7 +2979,7 @@ def technology_list(request):
     if page_number < 1:
         page_number = 1
 
-    technologies = Technology.objects.all().order_by('id')
+    technologies = Technology.objects.all().order_by('-id')
     query = request.POST.get("q", "")
 
     if query:
@@ -3080,7 +3096,7 @@ def appmode_list(request):
     if page_number < 1:
         page_number = 1
 
-    app_modes = AppMode.objects.all().order_by('id')
+    app_modes = AppMode.objects.all().order_by('-id')
     query = request.POST.get("q", "")
 
     if query:
