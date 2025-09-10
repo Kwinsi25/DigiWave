@@ -139,7 +139,7 @@ def project_list(request):
     quotations = Quotation.objects.all()
     # Count stats
     total_projects = projects.count()
-    ongoing_count = projects.filter(status="Ongoing").count()
+    ongoing_count = projects.filter(status="In Progress").count()
     completed_count = projects.filter(status="Completed").count()
     cancelled_count = projects.filter(status="Cancelled").count()
     on_hold_count = projects.filter(status="On Hold").count()

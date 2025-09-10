@@ -369,8 +369,8 @@ class Project(models.Model):
        
         #update payment and status value
         self.payment_value = self.total_paid
-        if not self.approval_amount:  # if no approval amount, default pending
-            self.payment_status = "Pending"
+        if not self.approval_amount or self.approval_amount == 0:
+            self.payment_status = "Advanced"
         else:
             if self.payment_value <= 0:
                 self.payment_status = "Pending"
