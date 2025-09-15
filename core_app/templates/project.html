@@ -3,8 +3,11 @@
 {% block title %}All Domains{% endblock %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+
 {% block extra_css %}
 <style>
+  
+
     select.readonly {
         pointer-events: none;
         /* blocks click */
@@ -411,14 +414,14 @@
                                     <tr>
                                         <th>Quotation</th>
                                         <td colspan="3">
-                                            <select class="form-select" name="quotation" id="quotationSelect">
+                                            <select  name="quotation" id="quotationSelect" class="form-control select2">
                                                 <option value="">-- Select Quotation --</option>
                                                 {% for q in quotations %}
                                                 <option value="{{ q.id }}">{{ q.quotation_no }} - {{ q.client_name }}
                                                 </option>
                                                 {% endfor %}
                                             </select>
-
+                                           
                                         </td>
                                     </tr>
 
@@ -688,12 +691,12 @@
                                                 placeholder="Enter mediator charge">
 
                                         </td>
-                                        <!-- <th>Income (₹)</th>
+                                        <th>Domain Charge (₹)</th>
                                             <td>
-                                                <input type="number" class="form-control" name="income"
-                                                    placeholder="Enter income">
+                                                <input type="number" class="form-control" name="domain_charge"
+                                                    placeholder="Enter Domain charge">
                                                 
-                                            </td> -->
+                                            </td>
                                     </tr>
 
 
@@ -852,16 +855,20 @@
                                 <tr>
                                     <th>Mediator Charge</th>
                                     <td id="pd-mediator-charge"></td>
-                                    <th>Total Income</th>
-                                    <td id="pd-total-income"></td>
+                                    <th>Domain Charge</th>
+                                    <td id="pd-domain-charge"></td>
                                 </tr>
                                 <tr>
+                                    <th>Total Income</th>
+                                    <td id="pd-total-income"></td>
                                     <th>Total Expense</th>
                                     <td id="pd-total-expense"></td>
+                                </tr>
+                                <tr>
                                     <th>Free Service</th>
                                     <td id="pd-free-service" colspan="3"></td>
-                                </tr>
 
+                                </tr>
                                 <!-- 🔗 Links -->
                                 <tr class="table-light">
                                     <td colspan="4"><i class="bx bx-link-alt me-1 text-warning"></i>Project Links</td>
@@ -1144,9 +1151,9 @@
                                         <th>Mediator Charge (₹)</th>
                                         <td><input type="number" class="form-control" name="mediator_charge"
                                                 id="edit-mediator-charge" placeholder="Enter mediator charge"></td>
-                                        <!-- <th>Income (₹)</th>
-                                        <td><input type="number"  class="form-control" name="income"
-                                                id="edit-income" placeholder="Enter income"></td> -->
+                                        <th>Domain Charge (₹)</th>
+                                        <td><input type="number"  class="form-control" name="domain_charge"
+                                                id="edit-domain-charge" placeholder="Enter domain charge"></td>
                                     </tr>
                                     <!-- Completion and Free Service -->
                                     <tr>
@@ -1265,10 +1272,16 @@
 
 </div>
 {% block extra_js %}
+
+
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="{% static 'js/common.js' %}"></script>
+
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+        
         // searhing
         enableTableSearch("searchBox", "projectTable");
         // sorting
@@ -1568,6 +1581,7 @@
                 $("#pd-other-expense").text(p.other_expense ? `₹${p.other_expense}` : "-");
                 $("#pd-developer-charge").text(p.developer_charge ? `₹${p.developer_charge}` : "-");
                 $("#pd-server-charge").text(p.server_charge ? `₹${p.server_charge}` : "-");
+                $("#pd-domain-charge").text(p.domain_charge ? `₹${p.domain_charge}` : "-");
                 $("#pd-third-party-charge").text(p.third_party_api_charge ? `₹${p.third_party_api_charge}` : "-");
                 $("#pd-mediator-charge").text(p.mediator_charge ? `₹${p.mediator_charge}` : "-");
                 // $("#pd-income").text(p.income ? `₹${p.income}` : "-");
@@ -1712,6 +1726,7 @@
                 $("#edit-other-expense").val(p.other_expense);
                 $("#edit-developer-charge").val(p.developer_charge);
                 $("#edit-server-charge").val(p.server_charge);
+                $("#edit-domain-charge").val(p.domain_charge);
                 $("#edit-third-party-charge").val(p.third_party_api_charge);
                 $("#edit-mediator-charge").val(p.mediator_charge);
                 // $("#edit-income").val(p.income);

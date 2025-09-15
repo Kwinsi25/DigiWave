@@ -195,6 +195,7 @@ def save_project(request):
 
                 developer_charge=data.get("developer_charge") or None,
                 server_charge=data.get("server_charge") or None,
+                domain_charge=data.get("domain_charge") or None,
                 third_party_api_charge=data.get("third_party_api_charge") or None,
                 mediator_charge=data.get("mediator_charge") or None,
                 # income=Decimal(data.get("income")) if data.get("income") else None,
@@ -328,6 +329,7 @@ def get_project_details(request):
         "other_expense": str(project.other_expense) if project.other_expense is not None else '',
         "developer_charge": str(project.developer_charge) if project.developer_charge is not None else '',
         "server_charge": str(project.server_charge) if project.server_charge is not None else '',
+        "domain_charge": str(project.domain_charge) if project.domain_charge is not None else '',
         "third_party_api_charge": str(project.third_party_api_charge) if project.third_party_api_charge is not None else '',
         "mediator_charge": str(project.mediator_charge) if project.mediator_charge is not None else '',
         # "income": str(project.income) if project.income is not None else '',
@@ -403,6 +405,7 @@ def update_project(request, id):
             project.other_expense = to_decimal(data.get("other_expense"))
             project.developer_charge = to_decimal(data.get("developer_charge"))
             project.server_charge = to_decimal(data.get("server_charge"))
+            project.domain_charge = to_decimal(data.get("domain_charge"))
             project.third_party_api_charge = to_decimal(data.get("third_party_api_charge"))
             project.mediator_charge = to_decimal(data.get("mediator_charge"))
             # project.income = to_decimal(data.get("income"))
@@ -523,6 +526,7 @@ def get_project_p_l(request):
             p.other_expense or 0,
             p.developer_charge or 0,
             p.server_charge or 0,
+            p.domain_charge or 0,
             p.third_party_api_charge or 0,
             p.mediator_charge or 0,
         ])
@@ -597,6 +601,7 @@ def get_project_p_l_detail(request):
         "Other": float(project.other_expense or 0),
         "Developer": float(project.developer_charge or 0),
         "Server": float(project.server_charge or 0),
+        "Domain":float(project.domain_charge or 0),
         "Third Party API": float(project.third_party_api_charge or 0),
         "Mediator": float(project.mediator_charge or 0),
     }
@@ -1064,7 +1069,7 @@ def get_domain_details(request):
         "credentials_pass": domain.credentials_pass ,
         "linked_services": domain.linked_services,
         "notes": domain.notes,
-        "domain_charge": str(domain.domain_charge) if domain.domain_charge else "0.00",
+        "domain_charge": str(domain.domain_charge) if domain.domain_charge else "-",
         "client_payment_status": domain.client_payment_status,
         "payment_method": domain.payment_method,
         "payment_mode": domain.payment_mode,
@@ -2308,6 +2313,44 @@ def delete_client(request, id):
 # -----------------------------
 # File & Docs View
 # -----------------------------
+def get_icon_for_file(file):
+    """
+    Return icon_class and icon_color based on file extension.
+    """
+    if not file or not file.file:
+        return {"icon_class": "bxs-file", "icon_color": "#757575"}  # default gray
+
+    ext = file.file.name.split('.')[-1].lower()
+    if ext in ["pdf"]:
+        return {"icon_class": "bx bxs-file-pdf", "icon_color": "#e53935"}  # red
+    elif ext in ["doc", "docx"]:
+        return {"icon_class": "bx bxs-file-doc", "icon_color": "#1e88e5"}  # blue
+    elif ext in ["xls", "xlsx"]:
+        return {"icon_class": "bx bx-spreadsheet", "icon_color": "#43a047"}  # green
+    elif ext in ["ppt", "pptx"]:
+        return {"icon_class": "bx bxs-file-ppt", "icon_color": "#f4511e"}  # orange
+    elif ext in ["jpg","jpeg","png","gif","webp"]:
+        return {"icon_class": "bx bxs-file-image", "icon_color": "#fb8c00"}  # yellow/orange
+    elif ext in ["mp3","wav"]:
+        return {"icon_class": "bx bxs-music", "icon_color": "#8e24aa"}  # purple
+    elif ext in ["mp4","webm"]:
+        return {"icon_class": "bx bxs-video", "icon_color": "#3949ab"}  # blue
+    elif ext in ["html", "htm"]:
+        return {"icon_class": "bx bxl-html5", "icon_color": "#e34f26"}  # orange-red
+    elif ext in ["css"]:
+        return {"icon_class": "bx bxl-css3", "icon_color": "#264de4"}  # blue
+    elif ext in ["js", "jsx", "ts", "tsx"]:
+        return {"icon_class": "bx bxl-javascript", "icon_color": "#f7df1e"}  # yellow
+    elif ext in ["json"]:
+        return {"icon_class": "bx bxs-data", "icon_color": "#f39c12"}  # orange
+    elif ext in ["xml", "xsl", "xsd"]:
+        return {"icon_class": "bx bxs-code-alt", "icon_color": "#1abc9c"}  # teal
+    elif ext in ["zip", "rar", "7z", "tar", "gz"]:
+        return {"icon_class": "bx bxs-file-archive", "icon_color": "#8e44ad"}  # purple
+    elif ext in ["txt", "md", "log"]:
+        return {"icon_class": "bx bxs-file-text", "icon_color": "#6b7280"}  # gray
+    else:
+        return {"icon_class": "bx bxs-file", "icon_color": "#757575"}  # grey
 
 def file_docs(request):
     records_per_page = int(request.GET.get('recordsPerPage', 20))
@@ -2344,9 +2387,11 @@ def file_docs(request):
     # Flatten to folders directly
     folder_rows = []
     for f in all_folders:
-        file_count = FileDoc.objects.filter(folder=f).count()
-        last_file = FileDoc.objects.filter(folder=f).order_by("-created_at").first()
-
+        # file_count = FileDoc.objects.filter(folder=f).count()
+        # last_file = FileDoc.objects.filter(folder=f).order_by("-created_at").first()
+        file_count = FileDoc.objects.filter(folder=f, subfolder__isnull=True).count()
+        last_file = FileDoc.objects.filter(folder=f, subfolder__isnull=True).order_by("-created_at").first()
+       
         folder_rows.append({
             "id": f.id,
             "name": f.name,
@@ -2355,6 +2400,7 @@ def file_docs(request):
             "project_name": f.project.project_name if f.project else "No Project",
             "file_count": file_count,
             "last_file_name": last_file.name if last_file else "No Files",
+            
         })
     # -----------------------------
     # SubFolder rows
@@ -2530,6 +2576,7 @@ def get_files(request):
             "name": f.name,
             "file_url": f.file.url if f.file else None,
             "created_at": f.created_at.strftime("%Y-%m-%d %H:%M"),
+            **get_icon_for_file(f)
         }
         for f in folder.files.filter(subfolder__isnull=True)
     ]
@@ -2544,6 +2591,7 @@ def get_files(request):
         for sf in folder.subfolders.all()
     ]
     print(files_data)
+
     return JsonResponse({
         "id": folder.id,
         "name": folder.name,
@@ -2567,6 +2615,7 @@ def get_subfolder_files(request):
             "name": f.name,
             "file_url": f.file.url if f.file else None,
             "created_at": f.created_at.strftime("%Y-%m-%d %H:%M"),
+            **get_icon_for_file(f)
         }
         for f in subfolder.files.all()
     ]
@@ -2647,6 +2696,46 @@ def view_subfolder(request, id):
     }
     return render(request, "view_subfolder.html", context)
 
+
+@csrf_exempt
+def rename_folder(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Invalid method"}, status=400)
+
+    data = json.loads(request.body)
+    folder_id = data.get("id")
+    new_name = data.get("name", "").strip()
+
+    if not folder_id or not new_name:
+        return JsonResponse({"success": False, "error": "Missing data"}, status=400)
+
+    try:
+        folder = Folder.objects.get(id=folder_id)
+        folder.name = new_name
+        folder.save()
+        return JsonResponse({"success": True})
+    except Folder.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Folder not found"}, status=404)
+
+@csrf_exempt
+def rename_subfolder(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Invalid method"}, status=400)
+
+    data = json.loads(request.body)
+    subfolder_id = data.get("id")
+    new_name = data.get("name", "").strip()
+
+    if not subfolder_id or not new_name:
+        return JsonResponse({"success": False, "error": "Missing data"}, status=400)
+
+    try:
+        subfolder = SubFolder.objects.get(id=subfolder_id)
+        subfolder.name = new_name
+        subfolder.save()
+        return JsonResponse({"success": True})
+    except SubFolder.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Subfolder not found"}, status=404)
 # -----------------------------
 # Payment View  
 # -----------------------------
@@ -2694,6 +2783,7 @@ def payment_list(request):
             "project": project,
             "methods": ", ".join(methods),
             "status": project.payment_status,
+            "remaining_amount":project.remaining_payment,
         })
     print(grouped_data)
     query = request.POST.get("q", "")
@@ -2725,6 +2815,7 @@ def payment_list(request):
         "bank_transfer_count": bank_transfer_count,
         "upi_count": upi_count,
         "cash_count": cash_count,
+        
         "search_action": reverse("client_list"),
         "search_placeholder": "Search clients...",
         "records_options": [20, 50, 100, 200, 300],
@@ -2837,14 +2928,14 @@ def get_payment(request):
         })
 
     approval_amount = float(project.approval_amount or 0)
-    remaining_amount = approval_amount - total_paid
+    # remaining_amount = approval_amount - total_paid
 
     data = {
         "project_id": project.project_id,
         "project_name": project.project_name,
         "approval_amount": approval_amount,
         "total_paid": total_paid,
-        "remaining_amount": remaining_amount,
+        "remaining_amount": project.remaining_payment if project.remaining_payment else '-',
         "payments": payments_data,
     }
     return JsonResponse({"success": True, "data": data})

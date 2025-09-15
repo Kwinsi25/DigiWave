@@ -148,9 +148,9 @@
             <thead>
               <tr>
                 <th data-sort="number">Sr No.</th>
-                <th data-sort="string">Domain Name</th>
                 <th data-sort="string">Project ID</th>
                 <th data-sort="string">Project Name</th>
+                <th data-sort="string">Domain Name</th>
 
                 <th data-sort="string">Left Days</th>
                 <th data-sort="string">Registrar</th>
@@ -161,10 +161,7 @@
               {% for domain in page_obj %}
               <tr>
                 <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
-                <td>
-                  <a href="#" class="fw-bold domain-link" data-domain-id="{{ domain.id }}">{{ domain.domain_name }}</a>
-                </td>
-                <!-- Projects -->
+                
                 <td>
                   {% if domain.project.exists %}
                   {% for p in domain.project.all %}
@@ -180,14 +177,18 @@
                   {% if domain.project.exists %}
                   {% for p in domain.project.all %}
 
-                  {{ p.project_name }}
+                  <a href="#" class="fw-bold domain-link" data-domain-id="{{ domain.id }}">{{ p.project_name }}</a>
                   <br>
                   {% endfor %}
                   {% else %}
                   <span class="text-muted">No Project</span>
                   {% endif %}
                 </td>
+                <!-- Projects -->
+                <td>
+                  <a href="https://{{ domain.domain_name }}" target="_blank">{{ domain.domain_name }}</a>
 
+                </td>
                 <td>
                   {% if domain.left_days is not None %}
                   {{ domain.left_days }} days
@@ -339,7 +340,7 @@
                 <td id="dd-expiry-date"></td>
               </tr>
               <tr>
-                <th>Renewal Status</th>
+                <th>Status</th>
                 <td><span id="dd-renewal-status" class="badge"></span></td>
                 <th>Auto Renewal</th>
                 <td><span id="dd-auto-renewal" class="badge"></span></td>
@@ -490,10 +491,10 @@
                       placeholder="Select expiry date"></td>
                 </tr>
                 <tr>
-                  <th>Renewal Status</th>
+                  <th>Status</th>
                   <td>
                     <select class="form-select" name="renewalStatus">
-                      <option value="">-- Select Renewal Status --</option>
+                      <option value="">-- Select Status --</option>
                       <option value="Active">Active</option>
                       <option value="Expired">Expired</option>
                       <option value="Pending">Pending</option>
@@ -717,10 +718,10 @@
 
                 <!-- Renewal Status & Auto Renewal -->
                 <tr>
-                  <th>Renewal Status</th>
+                  <th>Status</th>
                   <td>
                     <select class="form-select" id="edit-renewal-status" name="renewalStatus">
-                      <option value="">-- Select Renewal Status --</option>
+                      <option value="">-- Select Status --</option>
                       <option value="Active" {% if domain.renewal_status == 'Active' %}selected{% endif %}>Active</option>
                       <option value="Expired" {% if domain.renewal_status == 'Expired' %}selected{% endif %}>Expired
                       </option>
@@ -1041,24 +1042,36 @@
         }
 
         // ==================== Domain Details ====================
-        $("#dd-domain-name").text(d.domain_name || "-");
+        if (d.domain_name) {
+            $("#dd-domain-name").html(
+                `<a href="https://${d.domain_name}" target="_blank">${d.domain_name}</a>`
+            );
+        } else {
+            $("#dd-domain-name").text("-");
+        }
+
         $("#dd-sub-domain1").text(d.sub_domain1 || "-");
         $("#dd-sub-domain2").text(d.sub_domain2 || "-");
         $("#dd-registrar").text(d.registrar || "-");
         $("#dd-purchase-date").text(formatDate(d.purchase_date));
         $("#dd-expiry-date").text(formatDate(d.expiry_date));
 
-        $("#dd-renewal-status")
-          .removeClass()
-          .addClass(
-            "badge " +
-            (d.renewal_status === "Pending"
-              ? "bg-label-warning"
-              : d.renewal_status === "Active"
-                ? "bg-label-success"
-                : "bg-label-danger")
-          )
-          .text(d.renewal_status || "-");
+        $("#dd-renewal-status").removeClass(); // clear previous classes
+
+        if (d.renewal_status && d.renewal_status !== "-") {
+          $("#dd-renewal-status")
+            .addClass(
+              "badge " +
+              (d.renewal_status === "Pending"
+                ? "bg-label-warning"
+                : d.renewal_status === "Active"
+                  ? "bg-label-success"
+                  : "bg-label-danger")
+            )
+            .text(d.renewal_status);
+        } else {
+          $("#dd-renewal-status").text("-"); // no badge class
+        }
 
         $("#dd-auto-renewal")
           .removeClass()
@@ -1066,7 +1079,8 @@
           .text(d.auto_renewal ? "On" : "Off");
 
         // ==================== Payment Details ====================
-        $("#dd-domain-charge").text(d.domain_charge || "0.00");
+        console.log(d.domain_charge)
+        $("#dd-domain-charge").text(d.domain_charge || "-");
         $("#dd-payment-status")
           .removeClass()
           .addClass(
@@ -1083,40 +1097,43 @@
         $("#dd-payment-mode").text(d.payment_mode || "-");
 
         // Pretty print payment details
-        let paymentHtml = "-";
-        if (d.payment_details) {
-          const details = d.payment_details;
+// Pretty print payment details
+let paymentHtml = "-";
+if (d.payment_details) {
+  const details = d.payment_details;
 
-          if (d.payment_method === "Bank Transfer") {
-            paymentHtml = `
-          <table class="table table-sm table-bordered mb-0">
-            <tr><th>Bank Name</th><td>${details.bank_name || "-"}</td></tr>
-            <tr><th>Account No</th><td>${details.account_no || "-"}</td></tr>
-            <tr><th>IFSC Code</th><td>${details.ifsc_code || "-"}</td></tr>
-          </table>`;
-          } else if (d.payment_method === "UPI") {
-            paymentHtml = `
-          <table class="table table-sm table-bordered mb-0">
-            <tr><th>UPI ID</th><td>${details.upi_id || "-"}</td></tr>
-          </table>`;
-          } else if (d.payment_method === "Cheque") {
-            paymentHtml = `
-          <table class="table table-sm table-bordered mb-0">
-            <tr><th>Cheque No</th><td>${details.cheque_no || "-"}</td></tr>
-            <tr><th>Cheque Name</th><td>${details.cheque_name || "-"}</td></tr>
-          </table>`;
-          } else if (d.payment_method === "Other") {
-            paymentHtml = `
-          <table class="table table-sm table-bordered mb-0">
-            <tr><th>Description</th><td>${details.description || "-"}</td></tr>
-          </table>`;
-          } else if (d.payment_method === "Cash") {
-            paymentHtml = `<span class="badge bg-success">Cash Payment</span>`;
-          } else {
-            paymentHtml = `<pre>${JSON.stringify(details, null, 2)}</pre>`;
-          }
-        }
-        $("#dd-payment-details").html(paymentHtml);
+  if (d.payment_method === "Bank Transfer") {
+    paymentHtml = `
+      <div><strong>Bank Name:</strong> ${details.bank_name || "-"}</div>
+      <div><strong>Account No:</strong> ${details.account_no || "-"}</div>
+      <div><strong>IFSC Code:</strong> ${details.ifsc_code || "-"}</div>
+    `;
+  } else if (d.payment_method === "UPI") {
+    paymentHtml = `
+      <div><strong>UPI ID:</strong> ${details.upi_id || "-"}</div>
+    `;
+  } else if (d.payment_method === "Cheque") {
+    paymentHtml = `
+      <div><strong>Cheque No:</strong> ${details.cheque_no || "-"}</div>
+      <div><strong>Cheque Name:</strong> ${details.cheque_name || "-"}</div>
+    `;
+  } else if (d.payment_method === "Other") {
+    paymentHtml = `
+      <div><strong>Description:</strong> ${details.description || "-"}</div>
+    `;
+  } else if (d.payment_method === "Cash") {
+    paymentHtml = `<span class="badge bg-success">Cash Payment</span>`;
+  } else {
+    // ✅ Handle empty object gracefully
+    paymentHtml =
+      Object.keys(details).length > 0
+        ? `<pre>${JSON.stringify(details, null, 2)}</pre>`
+        : "-";
+  }
+}
+$("#dd-payment-details").html(paymentHtml);
+
+
 
         // ==================== Credentials & Security ====================
         $("#dd-credentials-user").text(d.credentials_user || "-");

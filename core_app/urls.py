@@ -75,6 +75,8 @@ urlpatterns = [
     path('delete_folder/<int:id>/', delete_folder, name='delete_folder'),
     path('folder/<int:id>/', view_folder, name='view_folder'),
     path('sub_folder/<int:id>/', view_subfolder, name='view_subfolder'),
+    path('rename_folder/', rename_folder, name='rename_folder'),
+    path('rename_subfolder/', rename_subfolder, name='rename_subfolder'),
 
 
     #payment

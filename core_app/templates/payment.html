@@ -174,7 +174,7 @@
                                 <th data-sort="string">Project ID</th>
                                 <th data-sort="string">Project Name</th>
                                 <th data-sort="string">Payment Status</th>
-
+                                <th data-sort="number">Remaining Amount</th>
                             </tr>
                         </thead>
                         <tbody class="table-border-bottom-0">
@@ -200,7 +200,13 @@
                                         <span class="badge bg-label-danger">Pending</span>
                                     {% endif %}
                                 </td>
-
+                                <td>
+                                    {% if row.status == "Advanced" %}
+                                        {{ row.remaining_amount|default:"-" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                    </td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -597,8 +603,13 @@ $(document).on("click", ".payment-link", function (e) {
             .addClass("text-success fw-bold");
 
         $("#pd-remaining-amount")
-            .text(project.remaining_amount === 0 ? "-" : `₹${project.remaining_amount}`)
-            .addClass("text-danger fw-bold");
+  .text(
+    project.remaining_amount === "-" || project.remaining_amount === null
+      ? "-" 
+      : `₹${project.remaining_amount}`
+  )
+  .addClass("text-danger fw-bold");
+
 
         // === Clear existing rows ===
         const tbody = $("#payment-details-body");

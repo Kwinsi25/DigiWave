@@ -133,7 +133,12 @@
                                     </a>
 
                                 </li>
-
+                                <li>
+                                    <a class="dropdown-item rename-folder-btn" href="javascript:void(0);"
+                                    data-folder-id="{{ folder.id }}">
+                                        Rename Folder
+                                    </a>
+                                </li>
                             </ul>
 
 
@@ -143,7 +148,7 @@
                                 background: linear-gradient(135deg, #fde68a, #f59e0b20);">
                                     <i class="bx bxs-folder" style="font-size:38px; color:#f59e0b;"></i>
                                 </div>
-
+                                
                                 <!-- Folder Name (only clickable element) -->
                                 <h6 class="mt-2 mb-1 text-truncate" style="max-width:100%;">
                                     <a href="javascript:void(0);"
@@ -477,6 +482,45 @@
 
 
 
+<!-- Rename Subfolder Modal -->
+<div class="modal fade" id="renameSubfolderModal" tabindex="-1" aria-labelledby="renameSubfolderLabel" aria-hidden="true"
+     data-bs-backdrop="false" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+            <div class="modal-header border-0">
+                <h5 class="modal-title w-100" id="renameSubfolderLabel">Rename Subfolder</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" id="renameSubfolderInput" placeholder="Enter new Subfolder name">
+            </div>
+            <div class="modal-footer justify-content-center border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmRenameSubfolderBtn">Rename</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rename Folder Modal -->
+<div class="modal fade" id="renameFolderModal" tabindex="-1" aria-labelledby="renameFolderLabel" aria-hidden="true"
+     data-bs-backdrop="false" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+            <div class="modal-header border-0">
+                <h5 class="modal-title w-100" id="renameFolderLabel">Rename Folder</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" id="renameFolderInput" placeholder="Enter new Folder name">
+            </div>
+            <div class="modal-footer justify-content-center border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmRenameFolderBtn">Rename</button>
+            </div>
+        </div>
+    </div>
+</div>
 
     </div>
 </div>
@@ -624,7 +668,11 @@
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><a class="dropdown-item delete-folder" href="#" data-folder-id="${sf.id}">Delete Folder</a></li>
-                    <!-- Add more actions here if needed -->
+                    <li>
+                        <a class="dropdown-item rename-subfolder-btn" href="#" data-subfolder-id="${sf.id}">
+                            Rename Subfolder
+                        </a>
+                    </li>
                 </ul>
             </div>
 
@@ -638,20 +686,65 @@
             </div>
 
             <!-- Folder Name (clickable) -->
-            <h6 class="mt-2 mb-1 text-truncate" style="max-width:100%;">
-                <a href="javascript:void(0);" class="text-decoration-none text-dark fw-semibold view-folder">
+            <h6 class="mt-2 mb-1 text-truncate text-dark fw-semibold" style="max-width:100%;cursor:pointer;">
+                
                     ${sf.name}
-                </a>
+                
             </h6>
 
             <!-- Created Date -->
             <small class="text-muted d-block">${sf.created_at}</small>
         </div>
     `;
+folderCard.querySelector(".rename-subfolder-btn")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const subfolderId = folderCard.querySelector(".rename-subfolder-btn").getAttribute("data-subfolder-id");
+
+    const modal = new bootstrap.Modal(document.getElementById("renameSubfolderModal"));
+    document.getElementById("renameSubfolderInput").value = "";
+    modal.show();
+    window.currentSubfolderId = subfolderId;
+});
+// Confirm rename
+document.getElementById("confirmRenameSubfolderBtn").addEventListener("click", () => {
+    const newName = document.getElementById("renameSubfolderInput").value.trim();
+    if (!newName || !currentSubfolderId) return;
+
+    fetch(`/rename_subfolder/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({ id: currentSubfolderId, name: newName })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast("Subfolder renamed successfully", "success");
+
+            // Update name in DOM
+            const subfolderCard = document.querySelector(`.rename-subfolder-btn[data-subfolder-id="${currentSubfolderId}"]`)
+                                    .closest(".folder-card");
+            subfolderCard.querySelector("h6").textContent = newName;
+
+            // Hide modal
+            bootstrap.Modal.getInstance(document.getElementById("renameSubfolderModal")).hide();
+        } else {
+            showToast(data.error || "Error renaming subfolder", "danger");
+        }
+    })
+    .catch(() => showToast("Error renaming subfolder", "danger"));
+});
 
                     // Folder click
-                    folderCard.querySelector(".view-folder").addEventListener("click", () => openSubfolderModal(sf.id));
-
+                    // folderCard.querySelector(".view-folder").addEventListener("click", () => openSubfolderModal(sf.id));
+                    // Click entire card to open subfolder
+                    folderCard.addEventListener("click", (e) => {
+                        // Prevent click if clicked on dropdown menu
+                        if (e.target.closest(".dropdown")) return;
+                        openSubfolderModal(sf.id);
+                    });
                     // Subfolder delete button
                     folderCard.querySelector(".delete-folder")?.addEventListener("click", (e) => {
                         e.stopPropagation();
@@ -667,15 +760,17 @@
                     fileCard.className = "card file-card m-2 position-relative";
                     fileCard.style.width = "120px";
 
-                    const fileExt = f.name.split('.').pop().toLowerCase();
-                    let iconClass = "bx bx-file";
-                    let iconColor = "#6b7280"; // default gray
+                    // const fileExt = f.name.split('.').pop().toLowerCase();
+                    // let iconClass = "bx bx-file";
+                    // let iconColor = "#6b7280"; // default gray
 
-                    if (["jpg", "jpeg", "png", "gif", "webp"].includes(fileExt)) iconClass = "bx bxs-image";
-                    else if (fileExt === "pdf") iconClass = "bx bxs-file-pdf";
-                    else if (["mp4", "webm"].includes(fileExt)) iconClass = "bx bxs-video";
-                    else if (["mp3", "wav"].includes(fileExt)) iconClass = "bx bxs-music";
-
+                    // if (["jpg", "jpeg", "png", "gif", "webp"].includes(fileExt)) iconClass = "bx bxs-image";
+                    // else if (fileExt === "pdf") iconClass = "bx bxs-file-pdf";
+                    // else if (["mp4", "webm"].includes(fileExt)) iconClass = "bx bxs-video";
+                    // else if (["mp3", "wav"].includes(fileExt)) iconClass = "bx bxs-music";
+                      // Use backend-provided icon info
+    const iconClass = f.icon_class || "bx bx-file";
+    const iconColor = f.icon_color || "#6b7280"; // fallback gray
                     fileCard.innerHTML = `
         <div class="card-body p-3 position-relative">
             <!-- Three-dot menu -->
@@ -708,7 +803,7 @@
             <small class="text-muted d-block">${f.created_at}</small>
         </div>
     `;
-
+            
                     fileCard.querySelector(".view-file").addEventListener("click", () => openFilePreview(f));
                     // File delete button
                     fileCard.querySelector(".delete-file")?.addEventListener("click", (e) => {
@@ -750,7 +845,12 @@
             previewHtml = `<video controls class="w-100"><source src="${fileUrl}" type="video/${fileExt}"></video>`;
         } else if (["mp3", "wav"].includes(fileExt)) {
             previewHtml = `<audio controls class="w-100"><source src="${fileUrl}" type="audio/${fileExt}"></audio>`;
-        } else {
+        } else if (["doc", "docx", "xls", "xlsx", "ppt", "pptx"].includes(fileExt)) {
+    const encodedUrl = encodeURIComponent(fileUrl);
+    previewHtml = `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}" 
+        width="100%" height="600px" style="border:none;"></iframe>`;
+}
+else {
             previewHtml = `<p class="text-muted">Preview not supported. <a href="${fileUrl}" target="_blank">Download</a></p>`;
         }
 
@@ -795,7 +895,9 @@
                         const fileDiv = document.createElement("div");
                         fileDiv.className = "file-card text-center p-2 border rounded position-relative";
                         fileDiv.style.width = "100px";
-
+                        // Use backend-provided icon_class and icon_color
+        const iconClass = f.icon_class || "bx bx-file";
+        const iconColor = f.icon_color || "#6b7280"; // fallback gray
                         fileDiv.innerHTML = `
         <!-- Three-dot menu -->
         <div class="dropdown position-absolute top-0 end-0 m-1">
@@ -810,7 +912,10 @@
         </div>
 
         <!-- File icon & name -->
-        <i class="bx bx-file fs-1 text-secondary file-preview-icon"></i>
+        <div class="d-flex justify-content-center align-items-center mb-2" style="width:75px; height:75px; border-radius:50%; background:#f3f4f6;">
+                <i class="${iconClass} file-preview-icon" style="font-size:38px; color:${iconColor};"></i>
+            </div>
+        
         <p class="mb-0 fw-bold text-truncate file-preview-name">${f.name}</p>
     `;
 
@@ -896,6 +1001,57 @@
             showToast("Link copied ", "success");
         });
     });
+
+    // rename folder
+    let currentFolderId = null;
+
+// Open modal when rename button clicked
+document.querySelectorAll(".rename-folder-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+        e.stopPropagation(); // prevent card click
+        currentFolderId = btn.getAttribute("data-folder-id");
+
+        const modal = new bootstrap.Modal(document.getElementById("renameFolderModal"));
+        document.getElementById("renameFolderInput").value = ""; // clear input
+        modal.show();
+    });
+});
+
+// Confirm rename
+document.getElementById("confirmRenameFolderBtn").addEventListener("click", () => {
+    const newName = document.getElementById("renameFolderInput").value.trim();
+    if (!newName || !currentFolderId) return;
+
+    fetch(`/rename_folder/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken") // CSRF token function needed
+        },
+        body: JSON.stringify({ id: currentFolderId, name: newName })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast("Folder renamed successfully", "success");
+
+            // Update name in DOM
+            const folderCard = document.querySelector(`.rename-folder-btn[data-folder-id="${currentFolderId}"]`)
+                                    .closest(".folder-card");
+            folderCard.querySelector("h6").textContent = newName;
+
+            // Hide modal
+            bootstrap.Modal.getInstance(document.getElementById("renameFolderModal")).hide();
+
+            // Optional: reload page
+            // location.reload();
+        } else {
+            showToast(data.error || "Error renaming folder", "danger");
+        }
+    })
+    .catch(() => showToast("Error renaming folder", "danger"));
+});
+
 
 
     // folder selcetion
@@ -1155,7 +1311,7 @@
                         if (index === cells.length - 1) return; // skip last column
                         let original = td.getAttribute("data-original") || td.innerText;
                         td.innerHTML = original;
-                        location.reload();
+                        
                     });
                 } else {
                     row.style.display = "none";

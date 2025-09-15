@@ -406,6 +406,7 @@
             <th>Server</th>
             <th>Third Party API</th>
             <th>Mediator</th>
+            <th>Domain</th>
         </tr>
     </thead>
     <tbody>
@@ -508,6 +509,7 @@ $("#expense-values-row").html(`
     <td class="text-danger fw-bold">${project.expenses.Server > 0 ? `₹${project.expenses.Server}` : '-'}</td>
     <td class="text-danger fw-bold">${project.expenses["Third Party API"] > 0 ? `₹${project.expenses["Third Party API"]}` : '-'}</td>
     <td class="text-danger fw-bold">${project.expenses.Mediator > 0 ? `₹${project.expenses.Mediator}` : '-'}</td>
+    <td class="text-danger fw-bold">${project.expenses.Domain > 0 ? `₹${project.expenses.Domain}` : '-'}</td>
 `);
 
 

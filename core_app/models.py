@@ -285,6 +285,7 @@ class Project(models.Model):
     other_expense = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     developer_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     server_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    domain_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     third_party_api_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     mediator_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True) 
     profit_loss = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
