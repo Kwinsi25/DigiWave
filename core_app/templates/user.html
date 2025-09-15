@@ -1012,7 +1012,8 @@ if (data.employee_type && data.employee_type.toLowerCase() === "salary") {
                                                 <tr>
                                                     <th>Designations</th>
                                                     <td>
-                                                        <select name="designations" class="form-control" multiple>
+                                                        <select name="designations" class="form-control tom-select" multiple>
+                                                            <option value="">Search designations</option>
                                                             {% for des in designations %}
                                                             <option value="{{ des.id }}">{{ des.title }}</option>
                                                             {% endfor %}
@@ -1022,7 +1023,8 @@ if (data.employee_type && data.employee_type.toLowerCase() === "salary") {
                                                     </td>
                                                     <th>Technologies</th>
                                                     <td>
-                                                        <select name="technologies" class="form-control" multiple>
+                                                        <select name="technologies" class="form-control tom-select" multiple>
+                                                            <option value="">Search technologies</option>
                                                             {% for tech in technologies %}
                                                             <option value="{{ tech.id }}">{{ tech.name }}</option>
                                                             {% endfor %}
@@ -1400,8 +1402,9 @@ if (data.employee_type && data.employee_type.toLowerCase() === "salary") {
                                                 <tr>
                                                     <th>Designations</th>
                                                     <td>
-                                                        <select name="designations" class="form-control"
+                                                        <select name="designations" class="form-control tom-select"
                                                             id="edit-designations" multiple>
+                                                            <option value="">Search designations</option>
                                                             {% for des in designations %}
                                                             <option value="{{ des.id }}">{{ des.title }}</option>
                                                             {% endfor %}
@@ -1411,8 +1414,9 @@ if (data.employee_type && data.employee_type.toLowerCase() === "salary") {
                                                     </td>
                                                     <th>Technologies</th>
                                                     <td>
-                                                        <select name="technologies" class="form-control"
+                                                        <select name="technologies" class="form-control tom-select"
                                                             id="edit-technologies" multiple>
+                                                            <option value="">Search technologies</option>
                                                             {% for tech in technologies %}
                                                             <option value="{{ tech.id }}">{{ tech.name }}</option>
                                                             {% endfor %}
@@ -1551,6 +1555,8 @@ if (data.employee_type && data.employee_type.toLowerCase() === "salary") {
 
 <!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
          // searching
@@ -1559,7 +1565,18 @@ if (data.employee_type && data.employee_type.toLowerCase() === "salary") {
     
     enableTableSorting("UserTable");
    
-
+        // dropdown with search
+        document.querySelectorAll(".tom-select").forEach(function(el) {
+                new TomSelect(el, {
+                    create: false,
+                     plugins: ['remove_button'], // add X remove button
+                    sortField: {
+                        field: "text",
+                        direction: "asc"
+                    }
+                });
+                
+    });
         // calander
         flatpickr(".flat-date", {
             dateFormat: "Y-m-d",
@@ -1910,11 +1927,12 @@ addAmountForm.addEventListener("submit", e => {
                     editLastDate.setDate(res.last_date, true);
                     // Multi-select fields
                     let designationIds = res.designations.map(d => d.id);
-                    $("#edit-designations").val(designationIds).trigger("change");
+                    // $("#edit-designations").val(designationIds).trigger("change");
+                    document.getElementById("edit-designations").tomselect.setValue(designationIds);
 
                     let technologyIds = res.technologies.map(t => t.id);
-                    $("#edit-technologies").val(technologyIds).trigger("change");
-
+                    // $("#edit-technologies").val(technologyIds).trigger("change");
+                    document.getElementById("edit-technologies").tomselect.setValue(technologyIds);
                     // Contact Details
                     $("#edit-current-address").val(res.current_address);
                     $("#edit-permanent-address").val(res.permanent_address);

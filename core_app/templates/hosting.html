@@ -501,7 +501,8 @@
                                     <tr>
                                         <th>Project(s)</th>
                                         <td colspan="3">
-                                            <select class="form-select" name="project" id="add-project" multiple>
+                                            <select class="form-control tom-select" name="project" id="add-project" multiple>
+                                                <option value="">Search projects</option>
                                                 {% for project in projects %}
                                                 <option value="{{ project.id }}">{{ project.project_name }}</option>
                                                 {% endfor %}
@@ -736,7 +737,8 @@
                                     <tr>
                                         <th>Project(s)</th>
                                         <td colspan="3">
-                                            <select class="form-select" name="project" id="edit-project" multiple>
+                                            <select class="form-control tom-select" name="project" id="edit-project" multiple>
+                                                <option value="">Search projects</option>
                                                 {% for project in projects %}
                                                 <option value="{{ project.id }}">{{ project.project_name }}</option>
                                                 {% endfor %}
@@ -980,6 +982,7 @@
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="{% static 'js/common.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
@@ -989,6 +992,18 @@
 
         enableTableSorting("hostTable");
 
+        // dropdown with search
+         document.querySelectorAll(".tom-select").forEach(function(el) {
+                new TomSelect(el, {
+                    create: false,
+                     plugins: ['remove_button'], // add X remove button
+                    sortField: {
+                        field: "text",
+                        direction: "asc"
+                    }
+                });
+                
+    });
         $(document).ready(function () {
             const hostDetailsUrl = "{% url 'get_host_details' %}";
 
@@ -1138,7 +1153,8 @@
                     // If backend returned multiple projects
                     if (h.projects && h.projects.length > 0) {
                         const ids = h.projects.map(p => p.id.toString());
-                        $("#edit-project").val(ids).trigger("change");  // works with normal select or select2
+                        // $("#edit-project").val(ids).trigger("change");  
+                        document.getElementById("edit-project").tomselect.setValue(ids);
                     }
 
                     $("#edit-server-name").val(h.server_name || '');

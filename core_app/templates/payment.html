@@ -349,8 +349,8 @@
                 <tr>
                   <th>Project</th>
                   <td colspan="3">
-                    <select class="form-select" name="project">
-                      <option value="">-- Select Project --</option>
+                    <select class="form-control tom-select" name="project">
+                      <option value="">Search project</option>
                       {% for project in projects %}
                         <option value="{{ project.id }}">{{ project.project_name }}</option>
                       {% endfor %}
@@ -543,6 +543,7 @@
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="{% static 'js/common.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
@@ -551,7 +552,17 @@
     // sorting
     
     enableTableSorting("paymentTable");
-   
+   // dropdown with search
+      document.querySelectorAll(".tom-select").forEach(function(el) {
+                new TomSelect(el, {
+                    create: false,
+                    sortField: {
+                        field: "text",
+                        direction: "asc"
+                    }
+                });
+                
+    });
 
 
         // Payment Modal Dynamic Fields

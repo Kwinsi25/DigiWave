@@ -351,8 +351,8 @@
                                             </td>
                                             <th>Prepared By</th>
                                             <td>
-                                                <select class="form-select" name="prepared_by">
-                                                    <option value="">-- Select User --</option>
+                                                <select class="form-control tom-select" name="prepared_by">
+                                                    <option value="">Search Employee</option>
                                                     {% for u in users %}
                                                     <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }}
                                                     </option>
@@ -645,7 +645,7 @@
                                             </td>
                                             <th>Prepared By</th>
                                             <td>
-                                                <select class="form-select" id="prepared_by" name="prepared_by">
+                                                <select class="form-control tom-select" id="prepared_by" name="prepared_by">
                                                     <option value="">-- Select User --</option>
                                                     {% for u in users %}
                                                     <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }}
@@ -1053,6 +1053,7 @@
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="{% static 'js/common.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
          // searching
@@ -1060,8 +1061,17 @@
     // sorting
     
     enableTableSorting("quotationTable");
-   
-      
+        // dropdown with search
+      document.querySelectorAll(".tom-select").forEach(function(el) {
+                new TomSelect(el, {
+                    create: false,
+                    sortField: {
+                        field: "text",
+                        direction: "asc"
+                    }
+                });
+                
+    });
         // --- Dynamic Service Rows in Create Quotation ---
         const addBtn = document.getElementById("addServiceRow");
         const tableBody = addBtn.closest("tbody"); // tbody containing rows
@@ -1266,12 +1276,12 @@
                 document.getElementById("company_email").value = data.company_email;
                 document.getElementById("company_address").value = data.company_address;
                 // Set Prepared By dropdown
-                if (data.prepared_by && data.prepared_by.id) {
-                    document.getElementById("prepared_by").value = String(data.prepared_by.id);
-                } else {
-                    document.getElementById("prepared_by").value = "";
-                    }
-
+                // if (data.prepared_by && data.prepared_by.id) {
+                //     document.getElementById("prepared_by").value = String(data.prepared_by.id);
+                // } else {
+                //     document.getElementById("prepared_by").value = "";
+                //     }
+                document.getElementById("prepared_by").tomselect.setValue(data.prepared_by.id ? data.prepared_by.id.toString() : "");
 
                 document.getElementById("client_name").value = data.client_name;
                 document.getElementById("client_contact").value = data.client_contact;

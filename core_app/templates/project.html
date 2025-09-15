@@ -414,8 +414,9 @@
                                     <tr>
                                         <th>Quotation</th>
                                         <td colspan="3">
-                                            <select  name="quotation" id="quotationSelect" class="form-control select2">
-                                                <option value="">-- Select Quotation --</option>
+                                            
+                                            <select class="form-control tom-select"  name="quotation" id="quotationSelect">
+                                                <option value="">Search quotation</option>
                                                 {% for q in quotations %}
                                                 <option value="{{ q.id }}">{{ q.quotation_no }} - {{ q.client_name }}
                                                 </option>
@@ -545,7 +546,8 @@
                                     <tr>
                                         <th>Technologies</th>
                                         <td>
-                                            <select class="form-select" name="technologies" multiple>
+                                            <select class="form-control tom-select" name="technologies" multiple>
+                                                <option value="">Search technologies</option>
                                                 {% for tech in technologies %}
                                                 <option value="{{ tech.id }}">{{ tech.name }}</option>
                                                 {% endfor %}
@@ -556,7 +558,8 @@
                                         </td>
                                         <th>App Mode</th>
                                         <td>
-                                            <select class="form-select" name="app_mode" multiple>
+                                            <select class="form-control tom-select" name="app_mode" multiple>
+                                                <option value="">Search Apps</option>
                                                 {% for mode in app_modes %}
                                                 <option value="{{ mode.id }}">{{ mode.name }}</option>
                                                 {% endfor %}
@@ -580,7 +583,8 @@
                                         </td>
                                         <th>Team Members</th>
                                         <td>
-                                            <select class="form-select" name="team_members" multiple>
+                                            <select class="form-control tom-select" name="team_members" multiple>
+                                                <option value="">Search employee</option>
                                                 {% for user in users %}
                                                 <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}
                                                 </option>
@@ -941,7 +945,7 @@
                                     <tr>
                                         <th>Quotation</th>
                                         <td colspan="3">
-                                            <select class="form-select" name="quotation" id="edit-quotation">
+                                            <select class="form-control tom-select" name="quotation" id="edit-quotation">
                                                 <option value="">-- Select Quotation --</option>
                                                 {% for q in quotations %}
                                                 <option value="{{ q.id }}">{{ q.quotation_no }} - {{ q.client_name }}
@@ -1043,7 +1047,7 @@
                                     <tr>
                                         <th>Technologies</th>
                                         <td>
-                                            <select class="form-select" name="technologies" id="edit-technologies"
+                                            <select class="form-control tom-select" name="technologies" id="edit-technologies"
                                                 multiple>
 
                                                 {% for tech in technologies %}
@@ -1055,7 +1059,7 @@
                                         <th>App Mode</th>
                                         <td>
 
-                                            <select class="form-select" name="app_mode" id="edit-app-mode" multiple>
+                                            <select class="form-control tom-select" name="app_mode" id="edit-app-mode" multiple>
 
                                                 {% for mode in app_modes %}
                                                 <option value="{{ mode.id }}">{{ mode.name }}</option>
@@ -1077,7 +1081,7 @@
                                         </td>
                                         <th>Team Members</th>
                                         <td>
-                                            <select class="form-select" name="team_members" id="edit-team-members"
+                                            <select class="form-control tom-select" name="team_members" id="edit-team-members"
                                                 multiple>
                                                 {% for user in users %}
                                                 <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}
@@ -1277,11 +1281,23 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="{% static 'js/common.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        
+            document.querySelectorAll(".tom-select").forEach(function(el) {
+                new TomSelect(el, {
+                    create: false,
+                     plugins: ['remove_button'], // add X remove button
+                    sortField: {
+                        field: "text",
+                        direction: "asc"
+                    }
+                });
+                
+    });
+  
         // searhing
         enableTableSearch("searchBox", "projectTable");
         // sorting
@@ -1704,7 +1720,10 @@
                 // Set form action to numeric id URL (update_project/<int:id>/)
                 $("#editProjectForm").attr("action", `/update_project/${p.id}/`);
                 // Quotation
-                $("#edit-quotation").val(p.quotation_id ? p.quotation_id.toString() : "");
+                // $("#edit-quotation").val(p.quotation_id ? p.quotation_id.toString() : "");
+                document.getElementById("edit-quotation").tomselect.setValue(p.quotation_id ? p.quotation_id.toString() : "");
+
+
                 // set hidden ID field
                 $("#edit-project-id").val(p.id);
                 // populate fields in edit modal
@@ -1746,10 +1765,13 @@
                 // For multi-select team members use the numeric ids returned
                 // $("#edit-team-members").val(p.team_members_ids || []);
                 // $("#edit-technologies").val(p.technologies_ids);
-                $("#edit-technologies").val(p.technologies_ids.map(id => id.toString()));
-                $("#edit-team-members").val(p.team_members_ids.map(id => id.toString()));
+                // $("#edit-technologies").val(p.technologies_ids.map(id => id.toString()));
+                document.getElementById("edit-technologies").tomselect.setValue(p.technologies_ids.map(id => id.toString()));
+                // $("#edit-team-members").val(p.team_members_ids.map(id => id.toString()));
+                document.getElementById("edit-team-members").tomselect.setValue(p.team_members_ids.map(id => id.toString()));
                 // App Mode
-                $("#edit-app-mode").val(p.app_modes_ids.map(id => id.toString()));
+                // $("#edit-app-mode").val(p.app_modes_ids.map(id => id.toString()));
+                document.getElementById("edit-app-mode").tomselect.setValue(p.app_modes_ids.map(id => id.toString()));
                 // If project has a quotation → lock quotation fields
                 if (p.quotation_id) {
                     if ($("#edit-inquiry-date")[0]._flatpickr) {

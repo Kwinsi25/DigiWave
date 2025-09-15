@@ -448,7 +448,8 @@
                 <tr>
                   <th>Associated Projects</th>
                   <td colspan="3">
-                    <select class="form-select" name="projects" multiple>
+                    <select class="form-control tom-select" name="projects" multiple>
+                      <option value="">Search projects</option>
                       {% for project in projects %}
                       <option value="{{ project.id }}">{{ project.project_name }}</option>
                       {% endfor %}
@@ -671,7 +672,8 @@
                 <tr>
                   <th>Associated Projects</th>
                   <td colspan="3">
-                    <select class="form-select" name="projects" id="edit-projects" multiple>
+                    <select class="form-control tom-select" name="projects" id="edit-projects" multiple>
+                      <option value="">Search projects</option>
                       {% for project in projects %}
                       <option value="{{ project.id }}" {% if project.id in assigned_project_ids %}selected{% endif %}>
                         {{ project.project_name }}
@@ -910,6 +912,7 @@
 {% block extra_js %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="{% static 'js/common.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 <script>
   // Reusable Flatpickr with Year Dropdown (no arrows)
   function initFlatpickrWithYearDropdown(selector, defaultDate = null) {
@@ -964,7 +967,18 @@
     // sorting
 
     enableTableSorting("domainTable");
-
+    // dropdown with search
+         document.querySelectorAll(".tom-select").forEach(function(el) {
+                new TomSelect(el, {
+                    create: false,
+                     plugins: ['remove_button'], // add X remove button
+                    sortField: {
+                        field: "text",
+                        direction: "asc"
+                    }
+                });
+                
+    });
 
     document.getElementById("domainDataForm").addEventListener("submit", function (e) {
       e.preventDefault();
@@ -1219,10 +1233,12 @@ $("#dd-payment-details").html(paymentHtml);
         // Projects multi-select
         $("#edit-projects option").prop("selected", false);
         if (d.projects && d.projects.length > 0) {
-          d.projects.forEach(p => {
-            $(`#edit-projects option[value='${p.id}']`).prop("selected", true);
-          });
-        }
+    const ids = d.projects.map(p => p.id.toString()); // convert to strings
+    document.getElementById("edit-projects").tomselect.setValue(ids);
+} else {
+    document.getElementById("edit-projects").tomselect.clear();
+}
+
 
         // Show dynamic payment fields
         $(".edit-payment-extra").addClass("d-none");
