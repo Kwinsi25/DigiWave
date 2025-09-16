@@ -2390,6 +2390,11 @@ def file_docs(request):
         # file_count = FileDoc.objects.filter(folder=f).count()
         # last_file = FileDoc.objects.filter(folder=f).order_by("-created_at").first()
         file_count = FileDoc.objects.filter(folder=f, subfolder__isnull=True).count()
+        # Count subfolders inside this folder
+        subfolder_count = SubFolder.objects.filter(folder=f).count()
+
+        # Total = files + subfolders
+        total_count = file_count + subfolder_count
         last_file = FileDoc.objects.filter(folder=f, subfolder__isnull=True).order_by("-created_at").first()
        
         folder_rows.append({
@@ -2398,7 +2403,7 @@ def file_docs(request):
             "created_at": f.created_at,
             "project_id": f.project.project_id if f.project else "-",
             "project_name": f.project.project_name if f.project else "No Project",
-            "file_count": file_count,
+            "file_count": total_count,
             "last_file_name": last_file.name if last_file else "No Files",
             
         })

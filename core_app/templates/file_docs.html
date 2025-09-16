@@ -699,9 +699,11 @@
 folderCard.querySelector(".rename-subfolder-btn")?.addEventListener("click", (e) => {
     e.stopPropagation();
     const subfolderId = folderCard.querySelector(".rename-subfolder-btn").getAttribute("data-subfolder-id");
+    // Get current subfolder name from the card
+    const currentName = folderCard.querySelector("h6").textContent.trim();
 
     const modal = new bootstrap.Modal(document.getElementById("renameSubfolderModal"));
-    document.getElementById("renameSubfolderInput").value = "";
+     document.getElementById("renameSubfolderInput").value = currentName;
     modal.show();
     window.currentSubfolderId = subfolderId;
 });
@@ -1010,10 +1012,12 @@ document.querySelectorAll(".rename-folder-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
         e.stopPropagation(); // prevent card click
         currentFolderId = btn.getAttribute("data-folder-id");
-
+        // Get current folder name from the card
+        const currentName = btn.closest(".folder-card").querySelector("h6").textContent.trim();
         const modal = new bootstrap.Modal(document.getElementById("renameFolderModal"));
-        document.getElementById("renameFolderInput").value = ""; // clear input
+        document.getElementById("renameFolderInput").value = currentName; // clear input
         modal.show();
+  
     });
 });
 
