@@ -24,6 +24,16 @@ from playwright.async_api import async_playwright
 from django.template.loader import render_to_string
 from dateutil.relativedelta import relativedelta
 from collections import OrderedDict
+import os
+import subprocess
+from django.conf import settings
+import json
+from decimal import Decimal, InvalidOperation
+from datetime import datetime
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.core.exceptions import ValidationError
+
 
 def parse_date(val):
     try:
@@ -2526,6 +2536,7 @@ def create_subfolder(request):
 
     return JsonResponse({"success": False, "error": "Invalid request method."})
 
+
 def add_file(request):
     if request.method == "POST":
         try:
@@ -2552,15 +2563,15 @@ def add_file(request):
                     return JsonResponse({"success": False, "error": "Invalid subfolder for selected folder"})
             if not files:
                 return JsonResponse({"success": False, "error": "No files provided"})
-
+           
             for f in files:
-                FileDoc.objects.create(
+                file_obj = FileDoc.objects.create(
                     name=f.name,
                     folder=folder,
                     subfolder=subfolder,
                     file=f
                 )
-
+                
             return JsonResponse({"success": True, "folder_id": folder.id})
 
         except Exception as e:
@@ -2741,6 +2752,7 @@ def rename_subfolder(request):
         return JsonResponse({"success": True})
     except SubFolder.DoesNotExist:
         return JsonResponse({"success": False, "error": "Subfolder not found"}, status=404)
+
 # -----------------------------
 # Payment View  
 # -----------------------------
@@ -2945,7 +2957,332 @@ def get_payment(request):
     }
     return JsonResponse({"success": True, "data": data})
 
+def get_developer_projects(request):
+    developer_id = request.GET.get("developer_id")
+    if developer_id:
+        try:
+            developer = User.objects.get(id=developer_id)
+            projects = list(developer.projects.values("id", "project_name"))
+            print(projects)
+            return JsonResponse({"projects": projects})
+        except User.DoesNotExist:
+            return JsonResponse({"projects": []})
+    return JsonResponse({"projects": []})
 
+
+def developer_payment_list(request):
+
+    records_per_page = int(request.GET.get('recordsPerPage', 20))
+
+    try:
+        page_number = int(request.GET.get('page', 1))
+    except ValueError:
+        page_number = 1
+    if page_number < 1:
+        page_number = 1
+
+    # All projects for dropdown
+    projects = Project.objects.order_by('id').all()
+
+    # All active users (team members) for dropdown for payment by
+    users = (
+        User.objects.filter(is_active=True)
+        .annotate(latest_payment=Max('payments__payment_date'))  # 👈 add latest payment
+        .order_by('-latest_payment')  # 👈 newest payment first
+    )
+
+
+    grouped_data = []
+    for dev in users:
+        # Get all projects for which this developer has payments
+        projects = Project.objects.filter(developer_payments__developer=dev).distinct()
+
+        # Total payment by summing DeveloperPayment.amount
+        total_payment = DeveloperPayment.objects.filter(developer=dev).aggregate(total=Sum('amount'))['total'] or 0
+
+        grouped_data.append({
+            "developer": dev,
+            "projects": projects,        # queryset of projects
+            "total_payment": total_payment
+        })
+
+    # Manual pagination
+    paginator = Paginator(grouped_data, records_per_page)
+    page_obj = paginator.get_page(page_number)
+     # Overall counts
+    total_payments = DeveloperPayment.objects.count()
+    bank_transfer_count = DeveloperPayment.objects.filter(payment_method="Bank Transfer").count()
+    upi_count = DeveloperPayment.objects.filter(payment_method="UPI").count()
+    cash_count = DeveloperPayment.objects.filter(payment_method="Cash").count()
+    print(total_payments)   
+    context = {
+        "page_obj": page_obj,
+        "records_per_page": records_per_page,
+        "projects":projects,
+        "users": users,
+        # "search_action": reverse("client_list"),
+        # "search_placeholder": "Search clients...",
+        "total_payments": total_payments,
+        "bank_transfer_count": bank_transfer_count,
+        "upi_count": upi_count,
+        "cash_count": cash_count,
+        "records_options": [20, 50, 100, 200, 300],
+    }
+    return render(request, "developer_payment.html", context)
+
+
+def add_developer_payment(request):
+    if request.method == "POST":
+        try:
+            project_id = request.POST.get("project")
+            developer_id = request.POST.get("developer")
+            payment_by_id = request.POST.get("payment_by")
+            amount = request.POST.get("amount")
+            payment_date = request.POST.get("payment_date")
+            payment_method = request.POST.get("payment_method")
+            description = request.POST.get("description")
+
+            # Validate related objects
+            project = get_object_or_404(Project, pk=project_id)
+            developer = get_object_or_404(User, pk=developer_id)
+            payment_by = User.objects.filter(pk=payment_by_id).first() if payment_by_id else None
+
+            # Prepare dynamic payment details
+            payment_details = {}
+            if payment_method == "Bank Transfer":
+                payment_details = {
+                    "bank_name": request.POST.get("bank_name"),
+                    # "account_no": request.POST.get("account_no"),
+                    # "ifsc_code": request.POST.get("ifsc_code"),
+                }
+            elif payment_method == "UPI":
+                payment_details = {
+                    "upi_id": request.POST.get("upi_id")
+                }
+            elif payment_method == "Cheque":
+                payment_details = {
+                    "cheque_no": request.POST.get("cheque_no"),
+                    "cheque_name": request.POST.get("cheque_name")
+                }
+            elif payment_method == "Other":
+                payment_details = {
+                    "other_details": request.POST.get("other_details")
+                }
+
+            # Convert payment_date to Python date
+            payment_date_obj = None
+            if payment_date:
+                try:
+                    payment_date_obj = datetime.strptime(payment_date, "%Y-%m-%d").date()
+                except ValueError:
+                    raise ValidationError({"payment_date": "Invalid date format. Use YYYY-MM-DD."})
+
+            # Create DeveloperPayment instance
+            payment = DeveloperPayment(
+                project=project,
+                developer=developer,
+                payment_by=payment_by,
+                amount=amount,
+                payment_date=payment_date_obj,
+                payment_method=payment_method,
+                payment_details=payment_details,
+                description=description
+            )
+
+            # Validate & save
+            payment.full_clean()
+            payment.save()
+
+            # Return JSON if AJAX
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": True, "message": "Developer payment added successfully!"})
+
+            # Normal request
+            messages.success(request, "Developer payment added successfully!")
+            return redirect("developer_payment_list")
+
+        except ValidationError as ve:
+            errors = ve.message_dict
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "errors": errors}, status=400)
+            
+            for field, errs in errors.items():
+                for err in errs:
+                    messages.error(request, f"{field}: {err}")
+            return redirect("developer_payment_list")
+
+        except Exception as e:
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
+            messages.error(request, f"Error: {str(e)}")
+            return redirect("developer_payment_list")
+
+    return redirect("developer_payment_list")
+
+
+def developer_project_payments(request):
+    developer_id = request.GET.get("developer_id")
+    developer = User.objects.get(id=developer_id)
+
+    # Get all projects of the developer
+    projects = Project.objects.filter(team_members=developer)
+    projects_data = []
+
+    total_amount = 0  # track total across all projects
+
+    for project in projects:
+        # Only get payments for this developer
+        payments_qs = DeveloperPayment.objects.filter(project=project, developer=developer).order_by('-created_at')
+
+        # Skip projects with no payments
+        if not payments_qs.exists():
+            continue
+
+        payments = []
+        project_total = 0
+
+        for p in payments_qs:
+            amount = float(p.amount)
+            project_total += amount
+            total_amount += amount
+
+            payments.append({
+                "id": p.id,
+                "amount": amount,
+                "payment_date": p.payment_date.strftime("%Y-%m-%d") if p.payment_date else "",
+                "payment_method": p.payment_method,
+                "payment_by": f"{p.payment_by.first_name} {p.payment_by.last_name}" if p.payment_by else "",
+                "details": p.payment_details or {}
+            })
+
+        projects_data.append({
+            "project_id": project.project_id,
+            "project_name": project.project_name,
+            "payments": payments,
+            "project_total": project_total
+        })
+
+    return JsonResponse({
+        "developer_name": f"{developer.first_name} {developer.last_name}",
+        "total_amount": total_amount,
+        "projects": projects_data
+    })
+
+
+def developer_payment_detail(request, payment_id):
+    payment = DeveloperPayment.objects.get(id=payment_id)
+    return JsonResponse({
+        "id": payment.id,
+        "amount": float(payment.amount),
+        "payment_date": payment.payment_date.strftime("%Y-%m-%d") if payment.payment_date else "",
+        "payment_method": payment.payment_method,
+        "payment_by_id": payment.payment_by.id if payment.payment_by else None,
+        "payment_by_name": f"{payment.payment_by.first_name} {payment.payment_by.last_name}" if payment.payment_by else "",
+        "details": payment.payment_details or {},   # <-- return object (dict)
+        "description": payment.description or ""
+    })
+
+@require_POST
+def update_developer_payment(request, payment_id):
+    try:
+        # decode JSON body if content-type application/json
+        if request.content_type == "application/json":
+            data = json.loads(request.body.decode("utf-8"))
+        else:
+            # fallback to POST dict (form submit)
+            data = request.POST
+
+        payment = DeveloperPayment.objects.get(id=payment_id)
+
+        # AMOUNT: validate & convert
+        if "amount" in data:
+            amt_raw = data.get("amount", "")
+            if str(amt_raw).strip() == "":
+                return JsonResponse({"status": "error", "errors": {"amount": ["Amount is required."]}}, status=400)
+            try:
+                payment.amount = Decimal(str(amt_raw))
+            except (InvalidOperation, ValueError):
+                return JsonResponse({"status": "error", "errors": {"amount": ["Invalid amount format."]}}, status=400)
+
+        # Simple string fields
+        if "payment_method" in data:
+            payment.payment_method = data.get("payment_method") or None
+
+        if "description" in data:
+            payment.description = data.get("description") or None
+
+        # payment_by (user id)
+        payment_by_id = data.get("payment_by")
+        if payment_by_id:
+            payment.payment_by = User.objects.filter(pk=payment_by_id).first()
+        else:
+            payment.payment_by = None
+
+        # payment_date
+        if "payment_date" in data:
+            payment_date = data.get("payment_date")
+            if payment_date:
+                try:
+                    payment.payment_date = datetime.strptime(payment_date, "%Y-%m-%d").date()
+                except ValueError:
+                    return JsonResponse({"status": "error", "errors": {"payment_date": ["Invalid date (expected YYYY-MM-DD)."]}}, status=400)
+            else:
+                payment.payment_date = None
+
+        # Build payment_details dict according to (possibly updated) payment.payment_method
+        details = {}
+        method = (payment.payment_method or "").strip()
+
+        if method == "Bank Transfer":
+            bank_name = (data.get("bank_name") or "").strip()
+            if bank_name:
+                details["bank_name"] = bank_name
+        elif method == "UPI":
+            upi_id = (data.get("upi_id") or "").strip()
+            if upi_id:
+                details["upi_id"] = upi_id
+        elif method == "Cheque":
+            cheque_no = (data.get("cheque_no") or "").strip()
+            cheque_name = (data.get("cheque_name") or "").strip()
+            if cheque_no:
+                details["cheque_no"] = cheque_no
+            if cheque_name:
+                details["cheque_name"] = cheque_name
+        elif method == "Other":
+            other = (data.get("other_details") or "").strip()
+            if other:
+                details["other_details"] = other
+
+        payment.payment_details = details or None
+
+        # Validate and save
+        payment.full_clean()
+        payment.save()
+
+        return JsonResponse({"status": "success", "message": "Developer payment updated successfully!"})
+
+    except DeveloperPayment.DoesNotExist:
+        return JsonResponse({"status": "error", "errors": {"__all__": ["Payment not found."]}}, status=404)
+    except ValidationError as ve:
+        return JsonResponse({"status": "error", "errors": ve.message_dict}, status=400)
+    except Exception as e:
+        # for debugging you can log traceback here
+        return JsonResponse({"status": "error", "errors": {"__all__": [str(e)]}}, status=500)
+
+
+@csrf_exempt
+def delete_developer_payment(request, payment_id):
+    if request.method == "DELETE":
+        try:
+            payment = DeveloperPayment.objects.get(id=payment_id)
+            payment.delete()
+            return JsonResponse({"success": True, "message": "Payment deleted successfully!"})
+        except DeveloperPayment.DoesNotExist:
+            return JsonResponse({"success": False, "errors": {"__all__": ["Payment not found."]}}, status=404)
+        except Exception as e:
+            return JsonResponse({"success": False, "errors": {"__all__": [str(e)]}}, status=500)
+
+    return JsonResponse({"success": False, "errors": {"__all__": ["Invalid request method."]}}, status=405)
 # -----------------------------
 # Designation  View  
 # -----------------------------
@@ -2974,15 +3311,17 @@ def designation_list(request):
     paginator = Paginator(designations, records_per_page)
     page_obj = paginator.get_page(page_number)
 
+    
     return render(request, 'designation.html', {
         "page_obj": page_obj,
         "records_per_page": records_per_page,
        "records_options": [20, 50, 100, 200, 300],
         'total_designations': Designation.objects.count(),
+        
         "search_action": reverse("client_list"),
         "search_placeholder": "Search clients..."
     })
-
+    
 
 def add_designation(request):
     if request.method == "POST":

@@ -455,7 +455,53 @@ class ProjectPayment(models.Model):
 
     def __str__(self):
         return f"{self.project.project_name} - {self.payment_method} - {self.amount}"
-    
+
+class DeveloperPayment(models.Model):
+    PAYMENT_METHOD_CHOICES = [
+        ('Bank Transfer', 'Bank Transfer'),
+        ('UPI', 'UPI'),
+        ('Cash', 'Cash'),
+        ('Cheque', 'Cheque'),
+        ('Other', 'Other'),
+    ]
+
+    project = models.ForeignKey("Project", on_delete=models.CASCADE, related_name="developer_payments")
+    developer = models.ForeignKey("User", on_delete=models.CASCADE, related_name="payments")
+    payment_by = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="payments_made")  # Who made the payment
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    payment_date = models.DateField(blank=True, null=True)
+    payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+
+    # Optional: store extra dynamic details like bank info, UPI id, cheque no, etc.
+    payment_details = models.JSONField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        # Validate amount
+        if self.amount <= 0:
+            raise ValidationError("Payment amount must be greater than zero.")
+
+        # Validate method-specific details
+        details = self.payment_details or {}
+
+        if self.payment_method == "Bank Transfer":
+            required_fields = ["bank_name"]
+        elif self.payment_method == "UPI":
+            required_fields = ["upi_id"]
+        elif self.payment_method == "Cheque":
+            required_fields = ["cheque_no", "cheque_name"]
+        else:
+            required_fields = []
+
+        for field in required_fields:
+            if field not in details or not details[field]:
+                raise ValidationError({ "payment_details": f"'{field}' is required for {self.payment_method}." })
+
+    def __str__(self):
+        return f"{self.project.project_name} - {self.developer.first_name} {self.developer.last_name} - {self.amount} ({self.payment_method})"  
 
 # -----------------------------
 # HostData model
@@ -955,6 +1001,7 @@ class FileDoc(models.Model):
         null=True
     )
     file = models.FileField(upload_to="files/", blank=True, null=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

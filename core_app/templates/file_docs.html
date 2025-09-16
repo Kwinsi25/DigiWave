@@ -822,6 +822,7 @@ document.getElementById("confirmRenameSubfolderBtn").addEventListener("click", (
 
     // preview of folder file
     function openFilePreview(file) {
+
         const folderModalEl = document.getElementById("viewProjectModal");
         const folderModal = bootstrap.Modal.getInstance(folderModalEl);
         const subfolderModalEl = document.getElementById("viewSubfolderModal");
@@ -847,11 +848,12 @@ document.getElementById("confirmRenameSubfolderBtn").addEventListener("click", (
             previewHtml = `<video controls class="w-100"><source src="${fileUrl}" type="video/${fileExt}"></video>`;
         } else if (["mp3", "wav"].includes(fileExt)) {
             previewHtml = `<audio controls class="w-100"><source src="${fileUrl}" type="audio/${fileExt}"></audio>`;
-        } else if (["doc", "docx", "xls", "xlsx", "ppt", "pptx"].includes(fileExt)) {
-    const encodedUrl = encodeURIComponent(fileUrl);
-    previewHtml = `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}" 
-        width="100%" height="600px" style="border:none;"></iframe>`;
-}
+        } 
+// else if (["doc", "docx", "xls", "xlsx", "ppt", "pptx"].includes(fileExt)) {
+//     const encodedUrl = encodeURIComponent(fileUrl);
+//     previewHtml = `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}" 
+//         width="100%" height="600px" style="border:none;"></iframe>`;
+// }
 else {
             previewHtml = `<p class="text-muted">Preview not supported. <a href="${fileUrl}" target="_blank">Download</a></p>`;
         }

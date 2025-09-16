@@ -1,0 +1,1113 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Developer Payments{% endblock %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+{% block extra_css %}
+<style>
+    .alert-success {
+        background-color: #017004 !important;
+        /* Green */
+        color: black !important;
+    }
+
+    /* Example: Custom error background */
+    .alert-error,
+    .alert-danger {
+        background-color: #F44336;
+        /* Red */
+        color: black;
+    }
+
+    /* Example: Custom info background */
+    .alert-info {
+        background-color: #2196F3;
+        /* Blue */
+        color: black;
+    }
+
+    /* Example: Custom warning background */
+    .alert-warning {
+        background-color: #FF9800;
+        /* Orange */
+        color: black;
+    }
+
+    .scrollable-table-body {
+        max-height: 400px;
+        /* Adjust height as needed */
+        overflow-y: auto;
+    }
+
+    .scrollable-table-body table {
+        margin-bottom: 0;
+        /* Avoid extra spacing */
+    }
+
+    /* Optional: Fix the header */
+    .scrollable-table-body thead th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div id="toast-container" style="
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 3000;  /* above sidebar/navbar */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+">
+    {% for message in messages %}
+    <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show" role="alert"
+        aria-live="assertive" aria-atomic="true" style="min-width: 250px;">
+        <div class="d-flex">
+            <div class="toast-body">
+                {{ message }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                aria-label="Close"></button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+<div class="content-wrapper">
+    <div class="container-xxl flex-grow-1 container-p-y">
+
+        <!-- Top Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body d-flex justify-content-between">
+                        <div>
+                            <h6>Total Payments</h6>
+                            <h4 class="fw-bold text-info">{{ total_payments }}</h4>
+                        </div>
+                        <div class="avatar bg-primary text-white rounded-circle p-2">
+                            <i class="bx bx-wallet fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bank Transfer -->
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Bank Transfer</h6>
+                            <h4 class="fw-bold text-success">{{bank_transfer_count}}</h4>
+                        </div>
+                        <div class="avatar bg-info text-white rounded-circle p-2">
+                            <i class="bx bx-buildings fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UPI -->
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">UPI</h6>
+                            <h4 class="fw-bold text-danger">{{upi_count}}</h4>
+                        </div>
+                        <div class="avatar bg-success text-white rounded-circle p-2">
+                            <i class="bx bx-qr-scan fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cash -->
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Cash</h6>
+                            <h4 class="fw-bold">{{cash_count}}</h4>
+                        </div>
+                        <div class="avatar bg-warning text-white rounded-circle p-2">
+                            <i class="bx bx-money fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Developer Payment Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">All Developer Payments</h4>
+                    <div class="d-flex gap-2">
+
+                        <button type="button" class="btn btn-outline-secondary" title="Filter Payments">
+                            <i class="bx bx-filter-alt"></i>
+                        </button>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#addDeveloperPaymentModal">
+                            <i class="bx bx-plus"></i> Add Payment
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="table-responsive text-nowrap scrollable-table-body">
+    <table class="table" id="developerPaymentTable">
+        <thead>
+            <tr>
+                <th>Sr No.</th>
+                <th>Developer</th>
+                <th>Projects</th>
+                <th>Total Payment (₹)</th>
+                
+            </tr>
+        </thead>
+        <tbody class="table-border-bottom-0">
+            {% for row in page_obj %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+           
+                <td> <a href="#" data-bs-toggle="modal" data-bs-target="#paymentDetailsModal" class="fw-bold view-payments" data-developer-id="{{ row.developer.id }}">{{ row.developer.first_name }} {{ row.developer.last_name }}</a></td>
+                <td>
+                    <ul class="list-unstyled d-flex align-items-center avatar-group mb-0">
+                        {% for project in row.projects|slice:":4" %}
+                        <li data-bs-toggle="tooltip" title="{{ project.project_name }}"
+                             class="avatar avatar-xs pull-up" style="margin-left: -8px; cursor:pointer; border:2px solid #525252;background-color: #1c6291; color: #fff; border-radius:50%;">
+                            <span class="text-center" style="font-size:12px;">{{ project.project_name|slice:":2" }}</span>
+                        </li>
+                        {% endfor %}
+
+                        {% if row.projects.count > 4 %}
+                        <li class="avatar avatar-xs"
+                            style="margin-left: -8px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; background:#1c6291; border-radius:50%; border:2px solid #ffffff; font-size:12px; font-weight:600;">
+                            +{{ row.projects.count|add:"-4" }}
+                        </li>
+                        {% endif %}
+                    </ul>
+                </td>
+                <td class="fw-bold">
+                    {% if row.total_payment > 0 %}
+                        ₹{{ row.total_payment }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+
+                
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No developers/projects/payments found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+                <!-- pagination -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+
+                    <!-- Records Per Page Dropdown -->
+                    <div class="d-flex align-items-center">
+                        <form method="GET" id="recordsForm" class="d-flex align-items-center">
+                            <label for="recordsPerPage" class="me-2 mb-0">Records per page:</label>
+                            <select class="form-select form-select-sm" name="recordsPerPage" id="recordsPerPage"
+                                style="width: auto;">
+                                {% for option in records_options %}
+                                <option value="{{ option }}" {% if records_per_page == option %}selected{% endif %}>
+                                    {{ option }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Page navigation" class="mt-3">
+                        <ul class="pagination justify-content-end mb-0">
+
+                            <!-- Previous Button -->
+                            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                                {% if page_obj.has_previous %}
+                                <a class="page-link"
+                                    href="?page={{ page_obj.previous_page_number }}&recordsPerPage={{ records_per_page }}">
+                                    <i class="bx bx-chevrons-left"></i>
+                                </a>
+                                {% else %}
+                                <span class="page-link disabled">
+                                    <i class="bx bx-chevrons-left"></i>
+                                </span>
+                                {% endif %}
+                            </li>
+
+                            <!-- Always show first page -->
+                            <li class="page-item {% if page_obj.number == 1 %}active{% endif %}">
+                                <a class="page-link" href="?page=1&recordsPerPage={{ records_per_page }}">1</a>
+                            </li>
+
+                            <!-- Show second page if exists -->
+                            {% if page_obj.paginator.num_pages >= 2 %}
+                            <li class="page-item {% if page_obj.number == 2 %}active{% endif %}">
+                                <a class="page-link" href="?page=2&recordsPerPage={{ records_per_page }}">2</a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Ellipsis -->
+                            {% if page_obj.paginator.num_pages > 4 %}
+                            <li class="page-item disabled"><span class="page-link">…</span></li>
+                            {% endif %}
+
+                            <!-- Second last page (if not duplicate of 2) -->
+                            {% if page_obj.paginator.num_pages > 2 and page_obj.paginator.num_pages|add:'-1' != 2 %}
+                            <li
+                                class="page-item {% if page_obj.number == page_obj.paginator.num_pages|add:'-1' %}active{% endif %}">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.paginator.num_pages|add:'-1' }}&recordsPerPage={{ records_per_page }}">
+                                    {{ page_obj.paginator.num_pages|add:'-1' }}
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Last page (if not duplicate of 2) -->
+                            {% if page_obj.paginator.num_pages > 1 and page_obj.paginator.num_pages != 2 %}
+                            <li
+                                class="page-item {% if page_obj.number == page_obj.paginator.num_pages %}active{% endif %}">
+                                <a class="page-link"
+                                    href="?page={{ page_obj.paginator.num_pages }}&recordsPerPage={{ records_per_page }}">
+                                    {{ page_obj.paginator.num_pages }}
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Next Button -->
+                            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                                {% if page_obj.has_next %}
+                                <a class="page-link"
+                                    href="?page={{ page_obj.next_page_number }}&recordsPerPage={{ records_per_page }}">
+                                    <i class="bx bx-chevrons-right"></i>
+                                </a>
+                                {% else %}
+                                <span class="page-link disabled">
+                                    <i class="bx bx-chevrons-right"></i>
+                                </span>
+                                {% endif %}
+                            </li>
+
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- Add Developer Payment Modal -->
+<div class="modal fade" id="addDeveloperPaymentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+    data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header table-primary text-white">
+                <h5 class="modal-title"><i class="bx bx-credit-card me-2"></i> Add Developer Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+
+            <form method="POST" action="{% url 'add_developer_payment' %}">
+                {% csrf_token %}
+                <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <tbody>
+
+                                <!-- ==================== Project & Developer ==================== -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-briefcase me-2"></i> Project & Developer</th>
+                                </tr>
+                                
+                                <tr>
+                                    <th>Developer</th>
+                                    <td colspan="3">
+                                        <select class="form-control" name="developer" id="developerSelect">
+                                            <option value="">Search Developer</option>
+                                            {% for user in users %}
+                                            <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Project</th>
+                                    <td colspan="3">
+                                        <select class="form-control tom-select" name="project"  id="projectSelect">
+                                            <option value="">Search project</option>
+                                            
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Payment By</th>
+                                    <td colspan="3">
+                                        <select class="form-control tom-select" name="payment_by" id="paymentBy">
+                                            <option value="">Search Payment By</option>
+                                            {% for user in users %}
+                                            <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+
+                                <!-- ==================== Payment Details ==================== -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-money me-2"></i> Payment Details</th>
+                                </tr>
+                                <tr>
+                                    <th>Amount (₹)</th>
+                                    <td><input type="number" name="amount" class="form-control"
+                                            placeholder="Enter amount"></td>
+                                    <th>Payment Date</th>
+                                    <td><input type="text" name="payment_date" class="form-control flat-date"
+                                            placeholder="Select date"></td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Method</th>
+                                    <td colspan="3">
+                                        <select class="form-select" name="payment_method" id="devPaymentMethod">
+                                            <option value="">-- Select Method --</option>
+                                            <option value="Bank Transfer">Bank Transfer</option>
+                                            <option value="UPI">UPI</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Cheque">Cheque</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+
+                                    </td>
+                                </tr>
+                                <!-- ==================== Bank Transfer ==================== -->
+                                <tr id="devBankFields" class="d-none">
+                                    <th>Bank Details</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control mb-2" name="bank_name"
+                                            placeholder="Bank Name">
+                                        <!-- <input type="text" class="form-control mb-2" name="account_no" placeholder="Account Number">
+                                    <input type="text" class="form-control" name="ifsc_code" placeholder="IFSC Code"> -->
+                                    </td>
+                                </tr>
+
+                                <!-- ==================== UPI ==================== -->
+                                <tr id="devUpiFields" class="d-none">
+                                    <th>UPI</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" name="upi_id"
+                                            placeholder="UPI ID (example@upi)">
+                                    </td>
+                                </tr>
+
+                                <!-- ==================== Cheque ==================== -->
+                                <tr id="devChequeFields" class="d-none">
+                                    <th>Cheque</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control mb-2" name="cheque_no"
+                                            placeholder="Cheque Number">
+                                        <input type="text" class="form-control" name="cheque_name"
+                                            placeholder="Cheque Holder Name">
+                                    </td>
+                                </tr>
+
+                                <!-- ==================== Other Details ==================== -->
+                                <tr id="devOtherFields" class="d-none">
+                                    <th>Other Details</th>
+                                    <td colspan="3">
+                                        <textarea class="form-control" name="other_details" rows="2"
+                                            placeholder="Enter additional payment details"></textarea>
+                                    </td>
+                                </tr>
+                                <!-- ==================== Description ==================== -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-comment-dots me-2"></i> Description</th>
+                                </tr>
+                                <tr>
+                                    <td colspan="4">
+                                        <textarea name="description" rows="3" class="form-control"
+                                            placeholder="Enter description"></textarea>
+                                    </td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Payment</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- view -->
+ <div class="modal fade" id="paymentDetailsModal" tabindex="-1" aria-labelledby="paymentDetailsModalLabel"
+     aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <!-- Header -->
+      <div class="modal-header table-success text-white">
+        <h5 class="modal-title" id="paymentDetailsModalLabel">
+          <i class="bx bx-credit-card me-2"></i> Payment Details
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body px-4 py-3">
+        <div id="payment-details-container" class="table-responsive">
+          <!-- Filled dynamically via JS -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- Edit Developer Payment Modal -->
+<div class="modal fade" id="editPaymentModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+    data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header table-success text-white">
+                <h5 class="modal-title"><i class="bx bx-edit-alt me-2"></i> Edit Developer Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+
+            <form id="editPaymentForm">
+                <input type="hidden" id="edit-payment-id" name="id">
+                <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <tbody>
+
+                                <!-- ==================== Payment By ==================== -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-user me-2"></i> Payment By</th>
+                                </tr>
+                                <tr>
+                                    <th>Paid By</th>
+                                    <td colspan="3">
+                                        <select class="form-control tom-select" id="edit-payment-by" name="payment_by">
+                                            <option value="">Search Employee</option>
+                                            {% for user in users %}
+                                                <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+
+                                <!-- ==================== Payment Details ==================== -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-money me-2"></i> Payment Details</th>
+                                </tr>
+                                <tr>
+                                    <th>Amount (₹)</th>
+                                    <td><input type="number" id="edit-amount" name="amount" class="form-control"
+                                            placeholder="Enter amount"></td>
+                                    <th>Payment Date</th>
+                                    <td><input type="text" class="form-control flat-date" id="edit-date" name="payment_date">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Method</th>
+                                    <td colspan="3">
+                                        <select class="form-select" id="edit-method" name="payment_method">
+                                            <option value="">-- Select Method --</option>
+                                            <option value="Bank Transfer">Bank Transfer</option>
+                                            <option value="UPI">UPI</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Cheque">Cheque</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </td>
+                                </tr>
+
+                                <!-- ==================== Bank Transfer ==================== -->
+                                <tr id="editBankFields" class="d-none">
+                                    <th>Bank Details</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control mb-2" id="edit-bank-name"
+                                            name="bank_name" placeholder="Bank Name">
+                                    </td>
+                                </tr>
+
+                                <!-- ==================== UPI ==================== -->
+                                <tr id="editUpiFields" class="d-none">
+                                    <th>UPI</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control" id="edit-upi-id" name="upi_id"
+                                            placeholder="UPI ID (example@upi)">
+                                    </td>
+                                </tr>
+
+                                <!-- ==================== Cheque ==================== -->
+                                <tr id="editChequeFields" class="d-none">
+                                    <th>Cheque</th>
+                                    <td colspan="3">
+                                        <input type="text" class="form-control mb-2" id="edit-cheque-no"
+                                            name="cheque_no" placeholder="Cheque Number">
+                                        <input type="text" class="form-control" id="edit-cheque-name"
+                                            name="cheque_name" placeholder="Cheque Holder Name">
+                                    </td>
+                                </tr>
+
+                                <!-- ==================== Other Details ==================== -->
+                                <tr id="editOtherFields" class="d-none">
+                                    <th>Other Details</th>
+                                    <td colspan="3">
+                                        <textarea class="form-control" id="edit-details" name="details"
+                                            rows="2" placeholder="Enter additional payment details"></textarea>
+                                    </td>
+                                </tr>
+
+                                <!-- ==================== Description ==================== -->
+                                <tr class="table-light">
+                                    <th colspan="4"><i class="bx bx-comment-dots me-2"></i> Description</th>
+                                </tr>
+                                <tr>
+                                    <td colspan="4">
+                                        <textarea id="edit-description" name="description" rows="3" class="form-control"
+                                            placeholder="Enter description"></textarea>
+                                    </td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer ">
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel"
+    aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+            <div class="modal-header border-0">
+                <h5 class="modal-title w-100" id="deleteConfirmLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this payment?
+            </div>
+            <div class="modal-footer justify-content-center border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/common.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // searching
+        enableTableSearch("searchBox", "paymentTable");
+        // sorting
+
+        enableTableSorting("paymentTable");
+        // dropdown with search
+       // Initialize TomSelect for both dropdowns
+    const developerSelect = new TomSelect("#developerSelect", {
+        create: false,
+        sortField: { field: "text", direction: "asc" }
+    });
+
+    const projectSelect = new TomSelect("#projectSelect", {
+        create: false,
+        sortField: { field: "text", direction: "asc" }
+    });
+
+    const paymentBy = new TomSelect("#paymentBy", {
+        create: false,
+        sortField: { field: "text", direction: "asc" }
+    });
+
+    const edit_payment_by = new TomSelect("#edit-payment-by", {
+        create: false,
+        sortField: { field: "text", direction: "asc" }
+    });
+    // Load projects when developer is selected
+    developerSelect.on("change", function (developerId) {
+        // Clear previous projects
+        projectSelect.clearOptions();
+
+        if (!developerId) return;
+
+        fetch(`/ajax/developer-projects/?developer_id=${developerId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.projects.length > 0) {
+                    const options = data.projects.map(project => ({
+                        value: project.id,
+                        text: project.project_name
+                    }));
+                    projectSelect.addOptions(options);
+                } else {
+                    projectSelect.addOption({ value: "", text: "No projects found" });
+                }
+            })
+            .catch(err => {
+                console.error("Error fetching projects:", err);
+                projectSelect.addOption({ value: "", text: "Error loading projects" });
+            });
+    });
+       
+    // Payment Method Dynamic Fields
+        const methodSelect = document.getElementById("devPaymentMethod");
+        const bankFields = document.getElementById("devBankFields");
+        const upiFields = document.getElementById("devUpiFields");
+        const chequeFields = document.getElementById("devChequeFields");
+        const otherFields = document.getElementById("devOtherFields");
+        console.log(methodSelect, bankFields, upiFields, chequeFields, otherFields)
+        methodSelect.addEventListener("change", function () {
+            console.log("---------")
+            bankFields.classList.add("d-none");
+            upiFields.classList.add("d-none");
+            chequeFields.classList.add("d-none");
+            otherFields.classList.add("d-none");
+
+            if (this.value === "Bank Transfer") bankFields.classList.remove("d-none");
+            if (this.value === "UPI") upiFields.classList.remove("d-none");
+            if (this.value === "Cheque") chequeFields.classList.remove("d-none");
+            if (this.value === "Other") otherFields.classList.remove("d-none");
+        });
+
+
+        // add payment
+        const addDevPaymentForm = document.querySelector("#addDeveloperPaymentModal form");
+
+        addDevPaymentForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            let form = this;
+            let formData = new FormData(form);
+
+            fetch("{% url 'add_developer_payment' %}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRFToken": form.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    // Clear previous validation highlights
+                    form.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+
+                    if (data.success) {
+                        // Close modal
+                        let modalEl = document.getElementById("addDeveloperPaymentModal");
+                        let modal = bootstrap.Modal.getInstance(modalEl);
+                        modal.hide();
+
+                        // Show success toast
+                        showToast("Developer payment added successfully!", "success");
+
+                        // Reload table/page after short delay
+                        setTimeout(() => window.location.reload(), 800);
+                    } else {
+                        if (data.errors) {
+                            if (data.errors["__all__"]) {
+                                showToast(data.errors["__all__"].join(", "), "danger");
+                            } else {
+                                // Highlight fields with errors
+                                Object.keys(data.errors).forEach(field => {
+                                    let input = form.querySelector(`[name="${field}"]`);
+                                    if (input) {
+                                        input.classList.add("is-invalid");
+                                    }
+                                });
+                                showToast("Please fix highlighted errors.", "danger");
+                            }
+                        } else {
+                            showToast("Something went wrong while saving developer payment.", "danger");
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error("Error:", err);
+                    showToast("Unexpected error while adding developer payment.", "danger");
+                });
+        });
+
+
+        // view
+        var paymentModal = new bootstrap.Modal(document.getElementById("paymentDetailsModal"));
+
+document.querySelectorAll(".view-payments").forEach(el => {
+    el.addEventListener("click", function () {
+        const developerId = this.dataset.developerId;
+
+        fetch(`/developer-project-payments/?developer_id=${developerId}`)
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById("payment-details-container");
+                container.innerHTML = ""; // clear previous
+                 // Update modal title with developer name and total amount
+                const modalTitle = document.querySelector("#paymentDetailsModal .modal-title");
+                modalTitle.innerHTML = `<i class="bx bx-credit-card me-2"></i>
+                                        Payments for ${data.developer_name} (Total: ₹${data.total_amount})`;
+                modalTitle.classList.add("text-info");
+                data.projects.forEach(proj => {
+                    // Project Summary
+                    const projectSummary = `
+                        <h6 class="fw-bold text-primary mt-3"><i class="bx bx-briefcase me-1"></i> ${proj.project_name} (${proj.project_id})</h6>
+                    `;
+
+                    // Payment Breakdown
+                    let paymentRows = "";
+                    proj.payments.forEach((p, idx) => {
+                        paymentRows += `
+                            <tr>
+                              <td>Payment #${idx + 1}</td>
+                              <td class="fw-bold">${p.amount > 0 ? "₹" + p.amount : "-"}</td>
+                              <td>${p.payment_date || "-"}</td>
+                              <td>${p.payment_method || "-"}</td>
+                              <td>
+                                ${p.payment_method === "Cash" 
+                                    ? "-" 
+                                    : p.details 
+                                        ? Object.entries(p.details).map(([k, v]) => `${k}: ${v}`).join("<br>") 
+                                        : "-"}
+                              </td>
+                              <td>${p.payment_by || "-"}</td>
+                              <td>
+                                    <a href="javascript:void(0);" 
+                                    class="text-primary me-2 edit-payment" 
+                                    data-payment-id="${p.id}" 
+                                    title="Edit">
+                                    <i class="bx bx-edit-alt"></i>
+                                    </a>
+
+                                    <a href="javascript:void(0);" 
+                                        class="text-danger delete-payment" 
+                                        data-payment-id="${p.id}" 
+                                        title="Delete">
+                                        <i class="bx bx-trash"></i>
+                                        </a>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    const paymentTable = `
+                        <table class="table table-bordered table-striped align-middle mb-4">
+                          <thead class="table-light">
+                            <tr>
+                              <th>No</th>
+                              <th>Amount (₹)</th>
+                              <th>Payment Date</th>
+                              <th>Method</th>
+                              <th>Details</th>
+                              <th>Payment By</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            ${paymentRows || `<tr><td colspan="7" class="text-center">No payments found</td></tr>`}
+                          </tbody>
+                        </table>
+                    `;
+
+                    container.insertAdjacentHTML("beforeend", projectSummary + paymentTable);
+                });
+
+                // Show modal
+                paymentModal.show();
+            })
+            .catch(err => console.error("Error fetching payments:", err));
+    });
+});
+
+
+// edit form value fetch
+document.addEventListener("click", function(e) {
+    if (e.target.closest(".edit-payment")) {
+        const btn = e.target.closest(".edit-payment");
+        const paymentId = btn.dataset.paymentId;
+        console.log("Clicked Edit:", paymentId);
+
+        // 1) Fetch payment detail and populate edit modal
+fetch(`/developer-payment-detail/${paymentId}/`)
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("edit-payment-id").value = data.id;
+        document.getElementById("edit-amount").value = data.amount || "";
+        const dateInput = document.getElementById("edit-date");
+        dateInput.value = data.payment_date || "";
+        if (dateInput._flatpickr) {
+            if (data.payment_date) dateInput._flatpickr.setDate(data.payment_date, true);
+            else dateInput._flatpickr.clear();
+        }
+
+        // Payment By (TomSelect)
+        const editPaymentBy = document.getElementById("edit-payment-by").tomselect;
+        if (data.payment_by_id) {
+            editPaymentBy.setValue(String(data.payment_by_id));
+        } else {
+            editPaymentBy.clear();
+        }
+
+        // method & details
+        document.getElementById("edit-method").value = data.payment_method || "";
+        document.getElementById("edit-description").value = data.description || "";
+
+        // reset all method-specific fields first
+        document.getElementById("edit-bank-name").value = "";
+        document.getElementById("edit-upi-id").value = "";
+        document.getElementById("edit-cheque-no").value = "";
+        document.getElementById("edit-cheque-name").value = "";
+        document.getElementById("edit-details").value = "";
+
+        const details = data.details || {};
+
+        if (data.payment_method === "Bank Transfer") {
+            document.getElementById("edit-bank-name").value = details.bank_name || "";
+            document.getElementById("editBankFields").classList.remove("d-none");
+            document.getElementById("editUpiFields").classList.add("d-none");
+            document.getElementById("editChequeFields").classList.add("d-none");
+            document.getElementById("editOtherFields").classList.add("d-none");
+        } else if (data.payment_method === "UPI") {
+            document.getElementById("edit-upi-id").value = details.upi_id || "";
+            document.getElementById("editUpiFields").classList.remove("d-none");
+            document.getElementById("editBankFields").classList.add("d-none");
+            document.getElementById("editChequeFields").classList.add("d-none");
+            document.getElementById("editOtherFields").classList.add("d-none");
+        } else if (data.payment_method === "Cheque") {
+            document.getElementById("edit-cheque-no").value = details.cheque_no || "";
+            document.getElementById("edit-cheque-name").value = details.cheque_name || "";
+            document.getElementById("editChequeFields").classList.remove("d-none");
+            document.getElementById("editBankFields").classList.add("d-none");
+            document.getElementById("editUpiFields").classList.add("d-none");
+            document.getElementById("editOtherFields").classList.add("d-none");
+        } else if (data.payment_method === "Other") {
+            // IMPORTANT: backend uses other_details
+            document.getElementById("edit-details").value = details.other_details || "";
+            document.getElementById("editOtherFields").classList.remove("d-none");
+            document.getElementById("editBankFields").classList.add("d-none");
+            document.getElementById("editUpiFields").classList.add("d-none");
+            document.getElementById("editChequeFields").classList.add("d-none");
+        } else {
+            // hide all
+            document.getElementById("editBankFields").classList.add("d-none");
+            document.getElementById("editUpiFields").classList.add("d-none");
+            document.getElementById("editChequeFields").classList.add("d-none");
+            document.getElementById("editOtherFields").classList.add("d-none");
+        }
+
+        var editModal = new bootstrap.Modal(document.getElementById("editPaymentModal"));
+        editModal.show();
+    });
+
+    }
+});
+
+// Payment Method Dynamic Fields (Edit Modal)
+const editMethodSelect = document.getElementById("edit-method");
+const editBankFields = document.getElementById("editBankFields");
+const editUpiFields = document.getElementById("editUpiFields");
+const editChequeFields = document.getElementById("editChequeFields");
+const editOtherFields = document.getElementById("editOtherFields");
+
+if (editMethodSelect) {
+    editMethodSelect.addEventListener("change", function () {
+        // hide all first
+        editBankFields.classList.add("d-none");
+        editUpiFields.classList.add("d-none");
+        editChequeFields.classList.add("d-none");
+        editOtherFields.classList.add("d-none");
+
+        // show based on selection
+        if (this.value === "Bank Transfer") editBankFields.classList.remove("d-none");
+        if (this.value === "UPI") editUpiFields.classList.remove("d-none");
+        if (this.value === "Cheque") editChequeFields.classList.remove("d-none");
+        if (this.value === "Other") editOtherFields.classList.remove("d-none");
+    });
+}
+
+// Optional: auto-trigger change when modal is opened (to reflect current value)
+document.getElementById("editPaymentModal").addEventListener("shown.bs.modal", function () {
+    editMethodSelect.dispatchEvent(new Event("change"));
+});
+
+
+// Handle edit form submit
+// 2) Submit edit form (use status from backend and show errors)
+document.getElementById("editPaymentForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const paymentId = document.getElementById("edit-payment-id").value;
+
+    const payload = {
+        amount: document.getElementById("edit-amount").value,
+        payment_date: document.getElementById("edit-date").value,
+        payment_method: document.getElementById("edit-method").value,
+        payment_by: document.getElementById("edit-payment-by").value || null,
+        description: document.getElementById("edit-description").value || ""
+    };
+
+    if (payload.payment_method === "Bank Transfer") {
+        payload.bank_name = document.getElementById("edit-bank-name").value;
+    } else if (payload.payment_method === "UPI") {
+        payload.upi_id = document.getElementById("edit-upi-id").value;
+    } else if (payload.payment_method === "Cheque") {
+        payload.cheque_no = document.getElementById("edit-cheque-no").value;
+        payload.cheque_name = document.getElementById("edit-cheque-name").value;
+    } else if (payload.payment_method === "Other") {
+        payload.other_details = document.getElementById("edit-details").value;
+    }
+
+    fetch(`/developer-payment-update/${paymentId}/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            // success handling (use toast if you have)
+            // alert("Payment updated successfully!");
+            showToast("Developer payment updated successfully!", "success");
+
+            var editModal = bootstrap.Modal.getInstance(document.getElementById("editPaymentModal"));
+            editModal.hide();
+
+            // refresh payments list — re-trigger the view-payments click for the current developer if available
+            // (simple approach: reload the page)
+            // delay reload so toast is visible for at least 1-2 seconds
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500); // 1.5 second
+        } else {
+            // show error(s)
+            console.error("Update errors:", data.errors);
+            // if field-level errors, highlight or show messages; else show generic message
+            showToast("Failed to update payment. See console for details.","danger");
+        }
+    })
+    .catch(err => {
+        console.error("Update error:", err);
+        showToast("Unexpected error while updating payment.","danger");
+    });
+});
+
+// Utility: get CSRF token (needed if CSRF is enforced)
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+
+// delete
+let paymentToDeleteId = null;
+
+// Open delete confirmation modal when delete icon clicked
+document.addEventListener("click", function(e) {
+    const deleteBtn = e.target.closest(".delete-payment");
+    if (deleteBtn) {
+        paymentToDeleteId = deleteBtn.dataset.paymentId;
+
+        const deleteModal = new bootstrap.Modal(document.getElementById("deleteConfirmModal"));
+        deleteModal.show();
+    }
+});
+
+// Handle confirm delete
+document.getElementById("confirmDeleteBtn").addEventListener("click", function() {
+    if (!paymentToDeleteId) return;
+
+    fetch(`/developer-payment-delete/${paymentToDeleteId}/`, {
+        method: "DELETE",
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken")
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast("Payment deleted successfully!", "success");
+
+            // remove the row from table
+            const row = document.querySelector(`.delete-payment[data-payment-id='${paymentToDeleteId}']`)?.closest("tr");
+            if (row) row.remove();
+
+            // close modal
+            const deleteModal = bootstrap.Modal.getInstance(document.getElementById("deleteConfirmModal"));
+            deleteModal.hide();
+        } else {
+            showToast("Failed to delete payment. See console for details.", "danger");
+            console.error("Delete error:", data.errors);
+        }
+        paymentToDeleteId = null; // reset
+    })
+    .catch(err => {
+        showToast("Unexpected error while deleting payment.", "danger");
+        console.error("Delete fetch error:", err);
+        paymentToDeleteId = null;
+    });
+});
+
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

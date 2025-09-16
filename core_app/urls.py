@@ -83,6 +83,13 @@ urlpatterns = [
     path('payment/', payment_list, name='payment_list'),
     path('add_payment/', add_payment, name='add_payment'),
     path('get_payment/', get_payment, name='get_payment'),
+    path('developer/',developer_payment_list,name='developer_payment_list'),
+    path('ajax/developer-projects/', get_developer_projects, name='get_developer_projects'),
+    path('add_developer_payment/', add_developer_payment, name='add_developer_payment'),
+    path('developer-project-payments/', developer_project_payments, name='developer_project_payments'),
+    path("developer-payment-detail/<int:payment_id>/", developer_payment_detail, name="developer_payment_detail"),
+    path("developer-payment-update/<int:payment_id>/", update_developer_payment, name="update_developer_payment"),
+    path('developer-payment-delete/<int:payment_id>/', delete_developer_payment, name='delete_developer_payment'),
 
     #designation
     path('designations/', designation_list, name='designation_list'),
