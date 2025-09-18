@@ -559,6 +559,10 @@
                     sortField: {
                         field: "text",
                         direction: "asc"
+                    },
+                    onItemAdd:function(){
+                        this.setTextboxValue(""); // clears search box after selecting
+                        this.refreshOptions(false); // close dropdown
                     }
                 });
                 

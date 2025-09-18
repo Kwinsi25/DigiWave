@@ -3,11 +3,7 @@
 {% load static%}
 {% block extra_css %}
 <style>
-    .scrollable-table-body {
-        max-height: 400px;
-        /* Adjust height as needed */
-        overflow-y: auto;
-    }
+
 
     .scrollable-table-body table {
         margin-bottom: 0;
@@ -144,9 +140,9 @@
 
                             <tr>
                                 <th data-sort="number">Sr No.</th>
-                                <th data-sort="string">Hosting Provider</th>
                                 <th data-sort="string">Project ID</th>
                                 <th data-sort="string">Project Name</th>
+                                <th data-sort="string">Hosting Provider</th>
                                 <th data-sort="string">Login URL</th>
                                 <th data-sort="string">Status</th>
                                 <th data-sort="string">Left Days</th>
@@ -157,8 +153,7 @@
                             {% for host in page_obj %}
                             <tr>
                                 <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
-                                <td><a href="#" data-bs-toggle="modal" data-bs-target="#hostDetailsModal"
-                                        class="fw-bold host-link" data-host-id="{{ host.id }}">{{ host.hosting_provider }}</a></td>
+                                
                                 <td>
                                     {% if host.project.exists %}
                                     {% for p in host.project.all %}
@@ -173,24 +168,27 @@
                                     {% if host.project.exists %}
                                     {% for p in host.project.all %}
 
-                                    {{ p.project_name }}
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#hostDetailsModal"
+                                        class="fw-bold host-link" data-host-id="{{ host.id }}">{{ p.project_name }}</a>
                                     <br>
                                     {% endfor %}
                                     {% else %}
                                     <span class="text-muted">No Project</span>
                                     {% endif %}
                                 </td>
-
+                                <td>{{ host.hosting_provider }}</a></td>
                                 <td><a href="{{ host.login_url }}" target="_blank">{{ host.login_url }}</a></td>
 
                                 <td><span class="badge 
                                         {% if host.status == 'Active' %}bg-label-success
                                         {% elif host.status == 'Inactive' %}bg-label-warning
                                         {% elif host.status == 'Expired' %}bg-label-danger
-                                        {% else %}bg-label-secondary
                                         {% endif %}
                                     ">
-                                        {{ host.status }}
+                                           
+                                                {{ host.status }}
+                                             
+
                                     </span>
                                 </td>
 
@@ -388,12 +386,23 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th>SSH Username</th>
+                                    <th>SSH / IP Username</th>
                                     <td id="hd-ssh-username"></td>
-                                    <th>SSH / FTP Access</th>
-                                    <td id="hd-ssh-ftp-access"></td>
+                                    <th>SSH / IP Password</th>
+                                    <td>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="hd-ssh-password" readonly>
+                                            <button class="btn btn-outline-secondary" type="button" id="toggleSSHPassword">
+                                                <i class="bx bx-show"></i>
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
+                                <tr>
+                                    <th>SSH / FTP Access</th>
+                                    <td id="hd-ssh-ftp-access" colspan="3"></td>
 
+                                </tr>
                                 <!-- Database -->
                                 <tr class="table-light">
                                     <th colspan="4"><i class="bx bx-cloud me-2"></i> Database</th>
@@ -557,7 +566,7 @@
                                     <tr>
                                         <th>Login URL</th>
                                         <td>
-                                            <input type="url" class="form-control" name="login_url"
+                                            <input type="text" class="form-control" name="login_url"
                                                 placeholder="Enter login URL">
                                         </td>
                                     </tr>
@@ -574,18 +583,25 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>SSH Username</th>
+                                        <th>SSH / IP Username</th>
                                         <td>
                                             <input type="text" class="form-control" name="ssh_username"
-                                                placeholder="Enter SSH username">
+                                                placeholder="Enter SSH / IP username">
                                         </td>
+                                        <th>SSH / IP Password</th>
+                                        <td>
+                                            <input type="password" class="form-control" name="ssh_password"
+                                                placeholder="Enter SSH / IP password">
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <th>SSH / FTP Access</th>
                                         <td>
                                             <input type="text" class="form-control" name="ssh_ftp_access"
                                                 placeholder="Enter SSH/FTP access">
                                         </td>
-                                    </tr>
 
+                                    </tr>
                                     <!-- ==================== Database ==================== -->
                                     <tr class="table-light">
                                         <th colspan="4"><i class="bx bx-cloud me-2"></i> Database</th>
@@ -793,7 +809,7 @@
                                     <tr>
                                         <th>Login URL</th>
                                         <td colspan="3">
-                                            <input type="url" class="form-control" name="login_url" id="edit-login-url"
+                                            <input type="text" class="form-control" name="login_url" id="edit-login-url"
                                                 placeholder="Enter login URL">
                                         </td>
                                     </tr>
@@ -816,18 +832,31 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>SSH Username</th>
+                                        <th>SSH / IP Username</th>
                                         <td>
                                             <input type="text" class="form-control" name="ssh_username"
-                                                id="edit-ssh-username" placeholder="Enter SSH username">
+                                                id="edit-ssh-username" placeholder="Enter SSH / IP username">
                                         </td>
-                                        <th>SSH / FTP Access</th>
+                                        <th>SSH / IP Password</th>
                                         <td>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" name="ssh_password"
+                                                    id="edit-ssh-password" placeholder="Enter SSH/IP password">
+                                                <button class="btn btn-outline-secondary" type="button"
+                                                    id="edit-toggle-ssh-password">
+                                                    <i class="bx bx-show"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>SSH / FTP Access</th>
+                                        <td colspan="3">
                                             <input type="text" class="form-control" name="ssh_ftp_access"
                                                 id="edit-ssh-ftp-access" placeholder="Enter SSH/FTP access">
                                         </td>
-                                    </tr>
 
+                                    </tr>
                                     <!-- Database -->
                                     <tr class="table-light">
                                         <th colspan="4"><i class="bx bx-cloud me-2"></i> Database</th>
@@ -1000,6 +1029,10 @@
                     sortField: {
                         field: "text",
                         direction: "asc"
+                    },
+                    onItemAdd:function(){
+                        this.setTextboxValue(""); // clears search box after selecting
+                        this.refreshOptions(false); // close dropdown
                     }
                 });
                 
@@ -1021,7 +1054,12 @@
                     passwordField.attr("type", type);
                     $(this).find("i").toggleClass("bx-show bx-hide");
                 });
-
+                $("#toggleSSHPassword").on("click", function () {
+                    const passwordField = $("#hd-ssh-password");
+                    const type = passwordField.attr("type") === "password" ? "text" : "password";
+                    passwordField.attr("type", type);
+                    $(this).find("i").toggleClass("bx-show bx-hide");
+                });
                 // Toggle DB Password
                 $("#toggleDbPassword").on("click", function () {
                     const passwordField = $("#hd-db-password");
@@ -1055,6 +1093,7 @@
                     $("#hd-username").text(h.username || '-');
                     $("#hd-password").val(h.password || '-');
                     $("#hd-ssh-username").text(h.ssh_username || '-');
+                    $("#hd-ssh-password").val(h.ssh_password || '-');
                     $("#hd-ssh-ftp-access").text(h.ssh_ftp_access || '-');
 
                     // Database
@@ -1122,7 +1161,17 @@
                         icon.removeClass("bx-hide").addClass("bx-show");
                     }
                 });
-
+                $("#edit-toggle-ssh-password").click(function () {
+                    const input = $("#edit-ssh-password");
+                    const icon = $(this).find("i");
+                    if (input.attr("type") === "password") {
+                        input.attr("type", "text");
+                        icon.removeClass("bx-show").addClass("bx-hide");
+                    } else {
+                        input.attr("type", "password");
+                        icon.removeClass("bx-hide").addClass("bx-show");
+                    }
+                });
                 $("#edit-toggle-db-password").click(function () {
                     const input = $("#edit-db-password");
                     const icon = $(this).find("i");
@@ -1167,6 +1216,7 @@
                     $("#edit-username").val(h.username || '');
                     $("#edit-password").val(h.password || '');
                     $("#edit-ssh-username").val(h.ssh_username || '');
+                    $("#edit-ssh-password").val(h.ssh_password || '');
                     $("#edit-ssh-ftp-access").val(h.ssh_ftp_access || '');
                     $("#edit-database-name").val(h.database_name || '');
                     $("#edit-db-username").val(h.db_username || '');

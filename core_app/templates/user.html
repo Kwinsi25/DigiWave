@@ -1573,6 +1573,10 @@ if (data.employee_type && data.employee_type.toLowerCase() === "salary") {
                     sortField: {
                         field: "text",
                         direction: "asc"
+                    },
+                    onItemAdd:function(){
+                        this.setTextboxValue(""); // clears search box after selecting
+                        this.refreshOptions(false); // close dropdown
                     }
                 });
                 

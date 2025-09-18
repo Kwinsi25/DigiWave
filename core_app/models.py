@@ -520,10 +520,11 @@ class HostData(models.Model):
     plan_package = models.CharField(max_length=100, blank=True, null=True)
     server_ip = models.GenericIPAddressField(blank=True, null=True, unique=True)
     operating_system = models.CharField(max_length=100, blank=True, null=True)  # New
-    login_url = models.URLField(blank=True, null=True)
+    login_url = models.CharField(max_length=255,blank=True, null=True)
     username = models.CharField(max_length=100, blank=True, null=True)
     password = models.CharField(max_length=255, blank=True, null=True)
     ssh_username = models.CharField(max_length=100, blank=True, null=True)
+    ssh_password = models.CharField(max_length=100, blank=True, null=True)
     ssh_ftp_access = models.CharField(max_length=50, blank=True, null=True)
     database_name = models.CharField(max_length=100, blank=True, null=True)
     db_username = models.CharField(max_length=100, blank=True, null=True)

@@ -167,9 +167,9 @@
     <table class="table" id="developerPaymentTable">
         <thead>
             <tr>
-                <th>Sr No.</th>
-                <th>Developer</th>
-                <th>Projects</th>
+                <th data-sort="number">Sr No.</th>
+                <th data-sort="string">Developer</th>
+                <th data-sort="string">Projects</th>
                 <th>Total Payment (₹)</th>
                 
             </tr>
@@ -645,30 +645,47 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // searching
-        enableTableSearch("searchBox", "paymentTable");
+        enableTableSearch("searchBox", "developerPaymentTable");
         // sorting
 
-        enableTableSorting("paymentTable");
+        enableTableSorting("developerPaymentTable");
         // dropdown with search
        // Initialize TomSelect for both dropdowns
     const developerSelect = new TomSelect("#developerSelect", {
         create: false,
         sortField: { field: "text", direction: "asc" }
+        ,
+                    onItemAdd:function(){
+                        this.setTextboxValue(""); // clears search box after selecting
+                        this.refreshOptions(false); // close dropdown
+                    }
     });
 
     const projectSelect = new TomSelect("#projectSelect", {
         create: false,
-        sortField: { field: "text", direction: "asc" }
+        sortField: { field: "text", direction: "asc" },
+                    onItemAdd:function(){
+                        this.setTextboxValue(""); // clears search box after selecting
+                        this.refreshOptions(false); // close dropdown
+                    }
     });
 
     const paymentBy = new TomSelect("#paymentBy", {
         create: false,
-        sortField: { field: "text", direction: "asc" }
+        sortField: { field: "text", direction: "asc" },
+                    onItemAdd:function(){
+                        this.setTextboxValue(""); // clears search box after selecting
+                        this.refreshOptions(false); // close dropdown
+                    }
     });
 
     const edit_payment_by = new TomSelect("#edit-payment-by", {
         create: false,
-        sortField: { field: "text", direction: "asc" }
+        sortField: { field: "text", direction: "asc" },
+                    onItemAdd:function(){
+                        this.setTextboxValue(""); // clears search box after selecting
+                        this.refreshOptions(false); // close dropdown
+                    }
     });
     // Load projects when developer is selected
     developerSelect.on("change", function (developerId) {
@@ -804,7 +821,7 @@ document.querySelectorAll(".view-payments").forEach(el => {
                     proj.payments.forEach((p, idx) => {
                         paymentRows += `
                             <tr>
-                              <td>Payment #${idx + 1}</td>
+                              <td>${idx + 1}</td>
                               <td class="fw-bold">${p.amount > 0 ? "₹" + p.amount : "-"}</td>
                               <td>${p.payment_date || "-"}</td>
                               <td>${p.payment_method || "-"}</td>
@@ -812,9 +829,18 @@ document.querySelectorAll(".view-payments").forEach(el => {
                                 ${p.payment_method === "Cash" 
                                     ? "-" 
                                     : p.details 
-                                        ? Object.entries(p.details).map(([k, v]) => `${k}: ${v}`).join("<br>") 
+                                        ? Object.entries(p.details).map(([k, v]) => `${v}`).join("<br>") 
                                         : "-"}
                               </td>
+                              <td>
+                                    ${
+                                        (p.description || "-")
+                                        .split(" ")
+                                        .map((word, i) => (i > 0 && (i + 1) % 3 === 0 ? word + "<br>" : word))
+                                        .join(" ")
+                                    }
+                                    </td>
+
                               <td>${p.payment_by || "-"}</td>
                               <td>
                                     <a href="javascript:void(0);" 
@@ -844,6 +870,7 @@ document.querySelectorAll(".view-payments").forEach(el => {
                               <th>Payment Date</th>
                               <th>Method</th>
                               <th>Details</th>
+                              <th>Description</th>
                               <th>Payment By</th>
                               <th>Action</th>
                             </tr>

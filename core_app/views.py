@@ -714,6 +714,7 @@ def add_host_data(request):
                 username=request.POST.get("username"),
                 password=request.POST.get("password"),
                 ssh_username = request.POST.get("ssh_username"),
+                ssh_password = request.POST.get("ssh_password"),
                 ssh_ftp_access=request.POST.get("ssh_ftp_access"),
                 database_name=request.POST.get("database_name"),
                 db_username=request.POST.get("db_username"),
@@ -780,12 +781,13 @@ def get_host_details(request):
         "username": host.username,
         "password": host.password,
         "ssh_username": host.ssh_username,
+        "ssh_password": host.ssh_password,
         "ssh_ftp_access": host.ssh_ftp_access,
         "database_name": host.database_name,
         "db_username": host.db_username,
         "db_password": host.db_password,
-        "purchase_date": host.purchase_date.strftime("%Y-%m-%d") if host.purchase_date else "",
-        "expiry_date": host.expiry_date.strftime("%Y-%m-%d") if host.expiry_date else "",
+        "purchase_date": host.purchase_date.strftime("%Y-%m-%d") if host.purchase_date else "-",
+        "expiry_date": host.expiry_date.strftime("%Y-%m-%d") if host.expiry_date else "-",
         "server_cost": str(host.server_cost) if host.server_cost else None,
         "status": host.status,
        "memory": host.memory,
@@ -836,6 +838,7 @@ def update_host_data(request, id):
             host.username = request.POST.get("username")
             host.password = request.POST.get("password")
             host.ssh_username = request.POST.get("ssh_username")
+            host.ssh_password = request.POST.get("ssh_password")
             host.ssh_ftp_access = request.POST.get("ssh_ftp_access")
             host.database_name = request.POST.get("database_name")
             host.db_username = request.POST.get("db_username")
@@ -3152,7 +3155,8 @@ def developer_project_payments(request):
                 "payment_date": p.payment_date.strftime("%Y-%m-%d") if p.payment_date else "",
                 "payment_method": p.payment_method,
                 "payment_by": f"{p.payment_by.first_name} {p.payment_by.last_name}" if p.payment_by else "",
-                "details": p.payment_details or {}
+                "details": p.payment_details or {},
+                "description" : p.description
             })
 
         projects_data.append({
