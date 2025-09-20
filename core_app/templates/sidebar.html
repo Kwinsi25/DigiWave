@@ -164,7 +164,36 @@
         <div data-i18n="Dashboard">Dashboard</div>
       </a>
     </li>
-
+    <!-- my work -->
+     <li class="menu-header small text-uppercase">
+      <span class="menu-header-text">Work</span>
+    </li>
+    <li class="menu-item">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-task"></i>
+        <div data-i18n="works">My work</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item"><a href="#" class="menu-link">My Task</a></li>
+        <li class="menu-item"><a href="{% url 'attendance_list' %}" class="menu-link">Attendance</a></li>
+        <li class="menu-item"><a href="{% url 'leave_list' %}" class="menu-link">Leave</a></li>
+      </ul>
+    </li>
+        <!-- Company -->
+     <li class="menu-header small text-uppercase">
+      <span class="menu-header-text">Company</span>
+    </li>
+    <li class="menu-item">
+      <a href="javascript:void(0);" class="menu-link menu-toggle">
+        <i class="menu-icon tf-icons bx bx-buildings"></i>
+        <div data-i18n="company">Company</div>
+      </a>
+      <ul class="menu-sub">
+        <li class="menu-item"><a href="#" class="menu-link">Leave Policy</a></li>
+        <li class="menu-item"><a href="#" class="menu-link">Announcment</a></li>
+      </ul>
+    </li>
+    <!-- data -->
     <li class="menu-header small text-uppercase">
       <span class="menu-header-text">DATA</span>
     </li>

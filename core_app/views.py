@@ -33,6 +33,12 @@ from datetime import datetime
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.core.exceptions import ValidationError
+from datetime import datetime, time
+from django.utils.dateparse import parse_datetime
+import pytz
+from django.contrib.auth import logout
+
+IST = pytz.timezone('Asia/Kolkata')
 
 
 def parse_date(val):
@@ -1269,6 +1275,7 @@ def user_list(request):
 
 def add_user(request):
     if request.method == "POST":
+        print(request.POST)
         try:
             user = User(
                 first_name=request.POST.get("first_name"),
@@ -1292,6 +1299,8 @@ def add_user(request):
                 ifsc_code=request.POST.get("ifsc_code") or None,
                 branch=request.POST.get("branch") or None,
                 is_active=True if request.POST.get("is_active") == "on" else False,
+                is_staff=True if request.POST.get("is_staff") == "on" else False,
+                is_superuser=True if request.POST.get("is_superuser") == "on" else False,
             )
 
             # Handle profile picture upload
@@ -1541,6 +1550,8 @@ def get_user(request, id):
         "designations": [{"id": d.id, "title": d.title} for d in user.designations.all()],
         "technologies": [{"id": t.id, "name": t.name} for t in user.technologies.all()],
         "is_active": user.is_active,
+        "is_staff" : user.is_staff,
+        "is_superuser":user.is_superuser,
         "projects": [p.project_name for p in getattr(user, "projects").all()] if hasattr(user, "projects") else [],
         "profile_picture_url": request.build_absolute_uri(user.profile_picture.url) if user.profile_picture else None,
          "fixed_employee_details": fixed_details,
@@ -1594,7 +1605,8 @@ def update_user(request, id):
 
             # Checkbox
             user.is_active = True if request.POST.get("is_active") else False
-
+            user.is_staff = True if request.POST.get("is_staff") else False
+            user.is_superuser = True if request.POST.get("is_superuser") else False
             # Profile picture
             if request.FILES.get("profile_picture"):
                 user.profile_picture = request.FILES["profile_picture"]
@@ -1628,6 +1640,180 @@ def delete_user(request, id):
 
     return JsonResponse({"success": False, "error": "Invalid request method"}, status=405)
 
+@login_required
+def clock_in(request):
+    today = timezone.localdate()
+    attendance, created = Attendance.objects.get_or_create(user=request.user, date=today)
+    attendance.add_clock_in()
+    return redirect('attendance_list')
+
+@login_required
+def clock_out(request):
+    today = timezone.localdate()
+    try:
+        attendance = Attendance.objects.get(user=request.user, date=today)
+        
+        # Check if last session has no clock_out
+        last_session = attendance.sessions[-1] if attendance.sessions else None
+        if last_session and last_session.get("clock_out") is None:
+            
+            now_ist = timezone.now().astimezone(IST)
+            
+            # If current time is past 7:30 PM, set clock_out to 7:30 PM
+            auto_logout_time = datetime.combine(today, time(19, 30))
+            auto_logout_time = IST.localize(auto_logout_time)
+            
+            if now_ist > auto_logout_time:
+                # Clock out at 7:30 PM
+                last_session["clock_out"] = auto_logout_time.isoformat()
+            else:
+                # Clock out at current time
+                last_session["clock_out"] = now_ist.isoformat()
+            
+            attendance.save()
+        
+        # Logout user automatically if past 7:30 PM
+        if timezone.now().astimezone(IST) >= auto_logout_time:
+            logout(request)
+            
+    except Attendance.DoesNotExist:
+        pass
+
+    return redirect('attendance_list')
+
+def attendance_list(request):
+    attendance_logs = Attendance.objects.filter(user=request.user).order_by('-date')
+    today = timezone.localdate()
+    
+    # Determine if user is clocked in today
+    try:
+        attendance_today = Attendance.objects.get(user=request.user, date=today)
+        sessions = attendance_today.sessions
+        if sessions and sessions[-1].get("clock_out") is None:
+            is_clocked_in = True
+        else:
+            is_clocked_in = False
+    except Attendance.DoesNotExist:
+        is_clocked_in = False
+    for record in attendance_logs:
+        # Calculate total hours and breaks
+        total_break = record.total_break()
+        total_hours = record.total_hours()
+        record.total_break_str = f"{total_break.seconds//3600:02d}:{(total_break.seconds//60)%60:02d}"
+        record.total_hours_str = f"{total_hours.seconds//3600:02d}:{(total_hours.seconds//60)%60:02d}"
+
+        # Convert sessions to localtime datetime objects
+        clock_ins = []
+        clock_outs = []
+        for session in record.sessions:
+            if session.get("clock_in"):
+                ci = timezone.localtime(parse_datetime(session["clock_in"]))
+                clock_ins.append(ci)
+            if session.get("clock_out"):
+                co = timezone.localtime(parse_datetime(session["clock_out"]))
+                clock_outs.append(co)
+
+        # Only store the first in and last out
+        record.first_in = min(clock_ins) if clock_ins else None
+        record.last_out = max(clock_outs) if clock_outs else None
+
+    today = timezone.localdate()
+    present_today = Attendance.objects.filter(user=request.user, date=today).exists()
+    absent_today = 0 if present_today else 1
+
+    context = {
+          "attendance_logs": attendance_logs,
+        "present_today": Attendance.objects.filter(user=request.user, date=today).exists(),
+        "absent_today": 0 if Attendance.objects.filter(user=request.user, date=today).exists() else 1,
+        "is_clocked_in": is_clocked_in,
+        "records_options": [5, 10, 25, 50],
+        "records_per_page": int(request.GET.get("recordsPerPage", 10)),
+    }
+    return render(request, "attendance.html", context)
+
+
+@login_required
+def leave_list(request):
+    leaves = LeaveRequest.objects.filter(user=request.user).order_by('-start_date')
+    today = date.today()
+    # Add a status attribute to each leave
+    for leave in leaves:
+        if leave.end_date < today:
+            leave.status = 'past'        # Past leave
+        elif leave.start_date <= today <= leave.end_date:
+            leave.status = 'current'     # Today / ongoing leave
+        else:
+            leave.status = 'future'      # Future leave
+    
+    return render(request, "leave.html", {"leaves": leaves})
+
+@login_required
+def add_leave(request):
+    if request.method == "POST":
+        print(request.POST,"--------------")  # DEBUG
+        start_date = request.POST.get("start_date")
+        end_date = request.POST.get("end_date")
+        leave_type = request.POST.get("leave_type")
+        reason = request.POST.get("reason")
+        document = request.FILES.get("document")
+
+        from datetime import datetime
+        start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+        leave = LeaveRequest(
+            user=request.user,
+            start_date=start_date_obj,
+            end_date=end_date_obj,
+            leave_type=leave_type,
+            reason=reason,
+            document=document
+        )
+        leave.save()
+        print("Saved leave:", leave.id)  # DEBUG
+        messages.success(request, "Leave request added successfully")
+
+        return redirect("leave_list")  
+    return redirect("leave_list")
+
+def update_leave(request):
+    """Update or cancel a leave request."""
+    if request.method == "POST":
+        leave_id = request.POST.get("leave_id")
+        leave = get_object_or_404(LeaveRequest, id=leave_id, user=request.user)
+
+        # Check if user wants to cancel leave
+        cancel_leave = request.POST.get("cancel_leave")
+        if cancel_leave:
+            leave.status = "cancelled"
+            leave.save()
+            messages.success(request, "Leave has been cancelled.")
+            return redirect("leave_list")
+
+        # Otherwise, update leave
+        start_date = request.POST.get("start_date")
+        end_date = request.POST.get("end_date")
+        leave_type = request.POST.get("leave_type")
+        reason = request.POST.get("reason")
+        document = request.FILES.get("document")
+
+        if start_date:
+            leave.start_date = start_date
+        if end_date:
+            leave.end_date = end_date
+        if leave_type:
+            leave.leave_type = leave_type
+        if reason:
+            leave.reason = reason
+        if document:
+            leave.document = document
+
+        leave.save()
+        messages.success(request, "Leave updated successfully.")
+        return redirect("leave_list")
+    
+    messages.error(request, "Invalid request.")
+    return redirect("leave_list")
 
 # -----------------------------
 # Quotation View
@@ -3636,3 +3822,4 @@ def delete_appmode(request, id):
             return JsonResponse({"success": False, "error": str(e)})
 
     return JsonResponse({"success": False, "error": "Invalid request."})
+

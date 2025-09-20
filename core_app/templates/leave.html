@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+{% block title %}Leave Requests{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scrollable-table-body {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .scrollable-table-body table {
+        margin-bottom: 0;
+    }
+
+    .scrollable-table-body thead th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+    }
+
+    /* Leave type badges */
+    .badge-full {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-first {
+        background-color: #ffc107;
+        color: black;
+    }
+
+    .badge-second {
+        background-color: #fd7e14;
+        color: white;
+    }
+
+    /* Highlight today's leave */
+    .today-leave {
+        background-color: #e0f7fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+<div id="toast-container"
+    style="position: fixed; top: 20px; right: 20px; z-index: 3000; display:flex; flex-direction:column; gap:10px;">
+    {% for message in messages %}
+    <div class="toast align-items-center text-white bg-{{ message.tags }} border-0 show">
+        <div class="d-flex">
+            <div class="toast-body">{{ message }}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- <div class="container-xxl flex-grow-1 container-p-y">
+
+  <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#leaveModal">
+    Add Leave
+  </button> -->
+
+<div class="content-wrapper">
+    <div class="container-xxl flex-grow-1 container-p-y">
+
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1">Present Today</h6>
+                            <h4 class="fw-bold text-success">{{ present_today }}</h4>
+                        </div>
+                        <div class="avatar bg-success text-white rounded-circle p-2">
+                            <i class="bx bx-user-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Absent Today</h6>
+                            <h4 class="fw-bold text-danger">{{ absent_today }}</h4>
+                        </div>
+                        <div class="avatar bg-danger text-white rounded-circle p-2">
+                            <i class="bx bx-user-x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Table -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">Leave Logs</h4>
+                    <div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#leaveModal">
+                            <i class="bx bx-plus"></i> Add Leave
+                        </button>
+
+                    </div>
+
+                </div>
+                <div class="table-responsive text-nowrap scrollable-table-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sr No.</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Leave Type</th>
+                                <th>Leave Days</th>
+                                <th>Reason</th>
+                                 <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+  {% now "Y-m-d" as today %}
+  {% for leave in leaves %}
+  <tr class="{% if leave.start_date|stringformat:'s' <= today <= leave.end_date|stringformat:'s' %}today-leave{% endif %}">
+    <td>{{ forloop.counter }}</td>
+    <td>{{ leave.start_date|date:"M. d, Y" }}</td>
+    <td>{{ leave.end_date|date:"M. d, Y" }}</td>
+    <td>
+      {% if leave.status == 'past' %}
+        <span class="badge bg-label-danger">{{ leave.get_leave_type_display }}</span>
+      {% elif leave.status == 'current' %}
+        <span class="badge bg-label-success">{{ leave.get_leave_type_display }}</span>
+      {% else %}
+        <span class="badge bg-label-primary">{{ leave.get_leave_type_display }}</span>
+      {% endif %}
+    </td>
+    <td>{{ leave.leave_days }}</td>
+    <td>{{ leave.reason }}</td>
+    <td>
+      {% if leave.start_date|stringformat:'s' > today %}
+
+      <a href="#" 
+   class="text-primary me-2 action-icon edit-record" 
+   title="Edit" 
+   data-bs-toggle="modal" 
+   data-bs-target="#updateLeaveModal" 
+   data-record-id="{{ record.id }}"
+   data-start-date="{{ record.start_date }}"
+   data-end-date="{{ record.end_date }}"
+   data-leave-type="{{ record.leave_type }}"
+   data-reason="{{ record.reason }}"
+   data-status="{{ record.status }}">
+  <i class="bx bx-edit-alt"></i>
+</a>
+
+      <a href="#" 
+         class="text-danger action-icon delete-record" 
+         title="Delete" 
+         data-record-id="{{ record.id }}">
+        <i class="bx bx-trash"></i>
+      </a>
+
+      {% else %}
+        <span class="text-muted"><i class="bx bx-lock"></i></span>
+      {% endif %}
+    </td>
+  </tr>
+  {% empty %}
+  <tr>
+    <td colspan="7" class="text-center">No leave requests found.</td>
+  </tr>
+  {% endfor %}
+</tbody>
+
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- Leave Modal -->
+<!-- Add Leave Modal -->
+<div class="modal fade" id="leaveModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header table-primary text-white">
+        <h5 class="modal-title"><i class="bx bx-user-plus me-2"></i> Add Leave</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="POST" enctype="multipart/form-data" action="{% url 'add_leave' %}">
+        {% csrf_token %}
+
+        <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <tbody>
+
+                <!-- ==================== Leave Dates ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-calendar me-2"></i> Leave Dates</th>
+                </tr>
+                <tr>
+                  <th>Start Date</th>
+                  <td><input type="text" class="form-control flat-date" name="start_date" id="start_date" required></td>
+                  <th>End Date</th>
+                  <td><input type="text" class="form-control flat-date" name="end_date" id="end_date" required></td>
+                </tr>
+
+                <!-- ==================== Leave Type ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-time-five me-2"></i> Leave Type</th>
+                </tr>
+                <tr>
+                  <th>Type</th>
+                  <td colspan="3">
+                    <select name="leave_type" id="leave_type" class="form-control" required>
+                      <option value="full">Full Day</option>
+                      <option value="first_half">First Half (10:00 AM - 3:00 PM)</option>
+                      <option value="second_half">Second Half (2:00 PM - 7:00 PM)</option>
+                    </select>
+                  </td>
+                </tr>
+
+                <!-- ==================== Reason & Document ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-message-rounded-dots me-2"></i> Details</th>
+                </tr>
+                <tr>
+                  <th>Reason</th>
+                  <td colspan="3">
+                    <textarea name="reason" class="form-control" rows="2" required></textarea>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Document (optional)</th>
+                  <td colspan="3">
+                    <input type="file" name="document" class="form-control">
+                  </td>
+                </tr>
+
+                <!-- ==================== Leave Days ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-calendar-check me-2"></i> Leave Days</th>
+                </tr>
+                <tr>
+                  <th>Calculated Days</th>
+                  <td colspan="3">
+                    <input type="text" id="leave_days" name="leave_days" class="form-control" readonly>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Submit</button>
+          
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Update Leave Modal -->
+<div class="modal fade" id="updateLeaveModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header table-primary text-white">
+        <h5 class="modal-title"><i class="bx bx-edit me-2"></i> Update Leave</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="POST" enctype="multipart/form-data" action="">
+        {% csrf_token %}
+        <input type="hidden" name="leave_id" id="edit_leave_id">
+
+        <div class="modal-body px-4 py-3" style="max-height: 70vh; overflow-y: auto;">
+          <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <tbody>
+
+                <!-- ==================== Cancel Leave ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-x-circle me-2"></i> Cancel Option</th>
+                </tr>
+                <tr>
+                  <td colspan="4">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="cancel_leave" name="cancel_leave">
+                      <label class="form-check-label fw-bold text-danger" for="cancel_leave">
+                        Cancel this leave request
+                      </label>
+                      <br>
+                      <small class="text-muted">If checked, this leave will be marked as cancelled and other fields will be ignored.</small>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- ==================== Leave Dates ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-calendar me-2"></i> Leave Dates</th>
+                </tr>
+                <tr>
+                  <th>Start Date</th>
+                  <td><input type="text" class="form-control flat-date" name="start_date" id="edit_start_date"></td>
+                  <th>End Date</th>
+                  <td><input type="text" class="form-control flat-date" name="end_date" id="edit_end_date"></td>
+                </tr>
+
+                <!-- ==================== Leave Type ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-time-five me-2"></i> Leave Type</th>
+                </tr>
+                <tr>
+                  <th>Type</th>
+                  <td colspan="3">
+                    <select name="leave_type" id="edit_leave_type" class="form-control">
+                      <option value="full">Full Day</option>
+                      <option value="first_half">First Half (10:00 AM - 3:00 PM)</option>
+                      <option value="second_half">Second Half (2:00 PM - 7:00 PM)</option>
+                    </select>
+                  </td>
+                </tr>
+
+                <!-- ==================== Reason & Document ==================== -->
+                <tr class="table-light">
+                  <th colspan="4"><i class="bx bx-message-rounded-dots me-2"></i> Details</th>
+                </tr>
+                <tr>
+                  <th>Reason</th>
+                  <td colspan="3">
+                    <textarea name="reason" id="edit_reason" class="form-control" rows="2"></textarea>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Document</th>
+                  <td colspan="3">
+                    <input type="file" name="document" id="edit_document" class="form-control">
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Submit</button>
+          
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script>
+   document.addEventListener("DOMContentLoaded", () => {
+    const toasts = document.querySelectorAll(".toast");
+    toasts.forEach(toast => {
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000); // 3s
+    });
+
+      const startDate = document.getElementById("start_date");
+    const endDate = document.getElementById("end_date");
+    const leaveType = document.getElementById("leave_type");
+    const leaveDays = document.getElementById("leave_days");
+
+    function calculateLeaveDays() {
+        const start = new Date(startDate.value);
+        const end = new Date(endDate.value);
+        if (!start || !end) return;
+
+        let delta = (end - start) / (1000 * 60 * 60 * 24) + 1;
+        if (leaveType.value === "first_half" || leaveType.value === "second_half") {
+            leaveDays.value = 0.5 * delta;
+        } else {
+            leaveDays.value = delta;
+        }
+    }
+
+    startDate.addEventListener("change", calculateLeaveDays);
+    endDate.addEventListener("change", calculateLeaveDays);
+    leaveType.addEventListener("change", calculateLeaveDays);
+
+
+  // update
+  const editButtons = document.querySelectorAll(".edit-record");
+
+  editButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const leaveId = btn.dataset.recordId;
+      const startDate = btn.dataset.startDate;
+      const endDate = btn.dataset.endDate;
+      const leaveType = btn.dataset.leaveType;
+      const reason = btn.dataset.reason;
+      const status = btn.dataset.status;
+
+      document.getElementById("edit_leave_id").value = leaveId;
+      document.getElementById("edit_start_date").value = startDate;
+      document.getElementById("edit_end_date").value = endDate;
+      document.getElementById("edit_leave_type").value = leaveType;
+      document.getElementById("edit_reason").value = reason;
+
+      // Set cancel checkbox if status is cancelled
+      document.getElementById("cancel_leave").checked = (status === "cancelled");
+
+      // Optional: disable other fields if cancelled
+      const fields = ["edit_start_date","edit_end_date","edit_leave_type","edit_reason","edit_document"];
+      fields.forEach(id => {
+        document.getElementById(id).disabled = (status === "cancelled");
+      });
+    });
+  });
+
+  // Also handle manual checking/unchecking of cancel checkbox
+  const cancelCheckbox = document.getElementById("cancel_leave");
+  cancelCheckbox.addEventListener("change", () => {
+    const fields = ["edit_start_date","edit_end_date","edit_leave_type","edit_reason","edit_document"];
+    fields.forEach(id => {
+      document.getElementById(id).disabled = cancelCheckbox.checked;
+    });
+
+  });
+    });
+</script>
+{% endblock %}

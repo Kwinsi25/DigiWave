@@ -1110,6 +1110,28 @@ if (data.employee_type && data.employee_type.toLowerCase() === "salary") {
                                                         </div>
                                                     </td>
                                                 </tr>
+                                                <tr>
+                                                    <th>Staff</th>
+                                                    <td colspan="3">
+                                                        <div class="form-check">
+                                                            <input type="checkbox" class="form-check-input"
+                                                                name="is_staff" id="add-is-staff" >
+                                                            <label class="form-check-label" for="add-is-staff">Is
+                                                                Staff</label>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Superuser</th>
+                                                    <td colspan="3">
+                                                        <div class="form-check">
+                                                            <input type="checkbox" class="form-check-input"
+                                                                name="is_superuser" id="add-is-superuser" >
+                                                            <label class="form-check-label" for="add-is-superuser">Is
+                                                                Superuser</label>
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                             </tbody>
                                         </table>
                                     </div>
@@ -1503,6 +1525,28 @@ if (data.employee_type && data.employee_type.toLowerCase() === "salary") {
                                                                 name="is_active" id="edit-is-active">
                                                             <label class="form-check-label" for="edit-is-active">Is
                                                                 Active</label>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Staff</th>
+                                                    <td colspan="3">
+                                                        <div class="form-check">
+                                                            <input type="checkbox" class="form-check-input"
+                                                                name="is_staff" id="edit-is-staff" >
+                                                            <label class="form-check-label" for="edit-is-staff">Is
+                                                                Staff</label>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Superuser</th>
+                                                    <td colspan="3">
+                                                        <div class="form-check">
+                                                            <input type="checkbox" class="form-check-input"
+                                                                name="is_superuser" id="edit-is-superuser" >
+                                                            <label class="form-check-label" for="edit-is-superuser">Is
+                                                                Superuser</label>
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -1950,6 +1994,8 @@ addAmountForm.addEventListener("submit", e => {
 
                     // Active status
                     $("#edit-is-active").prop("checked", res.is_active);
+                    $("#edit-is-staff").prop("checked", res.is_staff);
+                    $("#edit-is-super-user").prop("checked", res.is_superuser);
 
                     // Profile picture preview (optional)
                     if (res.profile_picture_url) {

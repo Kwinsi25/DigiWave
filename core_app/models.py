@@ -2,11 +2,15 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator,URLValidator
 from django.utils import timezone
+from datetime import timedelta,datetime
+from django.conf import settings
 import os,re
 from django.core.validators import RegexValidator, MinLengthValidator, EmailValidator,MinValueValidator
 from django.db.models import *
 from decimal import Decimal
 from datetime import date
+from django.contrib.auth.models import User as AuthUser
+import pytz
 
 # -----------------------------
 # User table for team members
@@ -19,6 +23,13 @@ class Designation(models.Model):
         return self.title
     
 class User(models.Model):
+    auth_user = models.OneToOneField(
+        AuthUser,
+        on_delete=models.CASCADE,
+        related_name="profile",
+        blank=True,
+        null=True
+    )
     MARITAL_STATUS_CHOICES = [
         ("single", "Single"),
         ("married", "Married"),
@@ -128,8 +139,7 @@ class User(models.Model):
 
 
     password = models.CharField(
-        max_length=128,
-        validators=[MinLengthValidator(8, "Password must be at least 8 characters.")]
+        max_length=128,blank=False,null=False
     )
     
     profile_picture = models.ImageField(
@@ -139,6 +149,8 @@ class User(models.Model):
     )
     
     is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -217,8 +229,133 @@ class User(models.Model):
     # Override save to update working_days
     # ---------------------------
     def save(self, *args, **kwargs):
+        # Create/update linked Django Auth User
+        if not self.auth_user_id:
+            username = self.username or (self.first_name.lower() + self.last_name.lower())
+            auth_user = AuthUser.objects.create_user(
+                username=username,
+                email=self.email if self.email else None,
+                password=self.password
+            )
+            auth_user.is_active = self.is_active
+            auth_user.is_staff = self.is_staff
+            auth_user.is_superuser = self.is_superuser
+            auth_user.save()
+            self.auth_user = auth_user
+        else:
+            self.auth_user.username = self.username or (self.first_name.lower() + self.last_name.lower())
+            self.auth_user.email = self.email
+            self.auth_user.set_password(self.password)
+            self.auth_user.is_active = self.is_active
+            self.auth_user.is_staff = self.is_staff
+            self.auth_user.is_superuser = self.is_superuser
+            self.auth_user.save()
+
+
         self.working_days = self.calculate_working_days()
         super().save(*args, **kwargs)
+
+
+IST = pytz.timezone('Asia/Kolkata')  # Indian Standard Time
+
+class Attendance(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    date = models.DateField()
+    sessions = models.JSONField(default=list)
+
+    def add_clock_in(self):
+        now = timezone.now()
+        now_ist = now.astimezone(IST)  # convert to IST
+        self.sessions.append({"clock_in": now_ist.isoformat(), "clock_out": None})
+        self.save()
+
+    def add_clock_out(self):
+        now = timezone.now()
+        now_ist = now.astimezone(IST)  # convert to IST
+        # Find last session without clock_out
+        for session in reversed(self.sessions):
+            if session.get("clock_out") is None:
+                session["clock_out"] = now_ist.isoformat()
+                break
+        self.save()
+
+    def total_hours(self):
+        total = timedelta()
+        for session in self.sessions:
+            ci = session.get("clock_in")
+            co = session.get("clock_out")
+            if ci and co:
+                ci_dt = timezone.datetime.fromisoformat(ci)
+                co_dt = timezone.datetime.fromisoformat(co)
+                total += (co_dt - ci_dt)
+        return total
+
+    def total_hours_str(self):
+        total = self.total_hours()
+        hours, remainder = divmod(total.total_seconds(), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
+
+    def total_break(self):
+        total_break = timedelta()
+        previous_out = None
+        for session in sorted(self.sessions, key=lambda s: s.get("clock_in")):
+            ci = session.get("clock_in")
+            co = session.get("clock_out")
+            if ci and co:
+                ci_dt = timezone.datetime.fromisoformat(ci)
+                co_dt = timezone.datetime.fromisoformat(co)
+                if previous_out:
+                    total_break += ci_dt - previous_out
+                previous_out = co_dt
+        return total_break
+
+    def total_break_str(self):
+        total = self.total_break()
+        hours, remainder = divmod(total.total_seconds(), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
+
+    def __str__(self):
+        return f"{self.user.email} - {self.date}"
+
+class LeaveRequest(models.Model):
+    LEAVE_TYPE_CHOICES = [
+        ('full', 'Full Day'),
+        ('first_half', 'First Half (10:00 AM - 3:00 PM)'),
+        ('second_half', 'Second Half (2:00 PM - 7:00 PM)'),
+    ]
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('cancelled', 'Cancelled'),
+    ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    leave_type = models.CharField(max_length=20, choices=LEAVE_TYPE_CHOICES)
+    reason = models.TextField()
+    document = models.FileField(upload_to='leave_docs/', blank=True, null=True)
+    leave_days = models.FloatField(default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def save(self, *args, **kwargs):
+        delta = (self.end_date - self.start_date).days + 1
+        if self.leave_type in ['first_half', 'second_half']:
+            self.leave_days = 0.5 * delta
+        else:
+            self.leave_days = delta
+        super().save(*args, **kwargs)
+    @classmethod
+    def get_leave_for_date(cls, user, date):
+        return cls.objects.filter(
+            user=user,
+            start_date__lte=date,
+            end_date__gte=date
+        ).first()
 
 # -----------------------------
 # Project model

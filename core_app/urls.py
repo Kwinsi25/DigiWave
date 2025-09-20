@@ -47,7 +47,11 @@ urlpatterns = [
     path("get_user/<int:id>/", get_user, name="get_user"),
     path('update_user/<int:id>/', update_user, name='update_user'),
     path('delete_user/<int:id>/', delete_user, name='delete_user'),
-
+    path('attendance_list/',attendance_list,name="attendance_list"),
+    path('clock-in/', clock_in, name='clock_in'),
+    path('clock-out/', clock_out, name='clock_out'),
+    path('leave_list/',leave_list,name='leave_list'),
+    path('add_leave/',add_leave,name='add_leave'),
 
     #quotation
     path('quotation/', quotation_list, name='quotation_list'),
